@@ -19,23 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
-----------------------------------------------------------------------------
-Exception: character artwork is NOT covered by the MIT License above
-例外：角色立绘不在上面这份 MIT 许可证范围内
-----------------------------------------------------------------------------
-
-The image files in these two folders are licensed under CC BY-NC-SA 4.0
-(attribution, non-commercial, share-alike), NOT under the MIT License:
-
-    scripts/xay-chars/img/
-    V2/web/chars/img/
-
-Most of them are adapted from the character sheets of lmy414/ai-chan-sheets
-(characters by ZipZipPipe). Source, credits and the changes made are listed in
-the LICENSE.md file inside each folder. Do not use these images commercially.
-Everything else in this repository is under the MIT License above.
-
-这两个文件夹里的图片按 CC BY-NC-SA 4.0 授权（署名、非商业使用、相同方式共享），
-不适用 MIT，请勿商用。来源、作者署名和改动说明见各文件夹里的 LICENSE.md。
-本仓库其余内容均按上面的 MIT 许可证。
