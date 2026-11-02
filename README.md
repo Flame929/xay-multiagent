@@ -14,9 +14,9 @@
 
 ## 先看一眼
 
-[![xay 演示预览（点击看约 2 分钟的完整视频）](docs/media/demo-preview.gif)](docs/media/demo.mp4)
+![xay 演示预览（14 秒）：员工开工、互相写信](docs/media/demo-preview.gif)
 
-点上面的动图看完整视频（约 2 分钟，3.8MB）：总经理开部门、招员工、拆任务，员工开工、互相写信、做完被验收，遇到拿不准的事停下来问你。这是示例模式的回放，不是真实任务。
+上面是 14 秒预览。完整视频约 2 分钟（mp4，3.8MB）：[**下载 demo.mp4**](https://github.com/Flame929/xay-multiagent/raw/main/docs/media/demo.mp4)。内容是：总经理开部门、招员工、拆任务，员工开工、互相写信、做完被验收，遇到拿不准的事停下来问你。这是示例模式的回放，不是真实任务。
 
 想看看一份计划长什么样、自己试一试？见 [`docs/examples/`](docs/examples/README.md)：三份现成的示例计划。
 
