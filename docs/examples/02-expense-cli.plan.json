@@ -1,0 +1,78 @@
+{
+  "title": "做一个命令行记账小工具",
+  "groups": [
+    {
+      "key": "g_core",
+      "title": "做出记账和查账的核心功能",
+      "why": "在终端里敲一行命令就能记一笔、查一个月的花销",
+      "after": [],
+      "check": "rules",
+      "tasks": [
+        {
+          "key": "t_store",
+          "title": "把每一笔账安全存下来",
+          "agent": "codex",
+          "writes": [
+            "ledger/store.py",
+            "tests/test_store.py"
+          ],
+          "verify": [
+            "python3 -m unittest tests/test_store.py"
+          ],
+          "card": "用一个本地文件保存账目，每笔有日期、金额、类别和备注。写入要防止半截写坏文件，读取要能容忍空文件。"
+        },
+        {
+          "key": "t_cli",
+          "title": "做好记账和查账的命令",
+          "agent": "dsh",
+          "deps": [
+            "t_store"
+          ],
+          "writes": [
+            "ledger/cli.py",
+            "tests/test_cli.py"
+          ],
+          "verify": [
+            "python3 -m unittest tests/test_cli.py"
+          ],
+          "card": "提供三个命令：记一笔、列出某个月的账、按类别汇总。参数写错时给出人话提示，不要抛一大段报错。"
+        }
+      ]
+    },
+    {
+      "key": "g_polish",
+      "title": "把工具打磨到别人也能直接用",
+      "why": "朋友拿到手看一页说明就会用，改动时也不容易改坏",
+      "after": [
+        "g_core"
+      ],
+      "check": "lead",
+      "tasks": [
+        {
+          "key": "t_edge",
+          "title": "补上各种出错情况的测试",
+          "agent": "codex",
+          "writes": [
+            "tests/test_edge_cases.py"
+          ],
+          "verify": [
+            "python3 -m unittest tests/test_edge_cases.py"
+          ],
+          "card": "覆盖金额填成文字、日期写错、账本文件被删、同一天记很多笔这些情况，确认都不会崩。"
+        },
+        {
+          "key": "t_readme",
+          "title": "写一页新手能看懂的使用说明",
+          "agent": "dsh",
+          "writes": [
+            "README.md"
+          ],
+          "verify": [
+            "test -s README.md"
+          ],
+          "card": "写清楚怎么安装、三个命令各举一个例子、账本文件放在哪里、怎么备份。"
+        }
+      ]
+    }
+  ]
+}

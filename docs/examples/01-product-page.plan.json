@@ -1,0 +1,112 @@
+{
+  "title": "给网店做新版商品页",
+  "groups": [
+    {
+      "key": "g_page",
+      "title": "做好新版商品页的页面",
+      "why": "顾客在电脑和手机上都能看到清爽好用的新商品页",
+      "after": [],
+      "check": "rules",
+      "tasks": [
+        {
+          "key": "t_frame",
+          "title": "搭好新版商品页的页面框架",
+          "agent": "codex",
+          "writes": [
+            "web/product/index.html",
+            "web/product/style.css"
+          ],
+          "verify": [
+            "python3 -m unittest tests/product/test_page_frame.py"
+          ],
+          "card": "做出商品页的页面骨架：顶部商品图、中间标题价格和购买按钮、底部详情。先只放占位内容，样式用一个单独的样式文件，方便后面换皮肤。"
+        },
+        {
+          "key": "t_docs",
+          "title": "写一份新版商品页的使用说明",
+          "agent": "dsh",
+          "deps": [
+            "t_frame"
+          ],
+          "writes": [
+            "docs/product-page.md"
+          ],
+          "verify": [
+            "test -s docs/product-page.md"
+          ],
+          "card": "给店里的同事写一页说明：新商品页有哪几块、每块怎么改内容、常见问题怎么办。用大白话，配一张区域示意文字图。"
+        }
+      ]
+    },
+    {
+      "key": "g_data",
+      "title": "备好商品的数据、图片和文案",
+      "why": "页面上展示的商品信息都是现成、准确的",
+      "after": [],
+      "check": "rules",
+      "tasks": [
+        {
+          "key": "t_api",
+          "title": "把商品数据接进新页面",
+          "agent": "dsh",
+          "writes": [
+            "data/product_api.py",
+            "tests/data/test_product_api.py"
+          ],
+          "verify": [
+            "python3 -m unittest tests/data/test_product_api.py"
+          ],
+          "card": "写一个读取商品名称、价格、库存和图片地址的小接口，页面从这里拿数据。接口返回要稳定，缺字段时给出清楚的提示。"
+        },
+        {
+          "key": "t_content",
+          "title": "整理商品图片和文案",
+          "agent": "agy",
+          "writes": [
+            "data/content/products.json"
+          ],
+          "verify": [
+            "python3 -c \"import json; json.load(open('data/content/products.json', encoding='utf-8'))\""
+          ],
+          "card": "把现有的商品图片和卖点文案按商品分好，每个商品一条：标题、一句话卖点、三条细节、图片列表。文案要口语、不夸大。"
+        }
+      ]
+    },
+    {
+      "key": "g_qa",
+      "title": "把新版商品页该测的都测一遍",
+      "why": "上线前就发现问题，顾客不会遇到打不开或错位的页面",
+      "after": [
+        "g_page",
+        "g_data"
+      ],
+      "check": "lead",
+      "tasks": [
+        {
+          "key": "t_test",
+          "title": "给新版商品页写自动化测试",
+          "agent": "codex",
+          "writes": [
+            "tests/product/test_page.py"
+          ],
+          "verify": [
+            "python3 -m unittest tests/product/test_page.py"
+          ],
+          "card": "覆盖打开页面、商品信息显示、缺图兜底、购买按钮可点这几件事。每条测试一个场景，失败时提示要一眼看懂。"
+        },
+        {
+          "key": "t_mobile",
+          "title": "检查手机上的显示效果",
+          "agent": "agy",
+          "writes": [
+            "web/product/mobile.css"
+          ],
+          "verify": [
+            "test -s web/product/mobile.css"
+          ],
+          "card": "按手机屏幕宽度检查页面：文字不挤、图片不溢出、按钮好点。有问题就改手机专用的样式文件。"
+        }
+      ]
+    }
+  ]
+}

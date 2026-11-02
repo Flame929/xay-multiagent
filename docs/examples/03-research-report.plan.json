@@ -1,0 +1,73 @@
+{
+  "title": "调研三种方案并写出对比报告",
+  "groups": [
+    {
+      "key": "g_research",
+      "title": "三种方案各自查清楚",
+      "why": "每种方案的做法、成本和坑都有一份独立的材料",
+      "after": [],
+      "check": "rules",
+      "tasks": [
+        {
+          "key": "t_plan_a",
+          "title": "调研方案一并写成一页纸",
+          "agent": "agy",
+          "writes": [
+            "reports/plan-a.md"
+          ],
+          "verify": [
+            "test -s reports/plan-a.md"
+          ],
+          "card": "查清方案一怎么做、要花多少钱和时间、最大的风险是什么。每个结论注明来源，拿不准的标出来。"
+        },
+        {
+          "key": "t_plan_b",
+          "title": "调研方案二并写成一页纸",
+          "agent": "dsh",
+          "writes": [
+            "reports/plan-b.md"
+          ],
+          "verify": [
+            "test -s reports/plan-b.md"
+          ],
+          "card": "查清方案二怎么做、要花多少钱和时间、最大的风险是什么。每个结论注明来源，拿不准的标出来。"
+        },
+        {
+          "key": "t_plan_c",
+          "title": "调研方案三并写成一页纸",
+          "agent": "codex",
+          "writes": [
+            "reports/plan-c.md"
+          ],
+          "verify": [
+            "test -s reports/plan-c.md"
+          ],
+          "card": "查清方案三怎么做、要花多少钱和时间、最大的风险是什么。每个结论注明来源，拿不准的标出来。"
+        }
+      ]
+    },
+    {
+      "key": "g_summary",
+      "title": "汇总成一份能拍板的对比报告",
+      "why": "老板只看这一份就能选出方案，不用翻三份材料",
+      "after": [
+        "g_research"
+      ],
+      "check": "lead",
+      "tasks": [
+        {
+          "key": "t_compare",
+          "title": "把三种方案放在一起对比",
+          "agent": "agy",
+          "writes": [
+            "reports/summary.md"
+          ],
+          "verify": [
+            "test -s reports/summary.md"
+          ],
+          "card": "读完三份一页纸，做一张对比表（成本、时间、风险、适合谁），最后给出推荐和不推荐的理由。结论放最前面。"
+        }
+      ]
+    }
+  ]
+}
