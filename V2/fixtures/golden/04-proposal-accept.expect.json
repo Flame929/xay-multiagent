@@ -1,0 +1,67 @@
+[
+  {
+    "path": "conversation.plan_version",
+    "equals": 2
+  },
+  {
+    "path": "tasks[0].title",
+    "equals": "做商品图轮播（含空状态）"
+  },
+  {
+    "path": "tasks[0].writes[0]",
+    "equals": "web/carousel/**"
+  },
+  {
+    "path": "tasks[0].writes[1]",
+    "equals": "web/empty/**"
+  },
+  {
+    "path": "plan.version",
+    "equals": 2
+  },
+  {
+    "path": "plan.history[1].version",
+    "equals": 2
+  },
+  {
+    "path": "plan.history[1].reason",
+    "equals": "页面还要有空状态（申请 pp_001 通过）"
+  },
+  {
+    "path": "proposals",
+    "equals": []
+  },
+  {
+    "path": "plan.history[1].by",
+    "equals": "em_codex01"
+  },
+  {
+    "path": "plan.history[1].changes[0].op",
+    "equals": "change"
+  },
+  {
+    "path": "plan.history[1].changes[0].title",
+    "equals": "做商品图轮播（含空状态）"
+  },
+  {
+    "path": "plan.history[1].changes[0].before.title",
+    "equals": "做商品图轮播"
+  },
+  {
+    "path": "plan.history[1].changes[0].after.title",
+    "equals": "做商品图轮播（含空状态）"
+  },
+  {
+    "path": "plan.history[1].changes[0].before.writes",
+    "equals": [
+      "web/carousel/**"
+    ]
+  },
+  {
+    "path": "plan.history[1].changes[0].after.writes",
+    "equals": [
+      "web/carousel/**",
+      "web/empty/**"
+    ]
+  }
+]

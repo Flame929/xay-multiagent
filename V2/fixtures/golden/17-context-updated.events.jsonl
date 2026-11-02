@@ -1,0 +1,3 @@
+{"ts":1793301300,"by":"lead:cv_demo17","type":"conv.begun","subject":"cv_demo17","ws":"ws_demo01","conv":"cv_demo17","data":{"title":"记忆更新","lead_kind":"claude","aliases":["claude:demo-17"],"cwd":"/work/demo-shop"}}
+{"ts":1793301310,"by":"lead:cv_demo17","type":"employee.hired","subject":"em_deepseek01","ws":"ws_demo01","conv":"cv_demo17","data":{"agent":"dsh"}}
+{"ts":1793301320,"by":"station:em_deepseek01","type":"context.updated","subject":"em_deepseek01","ws":"ws_demo01","conv":"cv_demo17","data":{"used":89600,"window":128000,"pct":70,"source":"dsh_total","estimated":true}}

@@ -1,0 +1,20 @@
+#!/bin/bash
+# xay-notify：发一条“AI 团队看板”系统通知，点击后打开对应任务的看板页面
+# 用法：xay-notify <任务名> <正文> [Mission id（run_dir 或 dag_dir）]
+# XAY_NOTIFY=0 时不发。装了「AI 团队看板」小应用（xay-install-notifier）就用它发，显示四象限图标；
+# 否则退回 osascript（显示脚本编辑器图标，点击不跳转）。
+[ "${XAY_NOTIFY:-1}" = "0" ] && exit 0
+export LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8   # 否则 osascript 可能按 GBK 解读中文
+sub="${1:-}"; body="${2:-}"; id="${3:-}"
+url="http://127.0.0.1:${XAY_WATCH_PORT:-7878}/"
+[ -n "$id" ] && url="${url}#/task/$(printf '%s' "$id" | jq -sRr @uri)"
+APP="$HOME/Applications/AI 团队看板.app"
+if [ -d "$APP" ]; then
+  q="$HOME/.xay/notify"; mkdir -p "$q"
+  f="$q/$(date +%s)-$$-$RANDOM"
+  printf '%s\n%s\n%s\n%s\n' "AI 团队看板" "$sub" "$body" "$url" > "$f.tmp" && mv -f "$f.tmp" "$f.msg"
+  open -g -a "$APP" >/dev/null 2>&1 && exit 0
+fi
+command -v osascript >/dev/null 2>&1 || exit 0
+esc() { printf '%s' "$1" | sed 's/[\\"]/\\&/g'; }
+osascript -e "display notification \"$(esc "$body")\" with title \"AI 团队看板\" subtitle \"$(esc "$sub")\"" >/dev/null 2>&1 || true

@@ -1,0 +1,11 @@
+{"ts":1793301090,"by":"lead:cv_demo14","type":"conv.begun","subject":"cv_demo14","ws":"ws_demo01","conv":"cv_demo14","data":{"title":"越权写入后继续","lead_kind":"claude","aliases":["claude:demo-14"],"cwd":"/work/demo-shop"}}
+{"ts":1793301100,"by":"lead:cv_demo14","type":"employee.hired","subject":"em_codex01","ws":"ws_demo01","conv":"cv_demo14","data":{"agent":"codex"}}
+{"ts":1793301110,"by":"lead:cv_demo14","type":"employee.hired","subject":"em_codex02","ws":"ws_demo01","conv":"cv_demo14","data":{"agent":"codex"}}
+{"ts":1793301120,"by":"lead:cv_demo14","type":"task.added","subject":"tk_a","ws":"ws_demo01","conv":"cv_demo14","data":{"key":"a","title":"做轮播","deps":[],"writes":["web/a/**"],"card":"商品图轮播","mode":"write","reason":"首页要上新品","owner":"em_codex01","dept":"fe"}}
+{"ts":1793301130,"by":"lead:cv_demo14","type":"task.added","subject":"tk_b","ws":"ws_demo01","conv":"cv_demo14","data":{"key":"b","title":"修文案","deps":[],"writes":["web/b/**"],"card":"修首页文案","mode":"write","reason":"文案有错","owner":"em_codex02","dept":"fe"}}
+{"ts":1793301140,"by":"station:em_codex01","type":"task.added","subject":"tk_evil","ws":"ws_demo01","conv":"cv_demo14","data":{"key":"evil","title":"工位偷偷加的任务","deps":[],"writes":["web/evil/**"],"card":"越权","mode":"write","reason":"越权"}}
+{"ts":1793301150,"by":"office","type":"task.ready","subject":"tk_a","ws":"ws_demo01","conv":"cv_demo14","data":{}}
+{"ts":1793301160,"by":"station:em_codex01","type":"turn.started","subject":"tn_a","ws":"ws_demo01","conv":"cv_demo14","data":{"task":"tk_a","em":"em_codex01","kind":"first"}}
+{"ts":1793301170,"by":"station:em_codex01","type":"task.progress","subject":"tk_a","ws":"ws_demo01","conv":"cv_demo14","data":{"step":1,"of":2,"text":"搭结构","source":"outbox"}}
+{"ts":1793301180,"by":"employee:em_codex01","type":"task.progress","subject":"tk_b","ws":"ws_demo01","conv":"cv_demo14","data":{"step":1,"of":2,"text":"改别人的活","source":"outbox"}}
+{"ts":1793301190,"by":"station:em_codex01","type":"task.progress","subject":"tk_a","ws":"ws_demo01","conv":"cv_demo14","data":{"step":2,"of":2,"text":"接图片","source":"outbox"}}

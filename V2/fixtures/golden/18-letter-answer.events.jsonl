@@ -1,0 +1,8 @@
+{"ts":1793301330,"by":"lead:cv_demo18","type":"conv.begun","subject":"cv_demo18","ws":"ws_demo01","conv":"cv_demo18","data":{"title":"信件答复","lead_kind":"claude","aliases":["claude:demo-18"],"cwd":"/work/demo-shop"}}
+{"ts":1793301340,"by":"lead:cv_demo18","type":"dept.opened","subject":"fe","ws":"ws_demo01","conv":"cv_demo18","data":{"name":"前端部","mission":"负责页面和交互","owns":["web/**"],"head":"rules"}}
+{"ts":1793301350,"by":"lead:cv_demo18","type":"employee.hired","subject":"em_codex01","ws":"ws_demo01","conv":"cv_demo18","data":{"agent":"codex"}}
+{"ts":1793301360,"by":"lead:cv_demo18","type":"employee.joined","subject":"em_codex01","ws":"ws_demo01","conv":"cv_demo18","data":{"dept":"fe"}}
+{"ts":1793301370,"by":"employee:em_codex01","type":"letter.sent","subject":"lt_req","ws":"ws_demo01","conv":"cv_demo18","data":{"from":"em_codex01","to":"fe","kind":"request","subject":"要一张空状态图","body":"首页缺一张空状态图，能补吗？"}}
+{"ts":1793301380,"by":"office","type":"letter.delivered","subject":"lt_req","ws":"ws_demo01","conv":"cv_demo18","data":{"how":"inbox"}}
+{"ts":1793301390,"by":"lead:cv_demo18","type":"letter.sent","subject":"lt_ans","ws":"ws_demo01","conv":"cv_demo18","data":{"from":"gm","to":"em_codex01","kind":"reply","subject":"好的","body":"已经安排，下午给你","reply_to":"lt_req"}}
+{"ts":1793301400,"by":"lead:cv_demo18","type":"letter.answered","subject":"lt_req","ws":"ws_demo01","conv":"cv_demo18","data":{"verdict":"accept","answer_letter":"lt_ans"}}

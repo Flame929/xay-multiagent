@@ -1,0 +1,4 @@
+{"ts":1793301760,"by":"lead:cv_demo24","type":"conv.begun","subject":"cv_demo24","ws":"ws_demo01","conv":"cv_demo24","data":{"title":"高版本事件被跳过","lead_kind":"claude","aliases":["claude:demo-24"],"cwd":"/work/demo-shop"}}
+{"ts":1793301770,"by":"lead:cv_demo24","type":"task.added","subject":"tk_a","ws":"ws_demo01","conv":"cv_demo24","data":{"key":"a","title":"做轮播","deps":[],"writes":["web/a/**"],"card":"商品图轮播","mode":"write","reason":"先做轮播","owner":"em_codex01"}}
+{"ts":1793301780,"v":99,"by":"lead:cv_demo24","type":"task.changed","subject":"tk_a","ws":"ws_demo01","conv":"cv_demo24","data":{"fields":{"title":"高版本不该生效"},"reason":"未来版本才认识"}}
+{"ts":1793301790,"by":"lead:cv_demo24","type":"task.changed","subject":"tk_a","ws":"ws_demo01","conv":"cv_demo24","data":{"fields":{"title":"照常生效"},"reason":"高版本之后照常改"}}

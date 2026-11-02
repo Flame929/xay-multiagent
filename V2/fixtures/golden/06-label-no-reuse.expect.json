@@ -1,0 +1,74 @@
+[
+  {
+    "path": "people.em_codex02.key",
+    "equals": "em_codex02"
+  },
+  {
+    "path": "people.em_codex02.label",
+    "equals": "Codex 2"
+  },
+  {
+    "path": "people.em_codex02.agent",
+    "equals": "codex"
+  },
+  {
+    "path": "people.em_deepseek01.label",
+    "equals": "DeepSeek 1"
+  },
+  {
+    "path": "people.em_deepseek01.agent",
+    "equals": "dsh"
+  },
+  {
+    "path": "people.em_gemini02.label",
+    "equals": "Gemini 2"
+  },
+  {
+    "path": "people.em_gemini02.agent",
+    "equals": "agy"
+  },
+  {
+    "path": "conversation.plan_version",
+    "equals": 0
+  },
+  {
+    "path": "former[0].key",
+    "equals": "em_codex01"
+  },
+  {
+    "path": "former[0].label",
+    "equals": "Codex 1"
+  },
+  {
+    "path": "former[0].agent",
+    "equals": "codex"
+  },
+  {
+    "path": "former[1].key",
+    "equals": "em_gemini01"
+  },
+  {
+    "path": "former[1].label",
+    "equals": "Gemini 1"
+  },
+  {
+    "path": "former[1].agent",
+    "equals": "agy"
+  },
+  {
+    "path": "people.em_codex01",
+    "equals": null
+  },
+  {
+    "path": "people.em_gemini01",
+    "equals": null
+  },
+  {
+    "path": "people.em_codex02.state",
+    "equals": "idle"
+  },
+  {
+    "path": "people.em_gemini02.state",
+    "equals": "idle"
+  }
+]

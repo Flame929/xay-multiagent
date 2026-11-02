@@ -1,0 +1,22 @@
+[
+  {
+    "path": "people.em_codex01.state",
+    "equals": "idle"
+  },
+  {
+    "path": "people.em_codex01.context.compactions",
+    "equals": 1
+  },
+  {
+    "path": "people.em_codex01.context.segment",
+    "equals": 2
+  },
+  {
+    "path": "people.em_codex01.context.calibrating",
+    "equals": true
+  },
+  {
+    "path": "people.em_codex01.context.pct",
+    "equals": 18
+  }
+]

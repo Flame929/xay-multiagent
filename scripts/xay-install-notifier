@@ -1,0 +1,80 @@
+#!/bin/bash
+# xay-install-notifier：生成「AI 团队看板」通知小应用（~/Applications/AI 团队看板.app）
+# 优先用 swiftc 编译原生版（assets/notifier/Notifier.swift）：通知显示四象限图标，
+# 点击哪条通知就打开哪条通知自己的看板地址；发完/处理完自动退出，不常驻。
+# 没有 swiftc 或编译失败时，退回 AppleScript 版（notifier.applescript，图标可能显示为脚本编辑器）。
+# 重复运行会覆盖安装。第一次弹通知时，macOS 会询问是否允许它发通知，选“允许”。
+# XAY_NOTIFIER_APPLESCRIPT=1 强制安装 AppleScript 版。
+set -euo pipefail
+SKILL_DIR="$(cd "$(dirname "$(readlink "$0" || echo "$0")")/.." && pwd)"
+ASSETS="$SKILL_DIR/assets/notifier"
+APP="$HOME/Applications/AI 团队看板.app"
+BUNDLE_ID="local.xay.board-notifier"
+TMP="$(mktemp -d)"
+trap 'rm -rf "$TMP"' EXIT
+
+# 图标：1024 PNG → iconset → icns
+mkdir -p "$TMP/icon.iconset"
+for s in 16 32 128 256 512; do
+  sips -z $s $s "$ASSETS/icon_1024.png" --out "$TMP/icon.iconset/icon_${s}x${s}.png" >/dev/null
+  sips -z $((s*2)) $((s*2)) "$ASSETS/icon_1024.png" --out "$TMP/icon.iconset/icon_${s}x${s}@2x.png" >/dev/null
+done
+iconutil -c icns "$TMP/icon.iconset" -o "$TMP/AppIcon.icns"
+
+build_swift() {
+  command -v swiftc >/dev/null 2>&1 || { echo "未找到 swiftc" >&2; return 1; }
+  local A="$TMP/app.app" exe="BoardNotifier"
+  mkdir -p "$A/Contents/MacOS" "$A/Contents/Resources"
+  swiftc -O -swift-version 5 -target "$(uname -m)-apple-macos12" \
+    -o "$A/Contents/MacOS/$exe" "$ASSETS/Notifier.swift" || return 1
+  cp "$TMP/AppIcon.icns" "$A/Contents/Resources/AppIcon.icns"
+  cat > "$A/Contents/Info.plist" <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleIdentifier</key><string>$BUNDLE_ID</string>
+  <key>CFBundleName</key><string>AI 团队看板</string>
+  <key>CFBundleDisplayName</key><string>AI 团队看板</string>
+  <key>CFBundleExecutable</key><string>$exe</string>
+  <key>CFBundleIconFile</key><string>AppIcon</string>
+  <key>CFBundlePackageType</key><string>APPL</string>
+  <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
+  <key>CFBundleShortVersionString</key><string>2.0</string>
+  <key>CFBundleVersion</key><string>$(date +%Y%m%d%H%M)</string>
+  <key>CFBundleDevelopmentRegion</key><string>zh_CN</string>
+  <key>LSMinimumSystemVersion</key><string>12.0</string>
+  <key>LSUIElement</key><true/>
+  <key>NSPrincipalClass</key><string>NSApplication</string>
+</dict>
+</plist>
+EOF
+  codesign --force -s - "$A" >/dev/null 2>&1 || return 1
+}
+
+build_applescript() {
+  osacompile -o "$TMP/app.app" "$ASSETS/notifier.applescript"
+  cp "$TMP/AppIcon.icns" "$TMP/app.app/Contents/Resources/applet.icns"
+  local P="$TMP/app.app/Contents/Info.plist"
+  plutil -replace CFBundleIdentifier -string "$BUNDLE_ID" "$P"
+  plutil -replace CFBundleName -string "AI 团队看板" "$P"
+  plutil -replace LSUIElement -bool true "$P"   # 不在程序坞里闪现
+  codesign --force --deep -s - "$TMP/app.app" >/dev/null 2>&1 || true
+}
+
+kind="原生 Swift 版"
+if [ "${XAY_NOTIFIER_APPLESCRIPT:-0}" = "1" ] || ! build_swift; then
+  [ "${XAY_NOTIFIER_APPLESCRIPT:-0}" = "1" ] || echo "Swift 版编译失败，改装 AppleScript 版" >&2
+  rm -rf "$TMP/app.app"
+  build_applescript
+  kind="AppleScript 版"
+fi
+
+mkdir -p "$HOME/Applications"
+pkill -f "$APP/Contents/MacOS/" 2>/dev/null || true   # 旧实例还在跑时先结束
+rm -rf "$APP"
+mv "$TMP/app.app" "$APP"
+touch "$APP"
+/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f "$APP" >/dev/null 2>&1 || true
+mkdir -p "$HOME/.xay/notify"
+echo "已安装（$kind）：$APP"

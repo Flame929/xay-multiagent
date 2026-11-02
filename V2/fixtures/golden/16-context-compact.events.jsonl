@@ -1,0 +1,5 @@
+{"ts":1793301250,"by":"lead:cv_demo16","type":"conv.begun","subject":"cv_demo16","ws":"ws_demo01","conv":"cv_demo16","data":{"title":"记忆压缩","lead_kind":"claude","aliases":["claude:demo-16"],"cwd":"/work/demo-shop"}}
+{"ts":1793301260,"by":"lead:cv_demo16","type":"employee.hired","subject":"em_codex01","ws":"ws_demo01","conv":"cv_demo16","data":{"agent":"codex"}}
+{"ts":1793301270,"by":"station:em_codex01","type":"context.updated","subject":"em_codex01","ws":"ws_demo01","conv":"cv_demo16","data":{"used":124000,"window":200000,"pct":62,"source":"codex_last","estimated":false}}
+{"ts":1793301280,"by":"office","type":"context.compact_requested","subject":"em_codex01","ws":"ws_demo01","conv":"cv_demo16","data":{"reason":"threshold","method":"native"}}
+{"ts":1793301290,"by":"station:em_codex01","type":"context.compacted","subject":"em_codex01","ws":"ws_demo01","conv":"cv_demo16","data":{"method":"native","before_pct":62,"after_pct":18,"segment":2}}

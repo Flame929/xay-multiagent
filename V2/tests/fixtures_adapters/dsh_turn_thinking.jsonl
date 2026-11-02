@@ -1,0 +1,8 @@
+{"type": "session", "sessionId": "{SESSION}", "cwd": "{CWD}"}
+{"type": "status", "phase": "turn_start", "turn": "{TURN}"}
+{"type": "status", "phase": "step_start", "turn": "{TURN}", "step": 1}
+{"type": "thinking", "text": "The user typed \"/compact\" — a compact command. There's no tool for that; it's likely a harness command handled elsewhere. I should respond briefly. Possibly the command isn't supported; just acknowledge. Hmm, in many har"}
+{"type": "text", "text": "/compact 不是我可调用的命令，当前会话没有内置的压缩工具；历史上下文得以保留，暗号仍是 PINEAPPLE-42。\n\n如果需要，我可以把当前对话要点整理成一份简短摘要，供后续继续使用。"}
+{"type": "status", "phase": "step_end", "turn": "{TURN}", "step": 1, "usage": {"inputTokens": 78, "outputTokens": 151, "totalTokens": 20709, "cacheReadTokens": 20480}}
+{"type": "status", "phase": "turn_end", "turn": "{TURN}", "reason": {"kind": "completed"}}
+{"type": "final", "text": "/compact 不是我可调用的命令，当前会话没有内置的压缩工具；历史上下文得以保留，暗号仍是 PINEAPPLE-42。\n\n如果需要，我可以把当前对话要点整理成一份简短摘要，供后续继续使用。"}

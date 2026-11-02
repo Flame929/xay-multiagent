@@ -1,0 +1,3396 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI 团队看板</title>
+  <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjEwMCAxMDAgODI0IDgyNCI+IDxkZWZzPjxjbGlwUGF0aCBpZD0iciI+PHJlY3QgeD0iMTAwIiB5PSIxMDAiIHdpZHRoPSI4MjQiIGhlaWdodD0iODI0IiByeD0iMTg1Ii8+PC9jbGlwUGF0aD4gPGZpbHRlciBpZD0ic2giIHg9Ii0xMCUiIHk9Ii0xMCUiIHdpZHRoPSIxMjAlIiBoZWlnaHQ9IjEyNSUiPjxmZURyb3BTaGFkb3cgZHg9IjAiIGR5PSIxMCIgc3RkRGV2aWF0aW9uPSIxNCIgZmxvb2Qtb3BhY2l0eT0iMC4yMiIvPjwvZmlsdGVyPjwvZGVmcz4gPHJlY3QgeD0iMTAwIiB5PSIxMDAiIHdpZHRoPSI4MjQiIGhlaWdodD0iODI0IiByeD0iMTg1IiBmaWxsPSIjZmZmZmZmIi8+IDxnIGNsaXAtcGF0aD0idXJsKCNyKSI+IDxyZWN0IHg9IjEwMCIgeT0iMTAwIiB3aWR0aD0iNDEyIiBoZWlnaHQ9IjQxMiIgZmlsbD0iI0ZCRjNFRSIvPiA8cmVjdCB4PSI1MTIiIHk9IjEwMCIgd2lkdGg9IjQxMiIgaGVpZ2h0PSI0MTIiIGZpbGw9IiNGNEY0RjUiLz4gPHJlY3QgeD0iMTAwIiB5PSI1MTIiIHdpZHRoPSI0MTIiIGhlaWdodD0iNDEyIiBmaWxsPSIjRUVGMkZGIi8+IDxyZWN0IHg9IjUxMiIgeT0iNTEyIiB3aWR0aD0iNDEyIiBoZWlnaHQ9IjQxMiIgZmlsbD0iI0Y0RjBGQSIvPiA8L2c+IDxwYXRoIGQ9Ik01MTIgMTAwIFY5MjQgTTEwMCA1MTIgSDkyNCIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjEwIi8+IDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDE5MCAxOTApIHNjYWxlKDkuNjY2NjY2NjY2NjY2NjY2KSI+PHBhdGggZD0ibTQuNzE0NCAxNS45NTU1IDQuNzE3NC0yLjY0NzEuMDc5LS4yMzA3LS4wNzktLjEyNzVoLS4yMzA3bC0uNzg5My0uMDQ4Ni0yLjY5NTYtLjA3MjktMi4zMzc1LS4wOTcxLTIuMjY0Ni0uMTIxNC0uNTcwNy0uMTIxNS0uNTM0My0uNzA0Mi4wNTQ2LS4zNTIyLjQ3OTctLjMyMTguNjg2LjA2MDggMS41MTc5LjEwMzIgMi4yNzY3LjE1NzggMS42NTE0LjA5NzIgMi40NDY4LjI1NWguMzg4NmwuMDU0Ni0uMTU3OS0uMTMzNi0uMDk3MS0uMTAzMi0uMDk3Mkw2Ljk3MyA5LjgzNTZsLTIuNTUtMS42ODc5LTEuMzM1Ni0uOTcxNC0uNzIyNS0uNDkxOC0uMzY0My0uNDYxNC0uMTU3OC0xLjAwNzguNjU1Ny0uNzIyNS44ODAzLjA2MDcuMjI0Ni4wNjA3Ljg5MjUuNjg2IDEuOTA2NCAxLjQ3NTQgMi40ODkzIDEuODMzNi4zNjQzLjMwMzUuMTQ1Ny0uMTAzMi4wMTgyLS4wNzI4LS4xNjQtLjI3MzMtMS4zNTM5LTIuNDQ2Ny0xLjQ0NS0yLjQ4OTMtLjY0MzUtMS4wMzItLjE3LS42MTk0Yy0uMDYwNy0uMjU1LS4xMDMyLS40Njc0LS4xMDMyLS43Mjg1TDYuMjg3LjEzMzUgNi42OTk3IDBsLjk5NTcuMTMzNi40MTkuMzY0Mi42MTkyIDEuNDE0NyAxLjAwMTggMi4yMjgyIDEuNTU0MyAzLjAyOTYuNDU1My44OTg1LjI0MjkuODMxOC4wOTEuMjU1aC4xNTc5di0uMTQ1N2wuMTI3NS0xLjcwNi4yMzY4LTIuMDk0Ny4yMzA3LTIuNjk1Ny4wNzg5LS43NTg5LjM3NjQtLjkxMDcuNzQ2OC0uNDkxOC41ODI4LjI3OTMuNDc5Ny42ODYtLjA2NjguNDQzMy0uMjg1MyAxLjg1MTctLjU1ODYgMi45MDIxLS4zNjQzIDEuOTQyOWguMjEyNWwuMjQyOS0uMjQyOS45ODM1LTEuMzA1MyAxLjY1MTQtMi4wNjQzLjcyODYtLjgxOTYuODUtLjkwNDYuNTQ2NC0uNDMxMWgxLjAzMjFsLjc1OSAxLjEyOTMtLjM0IDEuMTY1Ny0xLjA2MjUgMS4zNDc4LS44ODA0IDEuMTQxNC0xLjI2MjggMS43LS43ODkzIDEuMzYuMDcyOS4xMDkzLjE4ODItLjAxODMgMi44NTM1LS42MDcgMS41NDIxLS4yNzk0IDEuODM5Ni0uMzE1Ny44MzE4LjM4ODYuMDkxLjM5NDYtLjMyNzguODA3NS0xLjk2Ny40ODU3LTIuMzA3Mi40NjE0LTMuNDM2NC44MTM2LS4wNDI1LjAzMDQuMDQ4Ni4wNjA3IDEuNTQ4Mi4xNDU3LjY2MTguMDM2NGgxLjYyMWwzLjAxNzUuMjI0Ny43ODkyLjUyMi40NzM2LjYzNzYtLjA3OS40ODU3LTEuMjE0Mi42MTkzLTEuNjM5My0uMzg4Ni0zLjgyNS0uOTEwNy0xLjMxMTMtLjMyNzloLS4xODIydi4xMDkzbDEuMDkyOSAxLjA2ODYgMi4wMDM1IDEuODA5MiAyLjUwNzUgMi4zMzE0LjEyNzUuNTc2OC0uMzIxOC40NTU0LS4zNC0uMDQ4Ni0yLjIwMzktMS42NTc1LS44NS0uNzQ2OC0xLjkyNDYtMS42MjFoLS4xMjc1di4xN2wuNDQzMi42NDk2IDIuMzQzNiAzLjUyMTQuMTIxNCAxLjA4MDctLjE3LjM1MjEtLjYwNzEuMjEyNS0uNjY3OS0uMTIxNC0xLjM3MjEtMS45MjQ2TDE0LjM4IDE3Ljk1OWwtMS4xNDE0LTEuOTQyOC0uMTM5Ny4wNzktLjY3NCA3LjI1NTItLjMxNTYuMzcwMy0uNzI4Ni4yNzkzLS42MDcxLS40NjE0LS4zMjE4LS43NDY4LjMyMTgtMS40NzUzLjM4ODYtMS45MjQ2LjMxNTctMS41My4yODUzLTEuOTAwNC4xNy0uNjMxNC0uMDEyMS0uMDQyNS0uMTM5Ny4wMTgyLTEuNDMyOCAxLjk2NzItMi4xNzk2IDIuOTQ0Ni0xLjcyNDMgMS44NDU2LS40MTI4LjE2NC0uNzE2NC0uMzcwNC4wNjY3LS42NjE4LjQwMDgtLjU4ODkgMi4zODYtMy4wMzU3IDEuNDM4OS0xLjg4Mi45MjktMS4wODY4LS4wMDYyLS4xNTc5aC0uMDU0NmwtNi4zMzg1IDQuMTE2NC0xLjEyOTMuMTQ1Ny0uNDg1Ny0uNDU1NC4wNjA4LS43NDY3LjIzMDctLjI0MjkgMS45MDY0LTEuMzExNFoiIGZpbGw9IiNEOTc3NTciLz48L2c+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoNjAyIDE5MCkgc2NhbGUoMTEuNikiPjxwYXRoIGQ9Ik0xMS4yNDggMTguMjVxLS44MjUgMC0xLjU2OC0uMzE0YTQuMyA0LjMgMCAwIDEtMS4zMi0uODc0IDQgNCAwIDAgMS0xLjMwNC4yMTQgNCA0IDAgMCAxLTIuMDQ2LS41NDQgNC4yNyA0LjI3IDAgMCAxLTEuNTE4LTEuNDg1IDQgNCAwIDAgMS0uNTYtMi4wOTVxMC0uNDguMTMxLTEuMDRBNC40IDQuNCAwIDAgMSAyLjA0IDEwLjcxYTQuMDcgNC4wNyAwIDAgMSAuMDE3LTMuNCA0LjIgNC4yIDAgMCAxIDEuMDU2LTEuNDE4IDMuOCAzLjggMCAwIDEgMS42LS44NDIgMy45IDMuOSAwIDAgMSAuNzYtMS42ODNxLjU5My0uNzU5IDEuNDUxLTEuMTg4YTQuMDQgNC4wNCAwIDAgMSAxLjgzMi0uNDI5cS44MjUgMCAxLjU2Ny4zMTMuNzQyLjMxNCAxLjMyLjg3NWE0IDQgMCAwIDEgMS4zMDQtLjIxNXExLjEwNiAwIDIuMDQ2LjU0NWE0LjE0IDQuMTQgMCAwIDEgMS41MDEgMS40ODVxLjU3OC45NDEuNTc4IDIuMDk1IDAgLjQ4LS4xMzIgMS4wNC42Ni42MSAxLjAyMyAxLjQxOS4zNjMuNzkyLjM2MyAxLjY2NiAwIC44OTItLjM4IDEuNzE3YTQuMyA0LjMgMCAwIDEtMS4wNzIgMS40MzUgMy44IDMuOCAwIDAgMS0xLjU4NC44MjUgMy44IDMuOCAwIDAgMS0uNzc1IDEuNjgzIDQuMDYgNC4wNiAwIDAgMS0xLjQzNiAxLjE4OCA0LjA0IDQuMDQgMCAwIDEtMS44MzIuNDI5bS00LjA3Ni0yLjA2MnEuODI1IDAgMS40MzUtLjM0N2wzLjEwMy0xLjc4MmEuMzYuMzYgMCAwIDAgLjE2NC0uMzEzdi0xLjQyTDcuODgxIDE0LjYyYS42Ny42NyAwIDAgMS0uNzI2IDBsLTMuMTE4LTEuNzk4YS41LjUgMCAwIDEtLjAxNy4xMTV2LjE5OHEwIC44NDEuMzk2IDEuNTUxLjQxMy42OTMgMS4xMzkgMS4wODlhMy4yIDMuMiAwIDAgMCAxLjYxNy40MTJtLjE2NS0yLjY5YS40LjQgMCAwIDAgLjE4MS4wNXEuMDgzIDAgLjE2NS0uMDVsMS4yMzgtLjcxLTMuOTc3LTIuMzFhLjcuNyAwIDAgMS0uMzYzLS42NDN2LTMuNThxLS44MjUuMzYyLTEuMzIgMS4xMjJhMi45IDIuOSAwIDAgMC0uNDk1IDEuNjVxMCAuODA5LjQxMyAxLjU1LjQxMi43NDMgMS4wNzIgMS4xMjN6bTMuOTEgMy42NjNxLjg3NSAwIDEuNTg1LS4zOTZhMi45NiAyLjk2IDAgMCAwIDEuNTM0LTIuNjR2LTMuNTY0YS4zMi4zMiAwIDAgMC0uMTY1LS4yOTdsLTEuMjU0LS43MjZ2NC42MDRhLjcuNyAwIDAgMS0uMzYzLjY0M2wtMy4xMTkgMS43OTlhMyAzIDAgMCAwIDEuNzgzLjU3N20uNjI3LTYuMDM5VjguODc4TDEwLjAxIDcuODIyIDguMTI5IDguODc4djIuMjQ0bDEuODgxIDEuMDU2ek03LjA1NyA1Ljg1OWEuNy43IDAgMCAxIC4zNjMtLjY0NGwzLjExOS0xLjc5OGEzIDMgMCAwIDAtMS43ODItLjU3OHEtLjg3NCAwLTEuNTg0LjM5NkEyLjk2IDIuOTYgMCAwIDAgNi4wNSA0LjMyNGEzLjA3IDMuMDcgMCAwIDAtLjM5NiAxLjU1MXYzLjU0N3EwIC4xOTkuMTY1LjMxNGwxLjIzNy43MjZ6bTguMzgzIDcuODg3cS44MjUtLjM2NCAxLjMwMy0xLjEyMy40OTUtLjc1OC40OTUtMS42NWEzLjE1IDMuMTUgMCAwIDAtLjQxMi0xLjU1cS0uNDEzLS43NDMtMS4wNzMtMS4xMjNsLTMuMDg2LTEuNzgycS0uMDk5LS4wNjUtLjE4MS0uMDQ5YS4zLjMgMCAwIDAtLjE2NS4wNWwtMS4yMzguNjkyIDMuOTkzIDIuMzI3YS42LjYgMCAwIDEgLjI2NC4yNjQuNjQuNjQgMCAwIDEgLjEuMzYzem0tMy4zMTctOC4zODJhLjYzLjYzIDAgMCAxIC43MjYgMGwzLjEzNSAxLjgzMXYtLjI5N3EwLS43OTItLjM5Ni0xLjUwMWEyLjg2IDIuODYgMCAwIDAtMS4xMDUtMS4xNTVxLS43MS0uNDMtMS42NS0uNDMtLjgyNSAwLTEuNDM2LjM0N0w4LjI5NCA1Ljk0MWEuMzYuMzYgMCAwIDAtLjE2NS4zMTR2MS40MTh6IiBmaWxsPSIjMDAwMDAwIi8+PC9nPjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDE5MCA2MDIpIHNjYWxlKDkuNjY2NjY2NjY2NjY2NjY2KSI+PHBhdGggZD0iTTIzLjc0OCA0LjY1MWMtLjI1NC0uMTI0LS4zNjQuMTEzLS41MTIuMjMzLS4wNTEuMDQtLjA5NC4wOS0uMTM3LjEzNy0uMzcyLjM5Ny0uODA2LjY1Ny0xLjM3My42MjYtLjgyOS0uMDQ2LTEuNTM3LjIxNC0yLjE2My44NDgtLjEzMy0uNzgyLS41NzUtMS4yNDgtMS4yNDctMS41NDgtLjM1Mi0uMTU1LS43MDgtLjMxMS0uOTU1LS42NS0uMTcyLS4yNC0uMjE5LS41MDktLjMwNS0uNzc0LS4wNTUtLjE2LS4xMS0uMzIzLS4yOTMtLjM1LS4yLS4wMzEtLjI3OC4xMzYtLjM1Ni4yNzYtLjMxMy41NzItLjQzNCAxLjIwMi0uNDIyIDEuODQuMDI3IDEuNDM2LjYzMyAyLjU4IDEuODM4IDMuMzkzLjEzNy4wOTQuMTcyLjE4Ny4xMjkuMzIzLS4wODIuMjgtLjE4LjU1My0uMjY2LjgzMy0uMDU1LjE3OS0uMTM3LjIxOC0uMzI4LjE0YTUuNSA1LjUgMCAwIDEtMS43MzctMS4xNzljLS44NTctLjgyOC0xLjYzMS0xLjc0My0yLjU5Ny0yLjQ2YTEyIDEyIDAgMCAwLS42ODktLjQ3Yy0uOTg1LS45NTcuMTMtMS43NDMuMzg3LTEuODM2LjI3LS4wOTguMDk0LS40MzMtLjc3OC0uNDI4LS44NzIuMDAzLTEuNjcuMjk1LTIuNjg3LjY4NWEzIDMgMCAwIDEtLjQ2NS4xMzYgOS42IDkuNiAwIDAgMC0yLjg4My0uMTAxYy0xLjg4NS4yMS0zLjM5IDEuMS00LjQ5NyAyLjYyMkMuMDgyIDguNzc2LS4yMzEgMTAuODU0LjE1MiAxMy4wMmMuNDAzIDIuMjg0IDEuNTY4IDQuMTc1IDMuMzYgNS42NTMgMS44NTcgMS41MzMgMy45OTcgMi4yODQgNi40MzggMi4xNCAxLjQ4Mi0uMDg1IDMuMTMyLS4yODQgNC45OTQtMS44Ni40Ny4yMzQuOTYyLjMyOCAxLjc4LjM5OC42MjkuMDU4IDEuMjM1LS4wMzEgMS43MDUtLjEyOS43MzUtLjE1NS42ODQtLjgzNi40MTgtLjk2MS0yLjE1NS0xLjAwNC0xLjY4Mi0uNTk1LTIuMTEyLS45MjYgMS4wOTUtMS4yOTUgMi43NjgtMy41OTggMy4yODQtNi43MzMuMDUtLjM0Ni4xMTUtLjgzNC4xMDgtMS4xMTQtLjAwNC0uMTcxLjAzNS0uMjM4LjIzLS4yNTdhNC4yIDQuMiAwIDAgMCAxLjU0NS0uNDc1YzEuMzk3LS43NjMgMS45Ni0yLjAxNiAyLjA5My0zLjUxNy4wMi0uMjMtLjAwNC0uNDY3LS4yNDctLjU4OE0xMS41OCAxOC4xNjhjLTIuMDg4LTEuNjQyLTMuMTAxLTIuMTgzLTMuNTItMi4xNi0uMzkuMDI0LS4zMi40NzItLjIzNC43NjMuMDkuMjg4LjIwNy40ODcuMzcxLjc0LjExNC4xNjcuMTkyLjQxNi0uMTEzLjYwMy0uNjczLjQxNi0xLjg0Mi0uMTQtMS44OTctLjE2OC0xLjM2MS0uODAxLTIuNS0xLjg2LTMuMzAxLTMuMzA2LS43NzUtMS4zOTMtMS4yMjUtMi44ODgtMS4yOTktNC40ODItLjAyLS4zODUuMDk0LS41MjIuNDc3LS41OTJhNC43IDQuNyAwIDAgMSAxLjUzLS4wMzhjMi4xMzEuMzExIDMuOTQ2IDEuMjY0IDUuNDY3IDIuNzc0Ljg2OC44NiAxLjUyNSAxLjg4NyAyLjIwMiAyLjg5LjcyIDEuMDY2IDEuNDk0IDIuMDgyIDIuNDggMi45MTUuMzQ4LjI5MS42MjYuNTEzLjg5Mi42NzctLjgwMi4wOS0yLjE0LjEwOS0zLjA1NS0uNjE1em0xLjAwMS02LjQ0YS4zMDYuMzA2IDAgMCAxIC40MTUtLjI4Ny4zLjMgMCAwIDEgLjExMy4wNzQuMy4zIDAgMCAxIC4wODYuMjE0YzAgLjE3LS4xMzYuMzA3LS4zMDguMzA3YS4zMDMuMzAzIDAgMCAxLS4zMDYtLjMwN20zLjExIDEuNTk2Yy0uMi4wODEtLjQuMTUxLS41OTEuMTZhMS4yNSAxLjI1IDAgMCAxLS43OTgtLjI1NGMtLjI3NC0uMjMtLjQ3LS4zNTgtLjU1MS0uNzU4YTEuNyAxLjcgMCAwIDEgLjAxNS0uNTg4Yy4wNy0uMzI3LS4wMDctLjUzNy0uMjM4LS43MjctLjE4OC0uMTU2LS40MjYtLjE5OS0uNjg5LS4xOTlhLjYuNiAwIDAgMS0uMjU0LS4wNzguMjUzLjI1MyAwIDAgMS0uMTE0LS4zNTggMSAxIDAgMCAxIC4xOTItLjIxYy4zNTYtLjIwMi43NjctLjEzNiAxLjE0Ni4wMTYuMzUyLjE0NC42MTguNDA4IDEuMDAxLjc4Mi4zOTIuNDUxLjQ2Mi41NzYuNjg1LjkxNS4xNzYuMjY0LjMzNi41MzYuNDQ2Ljg0OC4wNjYuMTk0LS4wMi4zNTMtLjI1LjQ1IiBmaWxsPSIjNTc4NkZFIi8+PC9nPjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDYwMiA2MDIpIHNjYWxlKDkuNjY2NjY2NjY2NjY2NjY2KSI+PHBhdGggZD0iTTExLjA0IDE5LjMyUTEyIDIxLjUxIDEyIDI0cTAtMi40OS45My00LjY4Ljk2LTIuMTkgMi41OC0zLjgxdDMuODEtMi41NVEyMS41MSAxMiAyNCAxMnEtMi40OSAwLTQuNjgtLjkzYTEyLjMgMTIuMyAwIDAgMS0zLjgxLTIuNTggMTIuMyAxMi4zIDAgMCAxLTIuNTgtMy44MVExMiAyLjQ5IDEyIDBxMCAyLjQ5LS45NiA0LjY4LS45MyAyLjE5LTIuNTUgMy44MWExMi4zIDEyLjMgMCAwIDEtMy44MSAyLjU4UTIuNDkgMTIgMCAxMnEyLjQ5IDAgNC42OC45NiAyLjE5LjkzIDMuODEgMi41NXQyLjU1IDMuODEiIGZpbGw9IiM4RTc1QjIiLz48L2c+IDwvc3ZnPg==">
+  <style>
+    :root {
+      --bg-page: #ffffff;
+      --bg-sidebar: #f8f9fa;
+      --bg-card: #f4f5f7;
+      --bg-card-subtle: #ffffff;
+      --bg-card-hover: #ebeef2;
+      --bg-hover: #eaedf2;
+      --border-color: #e5e7eb;
+      --border-subtle: #f0f2f5;
+      --text-main: #111827;
+      --text-muted: #6b7280;
+      --text-subtle: #9ca3af;
+
+      --agent-codex: #10a37f;
+      --agent-dsh: #4d6bfe;
+      --agent-agy: #9b72cb;
+
+      --status-running: #2563eb;
+      --status-done: #16a34a;
+      --status-failed: #dc2626;
+      --status-queued: #6b7280;
+      --status-pending: #9ca3af;
+      --status-stopped: #d97706;
+      --status-skipped: #9ca3af;
+
+      --notice-bg: #fef3c7;
+      --notice-text: #92400e;
+      --notice-border: #fcd34d;
+
+      --code-bg: #f1f3f5;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-page: #0d1117;
+        --bg-sidebar: #161b22;
+        --bg-card: #1c2128;
+        --bg-card-subtle: #21262d;
+        --bg-card-hover: #262c36;
+        --bg-hover: #262c36;
+        --border-color: #30363d;
+        --border-subtle: #21262d;
+        --text-main: #f0f6fc;
+        --text-muted: #8b949e;
+        --text-subtle: #6e7681;
+
+        --notice-bg: #382405;
+        --notice-text: #fde68a;
+        --notice-border: #78350f;
+
+        --code-bg: #161b22;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, "PingFang SC", system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-page);
+      color: var(--text-main);
+      line-height: 1.5;
+      font-size: 14px;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* Layout */
+    .app-container {
+      display: flex;
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 220px;
+      background-color: var(--bg-sidebar);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      padding: 24px 14px;
+    }
+
+    .brand-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 10px 24px 10px;
+      letter-spacing: -0.3px;
+    }
+
+    .brand-logo-img { background: none !important; padding: 0 !important; overflow: hidden; }
+    .brand-logo-img svg { width: 100%; height: 100%; display: block; }
+    .brand-logo {
+      width: 26px;
+      height: 26px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #10a37f 0%, #4d6bfe 50%, #9b72cb 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 800;
+      font-size: 13px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+    }
+
+    .nav-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+      list-style: none;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.15s ease;
+      cursor: pointer;
+    }
+
+    .nav-item:hover {
+      background-color: var(--bg-hover);
+      color: var(--text-main);
+    }
+
+    .nav-item.active {
+      background-color: var(--bg-hover);
+      color: var(--text-main);
+      font-weight: 600;
+    }
+
+    .nav-item svg {
+      width: 18px;
+      height: 18px;
+      stroke-width: 2;
+    }
+
+    .sidebar-footer {
+      padding-top: 16px;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text-muted);
+      padding-left: 10px;
+    }
+
+    .conn-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: var(--status-done);
+      flex-shrink: 0;
+    }
+
+    .conn-dot.disconnected {
+      background-color: var(--status-failed);
+    }
+
+    /* Main Area */
+    .main-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 32px 48px;
+      max-width: 1320px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* Page Header */
+    .page-header {
+      margin-bottom: 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .page-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-main);
+      letter-spacing: -0.4px;
+      margin-bottom: 4px;
+    }
+
+    .page-subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      border-radius: 9999px;
+      padding: 7px 18px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.15s ease;
+      text-decoration: none;
+      outline: none;
+      line-height: 1.4;
+    }
+
+    .btn-primary {
+      background-color: #111827;
+      color: #ffffff;
+    }
+
+    .btn-primary:hover {
+      background-color: #27272a;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .btn-primary {
+        background-color: #f0f6fc;
+        color: #0d1117;
+      }
+      .btn-primary:hover {
+        background-color: #e6edf3;
+      }
+    }
+
+    .btn-secondary {
+      background-color: var(--bg-card-subtle);
+      border-color: var(--border-color);
+      color: var(--text-main);
+    }
+
+    .btn-secondary:hover {
+      background-color: var(--bg-hover);
+    }
+
+    .btn-danger {
+      background-color: var(--status-failed);
+      color: #ffffff;
+    }
+
+    .btn-danger:hover {
+      background-color: #b91c1c;
+    }
+
+    .btn-sm {
+      padding: 4px 12px;
+      font-size: 12px;
+    }
+
+    /* Section Groups */
+    .task-group {
+      margin-bottom: 36px;
+    }
+
+    .group-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .group-title .count {
+      font-size: 12px;
+      background: var(--bg-hover);
+      padding: 1px 7px;
+      border-radius: 10px;
+      color: var(--text-muted);
+    }
+
+    .cards-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* Mission Card */
+    .mission-card {
+      background-color: var(--bg-card);
+      border-radius: 16px;
+      padding: 20px 24px;
+      cursor: pointer;
+      transition: transform 0.12s ease, box-shadow 0.12s ease;
+      border: 1px solid transparent;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .mission-card:hover {
+      background-color: var(--bg-card-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+    }
+
+    .card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .card-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .mission-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-main);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .card-meta {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 13px;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    /* Progress Bar */
+    .progress-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    .mini-progress-bar {
+      width: 70px;
+      height: 6px;
+      background-color: var(--border-color);
+      border-radius: 999px;
+      overflow: hidden;
+      display: flex;
+    }
+
+    .mini-progress-fill {
+      background-color: var(--status-done);
+      height: 100%;
+      border-radius: 999px;
+      transition: width 0.3s ease;
+    }
+
+    /* Subtasks in Mission Card */
+    .card-subtasks {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding-left: 20px;
+      border-left: 2px solid var(--border-color);
+      margin-left: 5px;
+    }
+
+    .subtask-preview-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+      gap: 16px;
+    }
+
+    .subtask-preview-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .subtask-name {
+      color: var(--text-main);
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .subtask-preview-right {
+      color: var(--text-muted);
+      font-size: 12px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .more-subtasks-tag {
+      font-size: 12px;
+      color: var(--text-subtle);
+      padding-top: 2px;
+    }
+
+    /* Notice Banner */
+    .notice-bar {
+      background-color: var(--notice-bg);
+      color: var(--notice-text);
+      border: 1px solid var(--notice-border);
+      padding: 8px 12px;
+      border-radius: 10px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* AI Badge */
+    .ai-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 7px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #ffffff;
+      line-height: 1.2;
+      flex-shrink: 0;
+    }
+
+    .ai-codex { background-color: var(--agent-codex); }
+    .ai-dsh { background-color: var(--agent-dsh); }
+    .ai-agy { background-color: var(--agent-agy); }
+
+    /* Status Dot */
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: inline-block;
+    }
+
+    .status-dot.running {
+      background-color: var(--status-running);
+      box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.7);
+      animation: pulse-ring 1.8s infinite;
+    }
+
+    .status-dot.done { background-color: var(--status-done); }
+    .status-dot.failed, .status-dot.timeout, .status-dot.stale { background-color: var(--status-failed); }
+    .status-dot.stopped { background-color: var(--status-stopped); }
+    .status-dot.queued { background-color: var(--status-queued); border: 1px dashed var(--status-queued); }
+    .status-dot.pending, .status-dot.skipped { background-color: var(--status-pending); }
+
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.6); }
+      70% { transform: scale(1.15); box-shadow: 0 0 0 5px rgba(37, 99, 235, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+    }
+
+    /* Status Pill */
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 1.3;
+    }
+
+    .status-pill.running {
+      background-color: rgba(37, 99, 235, 0.1);
+      color: var(--status-running);
+    }
+    .status-pill.done {
+      background-color: rgba(22, 163, 74, 0.1);
+      color: var(--status-done);
+    }
+    .status-pill.failed, .status-pill.timeout, .status-pill.stale {
+      background-color: rgba(220, 38, 38, 0.1);
+      color: var(--status-failed);
+    }
+    .status-pill.stopped {
+      background-color: rgba(217, 119, 6, 0.1);
+      color: var(--status-stopped);
+    }
+    .status-pill.queued {
+      background-color: rgba(107, 114, 128, 0.1);
+      color: var(--status-queued);
+      border: 1px dashed var(--status-queued);
+    }
+    .status-pill.pending, .status-pill.skipped {
+      background-color: rgba(156, 163, 175, 0.1);
+      color: var(--status-pending);
+    }
+
+    /* Empty State */
+    .empty-state {
+      padding: 64px 20px;
+      text-align: center;
+      color: var(--text-muted);
+    }
+
+    .empty-icon {
+      width: 48px;
+      height: 48px;
+      stroke: var(--text-subtle);
+      margin: 0 auto 16px auto;
+      stroke-width: 1.5;
+    }
+
+    /* Task Detail Page */
+    .task-detail-header {
+      margin-bottom: 24px;
+    }
+
+    .back-btn-row {
+      margin-bottom: 16px;
+    }
+
+    .detail-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .detail-title-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .detail-meta-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-top: 10px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* Archify Swimlane Diagram */
+    .diagram-panel {
+      background-color: var(--bg-card-subtle);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 32px;
+      overflow-x: auto;
+      position: relative;
+    }
+
+    .diagram-svg-container {
+      min-width: 100%;
+    }
+
+    .diagram-legend {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      margin-top: 16px;
+      padding-top: 14px;
+      border-top: 1px dashed var(--border-color);
+      font-size: 12px;
+      color: var(--text-muted);
+      flex-wrap: wrap;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Subtask Cards Grid in Detail */
+    .subtask-cards-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 14px;
+    }
+
+    .subtask-card {
+      background-color: var(--bg-card);
+      border-radius: 14px;
+      padding: 16px 18px;
+      cursor: pointer;
+      transition: all 0.12s ease;
+      border: 1px solid transparent;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .subtask-card:hover {
+      background-color: var(--bg-card-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
+    .subtask-card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .subtask-card-action {
+      font-size: 13px;
+      color: var(--text-muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .subtask-card-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-subtle);
+      margin-top: 2px;
+    }
+
+    .round-tag {
+      background: var(--bg-hover);
+      padding: 1px 6px;
+      border-radius: 6px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* AI Members Page */
+    .agents-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+    }
+    .agents-grid > * { min-width: 0; }
+
+    .agent-card {
+      background-color: var(--bg-card);
+      border-radius: 16px;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .agent-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .agent-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 700;
+      font-size: 15px;
+      flex-shrink: 0;
+    }
+
+    .agent-name-role {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .agent-name-line {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .agent-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .agent-role {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .agent-model-tag {
+      font-size: 11px;
+      color: var(--text-subtle);
+      background: var(--bg-hover);
+      padding: 1px 6px;
+      border-radius: 4px;
+      display: inline-block;
+      width: fit-content;
+    }
+
+    .agent-section-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    /* Slots visual bar */
+    .slots-box {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .slots-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-main);
+    }
+
+    .slots-bar {
+      display: flex;
+      gap: 4px;
+      height: 8px;
+    }
+
+    .slot-cell {
+      flex: 1;
+      border-radius: 4px;
+      background-color: var(--border-color);
+      transition: background-color 0.2s;
+    }
+
+    .slot-cell.used {
+      background-color: currentColor;
+    }
+
+    .slot-cell.queued {
+      background-color: var(--status-queued);
+      opacity: 0.5;
+    }
+
+    /* Current work */
+    .current-work-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .current-work-item {
+      background-color: var(--bg-card-subtle);
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 13px;
+      border-left: 3px solid currentColor;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .current-work-mission {
+      font-size: 11px;
+      color: var(--text-subtle);
+    }
+
+    .current-work-now {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .idle-banner {
+      font-size: 13px;
+      color: var(--text-subtle);
+      padding: 10px 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Usage stats */
+    .usage-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      background: var(--bg-card-subtle);
+      padding: 12px;
+      border-radius: 10px;
+    }
+
+    .usage-col {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .usage-label {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .usage-val {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .usage-sub {
+      font-size: 11px;
+      color: var(--text-subtle);
+    }
+
+    /* Performance stats */
+    .perf-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      text-align: center;
+    }
+
+    .perf-box {
+      background: var(--bg-card-subtle);
+      padding: 8px 6px;
+      border-radius: 8px;
+    }
+
+    .perf-num {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .perf-lbl {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* Recent runs list */
+    .agent-recent-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .agent-recent-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 8px;
+      border-radius: 8px;
+      font-size: 12px;
+      cursor: pointer;
+      color: var(--text-main);
+      transition: background-color 0.1s;
+    }
+
+    .agent-recent-item:hover {
+      background-color: var(--bg-card-subtle);
+    }
+
+    /* History Page */
+    .history-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .filter-pill {
+      background-color: var(--bg-card);
+      border: 1px solid transparent;
+      padding: 5px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+
+    .filter-pill:hover {
+      background-color: var(--bg-hover);
+      color: var(--text-main);
+    }
+
+    .filter-pill.active {
+      background-color: #111827;
+      color: #ffffff;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .filter-pill.active {
+        background-color: #f0f6fc;
+        color: #0d1117;
+      }
+    }
+
+    .search-input {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 999px;
+      padding: 6px 16px;
+      font-size: 13px;
+      color: var(--text-main);
+      outline: none;
+      width: 220px;
+      transition: border-color 0.15s;
+    }
+
+    .search-input:focus {
+      border-color: var(--status-running);
+    }
+
+    /* History Table */
+    .history-table-card {
+      background-color: var(--bg-card-subtle);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .history-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13px;
+    }
+
+    .history-table th {
+      padding: 12px 18px;
+      background-color: var(--bg-sidebar);
+      color: var(--text-muted);
+      font-weight: 600;
+      border-bottom: 1px solid var(--border-color);
+      white-space: nowrap;
+    }
+
+    .history-table td {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border-color);
+      color: var(--text-main);
+    }
+
+    .history-table tbody tr {
+      cursor: pointer;
+      transition: background-color 0.1s;
+    }
+
+    .history-table tbody tr:hover {
+      background-color: var(--bg-hover);
+    }
+
+    .history-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* Right Drawer */
+    .drawer-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.4);
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+
+    .drawer-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .drawer {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 480px;
+      max-width: 100vw;
+      background-color: var(--bg-page);
+      box-shadow: -6px 0 24px rgba(0, 0, 0, 0.15);
+      z-index: 1001;
+      transform: translateX(100%);
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .drawer.open {
+      transform: translateX(0);
+    }
+
+    .drawer-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      flex-shrink: 0;
+    }
+
+    .drawer-header-info {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .drawer-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-main);
+      line-height: 1.3;
+    }
+
+    .drawer-tags-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .drawer-close-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--text-muted);
+      border: none;
+      background: transparent;
+      transition: background-color 0.15s;
+      flex-shrink: 0;
+    }
+
+    .drawer-close-btn:hover {
+      background-color: var(--bg-hover);
+      color: var(--text-main);
+    }
+
+    .drawer-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* Drawer Sections */
+    .drawer-section {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .drawer-sec-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .drawer-sec-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    /* Hero Now Doing */
+    .hero-now-box {
+      background: var(--bg-card);
+      border-radius: 14px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      border-left: 4px solid var(--status-running);
+    }
+
+    .hero-now-text {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .hero-now-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* Timeline */
+    .timeline-container {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .timeline-step-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: var(--bg-card);
+      font-size: 13px;
+      transition: background-color 0.1s;
+    }
+
+    .timeline-step-icon {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+      margin-top: 1px;
+      color: var(--text-muted);
+    }
+
+    .timeline-step-icon.active {
+      color: var(--status-running);
+    }
+
+    .timeline-step-icon.failed {
+      color: var(--status-failed);
+    }
+
+    .timeline-step-content {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .timeline-step-text {
+      color: var(--text-main);
+      word-break: break-word;
+    }
+
+    .timeline-step-text.failed {
+      color: var(--status-failed);
+    }
+
+    .timeline-step-raw {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+      background: var(--code-bg);
+      padding: 4px 8px;
+      border-radius: 6px;
+      margin-top: 4px;
+      word-break: break-all;
+      white-space: pre-wrap;
+    }
+
+    /* Switch toggle */
+    .switch-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text-muted);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .switch-wrap input {
+      cursor: pointer;
+    }
+
+    /* Markdown Report View */
+    .report-box {
+      background: var(--bg-card);
+      border-radius: 12px;
+      padding: 16px;
+      font-size: 13px;
+      color: var(--text-main);
+      line-height: 1.6;
+    }
+
+    .report-box h1, .report-box h2, .report-box h3 {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--text-main);
+    }
+
+    .report-box ul {
+      margin-left: 20px;
+      margin-bottom: 8px;
+    }
+
+    .report-box li {
+      margin-bottom: 4px;
+    }
+
+    .report-box p {
+      margin-bottom: 8px;
+    }
+
+    .report-box p:last-child {
+      margin-bottom: 0;
+    }
+
+    .report-box code {
+      background: var(--code-bg);
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+
+    /* Changed files tags */
+    .files-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .file-pill {
+      background: var(--bg-card);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Rounds switcher */
+    .rounds-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .round-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+
+    .round-btn:hover {
+      background: var(--bg-hover);
+      color: var(--text-main);
+    }
+
+    .round-btn.active {
+      background: #111827;
+      color: #ffffff;
+      border-color: #111827;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .round-btn.active {
+        background: #f0f6fc;
+        color: #0d1117;
+        border-color: #f0f6fc;
+      }
+    }
+
+    /* Collapsible Tech Details */
+    details.tech-details {
+      background: var(--bg-card);
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 13px;
+      border: 1px solid var(--border-color);
+    }
+
+    details.tech-details summary {
+      cursor: pointer;
+      font-weight: 600;
+      color: var(--text-muted);
+      outline: none;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tech-details-inner {
+      margin-top: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      border-top: 1px dashed var(--border-color);
+      padding-top: 12px;
+    }
+
+    .tech-row {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .tech-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .tech-val {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 11px;
+      color: var(--text-main);
+      background: var(--code-bg);
+      padding: 4px 8px;
+      border-radius: 6px;
+      word-break: break-all;
+    }
+
+    .stderr-pre {
+      max-height: 140px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      background: var(--code-bg);
+      padding: 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      color: var(--text-muted);
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: rgba(0, 0, 0, 0.45);
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-box {
+      background-color: var(--bg-page);
+      border-radius: 18px;
+      width: 90%;
+      max-width: 420px;
+      padding: 24px;
+      box-shadow: 0 12px 36px rgba(0,0,0,0.2);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      transform: scale(0.95);
+      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .modal-overlay.open .modal-box {
+      transform: scale(1);
+    }
+
+    .modal-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .modal-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    /* Toast */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 3000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+    }
+
+    .toast {
+      background-color: #111827;
+      color: #ffffff;
+      padding: 10px 20px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 500;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+      animation: toast-in 0.25s ease forwards;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .toast {
+        background-color: #f0f6fc;
+        color: #0d1117;
+      }
+    }
+
+    @keyframes toast-in {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .app-container {
+        flex-direction: column;
+      }
+      .sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+        padding: 12px 16px;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .brand-title {
+        padding: 0;
+        margin: 0;
+        font-size: 15px;
+      }
+      .nav-list {
+        flex-direction: row;
+        flex: initial;
+        gap: 6px;
+      }
+      .nav-item {
+        padding: 6px 10px;
+        font-size: 13px;
+      }
+      .sidebar-footer {
+        display: none;
+      }
+      .main-area {
+        padding: 16px;
+      }
+      .agents-grid {
+        grid-template-columns: 1fr;
+      }
+      .drawer {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="brand-title">
+        <div class="brand-logo brand-logo-img" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="100 100 824 824"> <defs><clipPath id="r"><rect x="100" y="100" width="824" height="824" rx="185"/></clipPath> <filter id="sh" x="-10%" y="-10%" width="120%" height="125%"><feDropShadow dx="0" dy="10" stdDeviation="14" flood-opacity="0.22"/></filter></defs> <rect x="100" y="100" width="824" height="824" rx="185" fill="#ffffff"/> <g clip-path="url(#r)"> <rect x="100" y="100" width="412" height="412" fill="#FBF3EE"/> <rect x="512" y="100" width="412" height="412" fill="#F4F4F5"/> <rect x="100" y="512" width="412" height="412" fill="#EEF2FF"/> <rect x="512" y="512" width="412" height="412" fill="#F4F0FA"/> </g> <path d="M512 100 V924 M100 512 H924" stroke="#ffffff" stroke-width="10"/> <g transform="translate(190 190) scale(9.666666666666666)"><path d="m4.7144 15.9555 4.7174-2.6471.079-.2307-.079-.1275h-.2307l-.7893-.0486-2.6956-.0729-2.3375-.0971-2.2646-.1214-.5707-.1215-.5343-.7042.0546-.3522.4797-.3218.686.0608 1.5179.1032 2.2767.1578 1.6514.0972 2.4468.255h.3886l.0546-.1579-.1336-.0971-.1032-.0972L6.973 9.8356l-2.55-1.6879-1.3356-.9714-.7225-.4918-.3643-.4614-.1578-1.0078.6557-.7225.8803.0607.2246.0607.8925.686 1.9064 1.4754 2.4893 1.8336.3643.3035.1457-.1032.0182-.0728-.164-.2733-1.3539-2.4467-1.445-2.4893-.6435-1.032-.17-.6194c-.0607-.255-.1032-.4674-.1032-.7285L6.287.1335 6.6997 0l.9957.1336.419.3642.6192 1.4147 1.0018 2.2282 1.5543 3.0296.4553.8985.2429.8318.091.255h.1579v-.1457l.1275-1.706.2368-2.0947.2307-2.6957.0789-.7589.3764-.9107.7468-.4918.5828.2793.4797.686-.0668.4433-.2853 1.8517-.5586 2.9021-.3643 1.9429h.2125l.2429-.2429.9835-1.3053 1.6514-2.0643.7286-.8196.85-.9046.5464-.4311h1.0321l.759 1.1293-.34 1.1657-1.0625 1.3478-.8804 1.1414-1.2628 1.7-.7893 1.36.0729.1093.1882-.0183 2.8535-.607 1.5421-.2794 1.8396-.3157.8318.3886.091.3946-.3278.8075-1.967.4857-2.3072.4614-3.4364.8136-.0425.0304.0486.0607 1.5482.1457.6618.0364h1.621l3.0175.2247.7892.522.4736.6376-.079.4857-1.2142.6193-1.6393-.3886-3.825-.9107-1.3113-.3279h-.1822v.1093l1.0929 1.0686 2.0035 1.8092 2.5075 2.3314.1275.5768-.3218.4554-.34-.0486-2.2039-1.6575-.85-.7468-1.9246-1.621h-.1275v.17l.4432.6496 2.3436 3.5214.1214 1.0807-.17.3521-.6071.2125-.6679-.1214-1.3721-1.9246L14.38 17.959l-1.1414-1.9428-.1397.079-.674 7.2552-.3156.3703-.7286.2793-.6071-.4614-.3218-.7468.3218-1.4753.3886-1.9246.3157-1.53.2853-1.9004.17-.6314-.0121-.0425-.1397.0182-1.4328 1.9672-2.1796 2.9446-1.7243 1.8456-.4128.164-.7164-.3704.0667-.6618.4008-.5889 2.386-3.0357 1.4389-1.882.929-1.0868-.0062-.1579h-.0546l-6.3385 4.1164-1.1293.1457-.4857-.4554.0608-.7467.2307-.2429 1.9064-1.3114Z" fill="#D97757"/></g><g transform="translate(602 190) scale(11.6)"><path d="M11.248 18.25q-.825 0-1.568-.314a4.3 4.3 0 0 1-1.32-.874 4 4 0 0 1-1.304.214 4 4 0 0 1-2.046-.544 4.27 4.27 0 0 1-1.518-1.485 4 4 0 0 1-.56-2.095q0-.48.131-1.04A4.4 4.4 0 0 1 2.04 10.71a4.07 4.07 0 0 1 .017-3.4 4.2 4.2 0 0 1 1.056-1.418 3.8 3.8 0 0 1 1.6-.842 3.9 3.9 0 0 1 .76-1.683q.593-.759 1.451-1.188a4.04 4.04 0 0 1 1.832-.429q.825 0 1.567.313.742.314 1.32.875a4 4 0 0 1 1.304-.215q1.106 0 2.046.545a4.14 4.14 0 0 1 1.501 1.485q.578.941.578 2.095 0 .48-.132 1.04.66.61 1.023 1.419.363.792.363 1.666 0 .892-.38 1.717a4.3 4.3 0 0 1-1.072 1.435 3.8 3.8 0 0 1-1.584.825 3.8 3.8 0 0 1-.775 1.683 4.06 4.06 0 0 1-1.436 1.188 4.04 4.04 0 0 1-1.832.429m-4.076-2.062q.825 0 1.435-.347l3.103-1.782a.36.36 0 0 0 .164-.313v-1.42L7.881 14.62a.67.67 0 0 1-.726 0l-3.118-1.798a.5.5 0 0 1-.017.115v.198q0 .841.396 1.551.413.693 1.139 1.089a3.2 3.2 0 0 0 1.617.412m.165-2.69a.4.4 0 0 0 .181.05q.083 0 .165-.05l1.238-.71-3.977-2.31a.7.7 0 0 1-.363-.643v-3.58q-.825.362-1.32 1.122a2.9 2.9 0 0 0-.495 1.65q0 .809.413 1.55.412.743 1.072 1.123zm3.91 3.663q.875 0 1.585-.396a2.96 2.96 0 0 0 1.534-2.64v-3.564a.32.32 0 0 0-.165-.297l-1.254-.726v4.604a.7.7 0 0 1-.363.643l-3.119 1.799a3 3 0 0 0 1.783.577m.627-6.039V8.878L10.01 7.822 8.129 8.878v2.244l1.881 1.056zM7.057 5.859a.7.7 0 0 1 .363-.644l3.119-1.798a3 3 0 0 0-1.782-.578q-.874 0-1.584.396A2.96 2.96 0 0 0 6.05 4.324a3.07 3.07 0 0 0-.396 1.551v3.547q0 .199.165.314l1.237.726zm8.383 7.887q.825-.364 1.303-1.123.495-.758.495-1.65a3.15 3.15 0 0 0-.412-1.55q-.413-.743-1.073-1.123l-3.086-1.782q-.099-.065-.181-.049a.3.3 0 0 0-.165.05l-1.238.692 3.993 2.327a.6.6 0 0 1 .264.264.64.64 0 0 1 .1.363zm-3.317-8.382a.63.63 0 0 1 .726 0l3.135 1.831v-.297q0-.792-.396-1.501a2.86 2.86 0 0 0-1.105-1.155q-.71-.43-1.65-.43-.825 0-1.436.347L8.294 5.941a.36.36 0 0 0-.165.314v1.418z" fill="#000000"/></g><g transform="translate(190 602) scale(9.666666666666666)"><path d="M23.748 4.651c-.254-.124-.364.113-.512.233-.051.04-.094.09-.137.137-.372.397-.806.657-1.373.626-.829-.046-1.537.214-2.163.848-.133-.782-.575-1.248-1.247-1.548-.352-.155-.708-.311-.955-.65-.172-.24-.219-.509-.305-.774-.055-.16-.11-.323-.293-.35-.2-.031-.278.136-.356.276-.313.572-.434 1.202-.422 1.84.027 1.436.633 2.58 1.838 3.393.137.094.172.187.129.323-.082.28-.18.553-.266.833-.055.179-.137.218-.328.14a5.5 5.5 0 0 1-1.737-1.179c-.857-.828-1.631-1.743-2.597-2.46a12 12 0 0 0-.689-.47c-.985-.957.13-1.743.387-1.836.27-.098.094-.433-.778-.428-.872.003-1.67.295-2.687.685a3 3 0 0 1-.465.136 9.6 9.6 0 0 0-2.883-.101c-1.885.21-3.39 1.1-4.497 2.622C.082 8.776-.231 10.854.152 13.02c.403 2.284 1.568 4.175 3.36 5.653 1.857 1.533 3.997 2.284 6.438 2.14 1.482-.085 3.132-.284 4.994-1.86.47.234.962.328 1.78.398.629.058 1.235-.031 1.705-.129.735-.155.684-.836.418-.961-2.155-1.004-1.682-.595-2.112-.926 1.095-1.295 2.768-3.598 3.284-6.733.05-.346.115-.834.108-1.114-.004-.171.035-.238.23-.257a4.2 4.2 0 0 0 1.545-.475c1.397-.763 1.96-2.016 2.093-3.517.02-.23-.004-.467-.247-.588M11.58 18.168c-2.088-1.642-3.101-2.183-3.52-2.16-.39.024-.32.472-.234.763.09.288.207.487.371.74.114.167.192.416-.113.603-.673.416-1.842-.14-1.897-.168-1.361-.801-2.5-1.86-3.301-3.306-.775-1.393-1.225-2.888-1.299-4.482-.02-.385.094-.522.477-.592a4.7 4.7 0 0 1 1.53-.038c2.131.311 3.946 1.264 5.467 2.774.868.86 1.525 1.887 2.202 2.89.72 1.066 1.494 2.082 2.48 2.915.348.291.626.513.892.677-.802.09-2.14.109-3.055-.615zm1.001-6.44a.306.306 0 0 1 .415-.287.3.3 0 0 1 .113.074.3.3 0 0 1 .086.214c0 .17-.136.307-.308.307a.303.303 0 0 1-.306-.307m3.11 1.596c-.2.081-.4.151-.591.16a1.25 1.25 0 0 1-.798-.254c-.274-.23-.47-.358-.551-.758a1.7 1.7 0 0 1 .015-.588c.07-.327-.007-.537-.238-.727-.188-.156-.426-.199-.689-.199a.6.6 0 0 1-.254-.078.253.253 0 0 1-.114-.358 1 1 0 0 1 .192-.21c.356-.202.767-.136 1.146.016.352.144.618.408 1.001.782.392.451.462.576.685.915.176.264.336.536.446.848.066.194-.02.353-.25.45" fill="#5786FE"/></g><g transform="translate(602 602) scale(9.666666666666666)"><path d="M11.04 19.32Q12 21.51 12 24q0-2.49.93-4.68.96-2.19 2.58-3.81t3.81-2.55Q21.51 12 24 12q-2.49 0-4.68-.93a12.3 12.3 0 0 1-3.81-2.58 12.3 12.3 0 0 1-2.58-3.81Q12 2.49 12 0q0 2.49-.96 4.68-.93 2.19-2.55 3.81a12.3 12.3 0 0 1-3.81 2.58Q2.49 12 0 12q2.49 0 4.68.96 2.19.93 3.81 2.55t2.55 3.81" fill="#8E75B2"/></g> </svg></div>
+        <span>AI 团队看板</span>
+      </div>
+      <ul class="nav-list">
+        <li>
+          <a class="nav-item active" href="#/" id="nav-tasks">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
+            <span>任务</span>
+          </a>
+        </li>
+        <li>
+          <a class="nav-item" href="#/agents" id="nav-agents">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a6.5 6.5 0 0 1 13 0"/></svg>
+            <span>AI 成员</span>
+          </a>
+        </li>
+        <li>
+          <a class="nav-item" href="#/history" id="nav-history">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span>历史</span>
+          </a>
+        </li>
+      </ul>
+      <div class="sidebar-footer">
+        <div class="conn-dot" id="conn-dot"></div>
+        <span id="conn-text">连接中...</span>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-area" id="main-content">
+      <!-- Dynamic page content will be injected here -->
+    </main>
+  </div>
+
+  <!-- Right Drawer -->
+  <div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+  <div class="drawer" id="right-drawer">
+    <div class="drawer-header">
+      <div class="drawer-header-info">
+        <div class="drawer-title" id="drawer-title">子任务详情</div>
+        <div class="drawer-tags-row" id="drawer-tags">
+          <!-- Tags injected by JS -->
+        </div>
+      </div>
+      <button class="drawer-close-btn" onclick="closeDrawer()" title="关闭">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="drawer-body" id="drawer-body">
+      <!-- Injected by JS -->
+    </div>
+  </div>
+
+  <!-- Custom Stop Confirmation Modal -->
+  <div class="modal-overlay" id="stop-modal">
+    <div class="modal-box">
+      <div class="modal-title">停止任务确认</div>
+      <div class="modal-desc" id="stop-modal-desc">确定停止这个任务吗？AI 已经做的改动会被丢弃。</div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeStopModal()">取消</button>
+        <button class="btn btn-danger" id="stop-modal-confirm-btn">停止任务</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <script>
+    // --- State and Config ---
+    const isDemo = window.location.search.includes('demo=1') || window.location.hash.includes('demo=1');
+    let currentState = null;
+    let pollTimer = null;
+    let lastPollSuccess = 0;
+    let activeDrawerTarget = null; // { subtaskId, runId }
+    let showTechDetails = false;
+    let pendingStopTarget = null; // { id, title }
+
+    try {
+      showTechDetails = localStorage.getItem('xay_show_tech_details') === '1';
+    } catch (e) {}
+
+    // Agent Config
+    const AGENTS_CONFIG = {
+      codex: { name: 'Codex', color: '#10a37f', role: '写核心代码', model: 'GPT（默认）' },
+      dsh: { name: 'dsh', color: '#4d6bfe', role: '测试与批量活', model: 'deepseek-v4.1-flash' },
+      agy: { name: 'agy', color: '#9b72cb', role: '文案、界面与调研', model: 'gemini-3.8-flash-high' }
+    };
+
+    // Status Config
+    const STATUS_CONFIG = {
+      running: { text: '进行中', color: '#2563eb', pulse: true },
+      queued: { text: '排队中', color: '#6b7280', pulse: false },
+      pending: { text: '等待中', color: '#9ca3af', pulse: false },
+      done: { text: '完成', color: '#16a34a', pulse: false },
+      failed: { text: '失败', color: '#dc2626', pulse: false },
+      timeout: { text: '超时', color: '#dc2626', pulse: false },
+      stale: { text: '中断', color: '#dc2626', pulse: false },
+      stopped: { text: '已停止', color: '#d97706', pulse: false },
+      skipped: { text: '已跳过', color: '#9ca3af', pulse: false }
+    };
+
+    // Formatters
+    function formatDuration(sec) {
+      if (sec == null || isNaN(sec)) return '-';
+      sec = Math.round(sec);
+      if (sec < 1) return '< 1 秒';
+      if (sec < 60) return sec + ' 秒';
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
+      if (m < 60) {
+        return s > 0 ? `${m} 分 ${s} 秒` : `${m} 分钟`;
+      }
+      const h = Math.floor(m / 60);
+      const rm = m % 60;
+      return rm > 0 ? `${h} 小时 ${rm} 分` : `${h} 小时`;
+    }
+
+    function formatTokens(n) {
+      if (!n || isNaN(n)) return '0';
+      if (n >= 10000) {
+        return (n / 10000).toFixed(1) + ' 万';
+      }
+      return n.toLocaleString();
+    }
+
+    function formatTimeAgo(ts) {
+      if (!ts) return '';
+      const now = Math.floor(Date.now() / 1000);
+      const diff = now - ts;
+      if (diff < 60) return '刚刚';
+      if (diff < 3600) return Math.floor(diff / 60) + ' 分钟前';
+      if (diff < 86400) return Math.floor(diff / 3600) + ' 小时前';
+      const d = new Date(ts * 1000);
+      const month = (d.getMonth() + 1).toString().padStart(2, '0');
+      const day = d.getDate().toString().padStart(2, '0');
+      const hours = d.getHours().toString().padStart(2, '0');
+      const mins = d.getMinutes().toString().padStart(2, '0');
+      return `${month}-${day} ${hours}:${mins}`;
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function renderMarkdown(md) {
+      if (!md) return '<p style="color:var(--text-muted)">尚未生成汇报内容</p>';
+      const lines = md.split('\n');
+      let html = '';
+      let inList = false;
+
+      for (let raw of lines) {
+        let line = escapeHtml(raw.trim());
+        if (!line) {
+          if (inList) { html += '</ul>'; inList = false; }
+          continue;
+        }
+
+        // Bold
+        line = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        // Inline code
+        line = line.replace(/`(.*?)`/g, '<code>$1</code>');
+
+        if (line.startsWith('# ')) {
+          if (inList) { html += '</ul>'; inList = false; }
+          html += `<h1>${line.slice(2)}</h1>`;
+        } else if (line.startsWith('## ')) {
+          if (inList) { html += '</ul>'; inList = false; }
+          html += `<h2>${line.slice(3)}</h2>`;
+        } else if (line.startsWith('### ')) {
+          if (inList) { html += '</ul>'; inList = false; }
+          html += `<h3>${line.slice(4)}</h3>`;
+        } else if (line.startsWith('- ') || line.startsWith('* ')) {
+          if (!inList) { html += '<ul>'; inList = true; }
+          html += `<li>${line.slice(2)}</li>`;
+        } else {
+          if (inList) { html += '</ul>'; inList = false; }
+          html += `<p>${line}</p>`;
+        }
+      }
+      if (inList) html += '</ul>';
+      return html;
+    }
+
+    // Toast
+    function showToast(msg, isError = false) {
+      const container = document.getElementById('toast-container');
+      const t = document.createElement('div');
+      t.className = 'toast';
+      if (isError) t.style.backgroundColor = '#dc2626';
+      t.textContent = msg;
+      container.appendChild(t);
+      setTimeout(() => {
+        t.style.opacity = '0';
+        t.style.transition = 'opacity 0.25s ease';
+        setTimeout(() => t.remove(), 250);
+      }, 2400);
+    }
+
+    // Modal
+    function openStopModal(id, title) {
+      pendingStopTarget = { id, title };
+      const desc = document.getElementById('stop-modal-desc');
+      desc.textContent = `确定停止「${title}」吗？这个 AI 已经做的改动会被丢弃。`;
+      document.getElementById('stop-modal').classList.add('open');
+    }
+
+    function closeStopModal() {
+      document.getElementById('stop-modal').classList.remove('open');
+      pendingStopTarget = null;
+    }
+
+    document.getElementById('stop-modal-confirm-btn').addEventListener('click', () => {
+      if (!pendingStopTarget) return;
+      const { id } = pendingStopTarget;
+      closeStopModal();
+
+      if (isDemo) {
+        showToast('示例模式');
+        return;
+      }
+
+      fetch('/api/stop', {
+        method: 'POST',
+        headers: {
+          'X-Xay-Action': 'stop',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ id })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.ok) {
+          showToast('已发送停止指令');
+          fetchState();
+        } else {
+          showToast(data.error || '停止失败', true);
+        }
+      })
+      .catch(() => {
+        showToast('请求异常', true);
+      });
+    });
+
+    // --- Demo Data ---
+    const DEMO_STATE = {
+      now: Math.floor(Date.now() / 1000),
+      missions: [
+        {
+          id: 'dag-20261029-multipage',
+          kind: 'dag',
+          title: '给看板加多页面',
+          status: 'running',
+          started: Math.floor(Date.now() / 1000) - 360,
+          ended: null,
+          elapsed_s: 360,
+          workdir: 'xay-dev',
+          total: 5,
+          done: 2,
+          failed: 0,
+          running: 1,
+          notice: '',
+          layers: [
+            ['impl_server', 'tests_base'],
+            ['page_ui'],
+            ['e2e_verify', 'doc_update']
+          ],
+          subtasks: [
+            {
+              id: 'impl_server',
+              agent: 'codex',
+              title: '写服务端',
+              status: 'done',
+              batch: 0,
+              deps: [],
+              elapsed_s: 95,
+              step: 7,
+              rounds: 1,
+              notice: '',
+              run: 'run-codex-srv',
+              now: { kind: 'cmd', text: '运行测试', raw: 'python3 -m unittest tests/test_xay_watch.py -v', state: 'done' }
+            },
+            {
+              id: 'tests_base',
+              agent: 'dsh',
+              title: '写测试用例',
+              status: 'done',
+              batch: 0,
+              deps: [],
+              elapsed_s: 60,
+              step: 5,
+              rounds: 1,
+              notice: '',
+              run: 'run-dsh-test',
+              now: { kind: 'cmd', text: '运行测试', raw: 'pytest -q tests/', state: 'done' }
+            },
+            {
+              id: 'page_ui',
+              agent: 'agy',
+              title: '重做页面与泳道图',
+              status: 'running',
+              batch: 1,
+              deps: ['impl_server'],
+              elapsed_s: 195,
+              step: 3,
+              rounds: 2,
+              notice: '',
+              run: 'run-agy-ui',
+              now: { kind: 'edit', text: '修改 scripts/xay-watch.html', raw: 'edit scripts/xay-watch.html', state: 'active' }
+            },
+            {
+              id: 'e2e_verify',
+              agent: 'dsh',
+              title: '端到端测试',
+              status: 'queued',
+              batch: 2,
+              deps: ['page_ui'],
+              elapsed_s: 0,
+              step: 0,
+              rounds: 0,
+              notice: '',
+              run: null,
+              now: null
+            },
+            {
+              id: 'doc_update',
+              agent: 'codex',
+              title: '更新约定文档',
+              status: 'pending',
+              batch: 2,
+              deps: ['page_ui'],
+              elapsed_s: 0,
+              step: 0,
+              rounds: 0,
+              notice: '',
+              run: null,
+              now: null
+            }
+          ]
+        },
+        {
+          id: 'run-queued-single',
+          kind: 'single',
+          title: '增量缓存性能优化',
+          status: 'queued',
+          started: Math.floor(Date.now() / 1000) - 45,
+          ended: null,
+          elapsed_s: 45,
+          workdir: 'xay-dev',
+          total: 1,
+          done: 0,
+          failed: 0,
+          running: 0,
+          notice: '等待名额释放中',
+          layers: [['opt_cache']],
+          subtasks: [
+            {
+              id: 'opt_cache',
+              agent: 'codex',
+              title: '增量缓存性能优化',
+              status: 'queued',
+              batch: 0,
+              deps: [],
+              elapsed_s: 45,
+              step: 0,
+              rounds: 1,
+              notice: '等待名额释放中',
+              run: 'run-queued-single',
+              now: null
+            }
+          ]
+        },
+        {
+          id: 'dag-done-with-notice',
+          kind: 'dag',
+          title: '自动隔离工作区与搬回',
+          status: 'done',
+          started: Math.floor(Date.now() / 1000) - 86400,
+          ended: Math.floor(Date.now() / 1000) - 85900,
+          elapsed_s: 500,
+          workdir: 'xay-dev',
+          total: 2,
+          done: 2,
+          failed: 0,
+          running: 0,
+          notice: '已自动搬回并合并 3 个文件',
+          layers: [['wt_add'], ['wt_land']],
+          subtasks: [
+            {
+              id: 'wt_add',
+              agent: 'codex',
+              title: '实现 worktree 隔离机制',
+              status: 'done',
+              batch: 0,
+              deps: [],
+              elapsed_s: 280,
+              step: 12,
+              rounds: 1,
+              run: 'run-wt-1',
+              now: { kind: 'cmd', text: '查看改动记录', raw: 'git diff --stat', state: 'done' }
+            },
+            {
+              id: 'wt_land',
+              agent: 'dsh',
+              title: '测试并发搬回逻辑',
+              status: 'done',
+              batch: 1,
+              deps: ['wt_add'],
+              elapsed_s: 220,
+              step: 8,
+              rounds: 1,
+              run: 'run-wt-2',
+              now: { kind: 'cmd', text: '运行测试', raw: 'pytest tests/test_worktree.py', state: 'done' }
+            }
+          ]
+        },
+        {
+          id: 'dag-failed-sync',
+          kind: 'dag',
+          title: '同步历史日志至云存储',
+          status: 'failed',
+          started: Math.floor(Date.now() / 1000) - 120000,
+          ended: Math.floor(Date.now() / 1000) - 119850,
+          elapsed_s: 150,
+          workdir: 'xay-dev',
+          total: 2,
+          done: 1,
+          failed: 1,
+          running: 0,
+          notice: '远程认证失败，请检查网络配置',
+          layers: [['sync_auth', 'sync_upload']],
+          subtasks: [
+            {
+              id: 'sync_auth',
+              agent: 'codex',
+              title: '配置鉴权凭证',
+              status: 'done',
+              batch: 0,
+              deps: [],
+              elapsed_s: 40,
+              step: 3,
+              rounds: 1,
+              run: 'run-sync-1',
+              now: { kind: 'cmd', text: '运行命令', raw: 'echo check auth', state: 'done' }
+            },
+            {
+              id: 'sync_upload',
+              agent: 'dsh',
+              title: '执行分卷归档上传',
+              status: 'failed',
+              batch: 0,
+              deps: [],
+              elapsed_s: 110,
+              step: 4,
+              rounds: 1,
+              notice: '远程认证失败，请检查网络配置',
+              run: 'run-sync-2',
+              now: { kind: 'cmd', text: '访问网址', raw: 'curl -f https://storage.api/upload', state: 'failed' }
+            }
+          ]
+        },
+        {
+          id: 'run-init-scaffold',
+          kind: 'single',
+          title: '初始化项目脚手架与规范',
+          status: 'done',
+          started: Math.floor(Date.now() / 1000) - 150000,
+          ended: Math.floor(Date.now() / 1000) - 149800,
+          elapsed_s: 200,
+          workdir: 'xay-dev',
+          total: 1,
+          done: 1,
+          failed: 0,
+          running: 0,
+          notice: '',
+          layers: [['init_step']],
+          subtasks: [
+            {
+              id: 'init_step',
+              agent: 'agy',
+              title: '编写脚手架与目录模板',
+              status: 'done',
+              batch: 0,
+              deps: [],
+              elapsed_s: 200,
+              step: 6,
+              rounds: 1,
+              run: 'run-init-scaffold',
+              now: { kind: 'edit', text: '修改 context.md', raw: 'edit context.md', state: 'done' }
+            }
+          ]
+        }
+      ],
+      agents: {
+        codex: {
+          name: 'Codex',
+          role: '写核心代码',
+          model: 'GPT（默认）',
+          slots: { used: 1, max: 3, queued: 1 },
+          current: [
+            {
+              mission: 'dag-20261029-multipage',
+              mission_title: '给看板加多页面',
+              run: 'run-codex-srv',
+              title: '写服务端',
+              status: 'running',
+              now: { kind: 'cmd', text: '运行测试', raw: 'python3 -m unittest tests/test_xay_watch.py -v', state: 'active' },
+              elapsed_s: 95
+            }
+          ],
+          today: { runs: 6, tokens: 145000 },
+          week: { runs: 28, tokens: 820000 },
+          stats: { success_rate: 0.96, avg_s: 240, reworks: 2, finished: 26 },
+          recent: [
+            { id: 'run-wt-1', agent: 'codex', title: '实现 worktree 隔离机制', status: 'done', elapsed_s: 280, changed_files: ['scripts/xay-run', 'scripts/xay-dag'] },
+            { id: 'run-sync-1', agent: 'codex', title: '配置鉴权凭证', status: 'done', elapsed_s: 40, changed_files: ['config.json'] },
+            { id: 'run-c3', agent: 'codex', title: '重构 registry 结构', status: 'done', elapsed_s: 310, changed_files: ['scripts/xay_watch.py'] }
+          ]
+        },
+        dsh: {
+          name: 'dsh',
+          role: '测试与批量活',
+          model: 'deepseek-v4.1-flash',
+          slots: { used: 0, max: 4, queued: 0 },
+          current: [],
+          today: { runs: 12, tokens: 310000 },
+          week: { runs: 54, tokens: 1420000 },
+          stats: { success_rate: 0.92, avg_s: 95, reworks: 4, finished: 50 },
+          recent: [
+            { id: 'run-dsh-test', agent: 'dsh', title: '写测试用例', status: 'done', elapsed_s: 60, changed_files: ['tests/test_xay_watch.py'] },
+            { id: 'run-wt-2', agent: 'dsh', title: '测试并发搬回逻辑', status: 'done', elapsed_s: 220, changed_files: ['tests/test_worktree.py'] },
+            { id: 'run-sync-2', agent: 'dsh', title: '执行分卷归档上传', status: 'failed', elapsed_s: 110, changed_files: [] }
+          ]
+        },
+        agy: {
+          name: 'agy',
+          role: '文案、界面与调研',
+          model: 'gemini-3.8-flash-high',
+          slots: { used: 1, max: 3, queued: 0 },
+          current: [
+            {
+              mission: 'dag-20261029-multipage',
+              mission_title: '给看板加多页面',
+              run: 'run-agy-ui',
+              title: '重做页面与泳道图',
+              status: 'running',
+              now: { kind: 'edit', text: '修改 scripts/xay-watch.html', raw: 'edit scripts/xay-watch.html', state: 'active' },
+              elapsed_s: 195
+            }
+          ],
+          today: { runs: 8, tokens: 240000 },
+          week: { runs: 35, tokens: 980000 },
+          stats: { success_rate: 0.94, avg_s: 180, reworks: 3, finished: 33 },
+          recent: [
+            { id: 'run-init-scaffold', agent: 'agy', title: '编写脚手架与目录模板', status: 'done', elapsed_s: 200, changed_files: ['.xay/context.md'] },
+            { id: 'run-agy-doc', agent: 'agy', title: '整理视觉设计规范', status: 'done', elapsed_s: 145, changed_files: ['README.md'] }
+          ]
+        }
+      },
+      runs: [
+        { id: 'run-agy-ui', agent: 'agy', title: '重做页面与泳道图', status: 'running', mission: 'dag-20261029-multipage', effort: 'high', model: 'gemini-3.8-flash-high', started: Math.floor(Date.now() / 1000) - 195, ended: null, elapsed_s: 195, step: 3, tokens: 42000, changed_files: ['scripts/xay-watch.html'], isolated: true, land: '', notice: '', session: 'sess-agy-ui-99128', workdir: 'xay-dev' },
+        { id: 'run-codex-srv', agent: 'codex', title: '写服务端', status: 'done', mission: 'dag-20261029-multipage', effort: 'medium', model: 'GPT（默认）', started: Math.floor(Date.now() / 1000) - 300, ended: Math.floor(Date.now() / 1000) - 205, elapsed_s: 95, step: 7, tokens: 31200, changed_files: ['scripts/xay_watch.py'], isolated: true, land: 'applied', notice: '', session: 'sess-codex-srv-10492', workdir: 'xay-dev' },
+        { id: 'run-dsh-test', agent: 'dsh', title: '写测试用例', status: 'done', mission: 'dag-20261029-multipage', effort: 'low', model: 'deepseek-v4.1-flash', started: Math.floor(Date.now() / 1000) - 270, ended: Math.floor(Date.now() / 1000) - 210, elapsed_s: 60, step: 5, tokens: 18000, changed_files: ['tests/test_xay_watch.py'], isolated: true, land: 'applied', notice: '', session: 'sess-dsh-test-44912', workdir: 'xay-dev' },
+        { id: 'run-queued-single', agent: 'codex', title: '增量缓存性能优化', status: 'queued', mission: 'run-queued-single', effort: 'medium', model: 'GPT（默认）', started: Math.floor(Date.now() / 1000) - 45, ended: null, elapsed_s: 45, step: 0, tokens: 0, changed_files: [], isolated: true, land: '', notice: '等待名额释放中', session: '', workdir: 'xay-dev' },
+        { id: 'run-wt-1', agent: 'codex', title: '实现 worktree 隔离机制', status: 'done', mission: 'dag-done-with-notice', effort: 'medium', model: 'GPT（默认）', started: Math.floor(Date.now() / 1000) - 86400, ended: Math.floor(Date.now() / 1000) - 86120, elapsed_s: 280, step: 12, tokens: 54000, changed_files: ['scripts/xay-run', 'scripts/xay-dag'], isolated: true, land: 'applied', notice: '', session: 'sess-wt-1', workdir: 'xay-dev' },
+        { id: 'run-wt-2', agent: 'dsh', title: '测试并发搬回逻辑', status: 'done', mission: 'dag-done-with-notice', effort: 'low', model: 'deepseek-v4.1-flash', started: Math.floor(Date.now() / 1000) - 86120, ended: Math.floor(Date.now() / 1000) - 85900, elapsed_s: 220, step: 8, tokens: 29000, changed_files: ['tests/test_worktree.py'], isolated: true, land: 'applied', notice: '', session: 'sess-wt-2', workdir: 'xay-dev' },
+        { id: 'run-sync-2', agent: 'dsh', title: '执行分卷归档上传', status: 'failed', mission: 'dag-failed-sync', effort: 'medium', model: 'deepseek-v4.1-flash', started: Math.floor(Date.now() / 1000) - 119960, ended: Math.floor(Date.now() / 1000) - 119850, elapsed_s: 110, step: 4, tokens: 12000, changed_files: [], isolated: true, land: 'discarded', notice: '远程认证失败，请检查网络配置', session: 'sess-sync-2', workdir: 'xay-dev' },
+        { id: 'run-init-scaffold', agent: 'agy', title: '初始化项目脚手架与规范', status: 'done', mission: 'run-init-scaffold', effort: 'high', model: 'gemini-3.8-flash-high', started: Math.floor(Date.now() / 1000) - 150000, ended: Math.floor(Date.now() / 1000) - 149800, elapsed_s: 200, step: 6, tokens: 33000, changed_files: ['.xay/context.md'], isolated: false, land: 'empty', notice: '', session: 'sess-init-1', workdir: 'xay-dev' }
+      ]
+    };
+
+    const DEMO_RUN_DETAILS = {
+      'run-agy-ui': {
+        run: DEMO_STATE.runs[0],
+        mission_title: '给看板加多页面',
+        task: '重构 scripts/xay-watch.html：实现约定 E 的全部页面要求，采用 archify 泳道图按 AI 分行，强化小白友好体验，将复杂技术细节折叠。',
+        actions: [
+          { kind: 'think', text: '思考设计方案与布局结构', raw: 'think: analyzing archify-workflow and harness visual references', state: 'done' },
+          { kind: 'read', text: '查看 .xay/context.md', raw: 'cat .xay/context.md', state: 'done' },
+          { kind: 'plan', text: '制定计划（3 项）', raw: 'plan: 1. Layout 2. Swimlane SVG 3. Drawer', state: 'done' },
+          { kind: 'edit', text: '修改 scripts/xay-watch.html', raw: 'edit scripts/xay-watch.html (write new structure)', state: 'active' }
+        ],
+        rounds: [
+          { run: 'run-agy-ui-r1', started: Math.floor(Date.now() / 1000) - 400, status: 'done', title: '第 1 轮' },
+          { run: 'run-agy-ui', started: Math.floor(Date.now() / 1000) - 195, status: 'running', title: '第 2 轮' }
+        ],
+        result: `# 看板重构阶段进展\n\n- **已完成**：全新视觉规范建立（浅灰卡片、黑白胶囊按钮、点阵网格）\n- **进行中**：泳道关系图与右侧抽屉细节打磨\n- **支持特性**：原生单文件、无 CDN、系统深色模式自适应`,
+        changed_files: ['scripts/xay-watch.html'],
+        notice: '',
+        tech: {
+          session: 'session-agy-ui-99128-44fb-8120',
+          run_dir: '/home/you/projects/xay-dev/.xay/runs/20261029-agy-ui',
+          workdir: '/home/you/projects/.xay/worktrees/xay-dev-run-agy-ui',
+          origin: '/home/you/projects/xay-dev',
+          land: 'applied',
+          stderr_tail: '2026-10-29 09:48:10 [INFO] rendering styles\n2026-10-29 09:48:12 [INFO] layout calculated'
+        }
+      },
+      'run-codex-srv': {
+        run: DEMO_STATE.runs[1],
+        mission_title: '给看板加多页面',
+        task: '实现 scripts/xay_watch.py 的约定 D 接口：humanize 大白话动作转换、Mission 聚合、AI 统计与停止接口。',
+        actions: [
+          { kind: 'read', text: '查看 xay_watch.py', raw: 'cat scripts/xay_watch.py', state: 'done' },
+          { kind: 'edit', text: '修改 scripts/xay_watch.py', raw: 'edit scripts/xay_watch.py', state: 'done' },
+          { kind: 'cmd', text: '运行测试', raw: 'python3 -m unittest tests/test_xay_watch.py -v', state: 'done' },
+          { kind: 'say', text: '回复：接口已全部实现并通过测试', raw: 'All 11 tests passed successfully.', state: 'done' }
+        ],
+        rounds: [
+          { run: 'run-codex-srv', started: Math.floor(Date.now() / 1000) - 300, status: 'done', title: '第 1 轮' }
+        ],
+        result: `## 服务端接口完成汇报\n\n- 新增 \`humanize()\` 模块级转换函数，涵盖 10 类命令分类与测试优先规则\n- 新增 \`/api/state\` 状态聚合\n- 新增 \`/api/stop\` 鉴权与安全终止进程功能\n- 11 项单元测试全部通过`,
+        changed_files: ['scripts/xay_watch.py'],
+        notice: '',
+        tech: {
+          session: 'session-codex-srv-10492-77ac',
+          run_dir: '/home/you/projects/xay-dev/.xay/runs/20261029-codex-srv',
+          workdir: '/home/you/projects/.xay/worktrees/xay-dev-run-codex-srv',
+          origin: '/home/you/projects/xay-dev',
+          land: 'applied',
+          stderr_tail: 'Ran 11 tests in 0.042s\nOK'
+        }
+      }
+    };
+
+    // --- Data Polling & Connection ---
+    function fetchState() {
+      if (isDemo) {
+        currentState = DEMO_STATE;
+        updateConnectionStatus(true);
+        renderCurrentRoute();
+        if (activeDrawerTarget) refreshDrawer();
+        return;
+      }
+
+      fetch('/api/state')
+        .then(res => {
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          return res.json();
+        })
+        .then(data => {
+          // Compatibility adaptation if backend returns older structure
+          if (!data.missions && data.dags) {
+            data.missions = data.dags.map(d => ({
+              ...d,
+              kind: 'dag',
+              title: d.title || d.dag,
+              status: d.running > 0 ? 'running' : (d.failed > 0 ? 'failed' : 'done'),
+              subtasks: (d.tasks || []).map(t => ({
+                ...t,
+                status: t.state || t.status,
+                agent: t.agent || 'codex',
+                rounds: t.rounds || 1,
+                now: t.now || null
+              })),
+              layers: d.layers || []
+            }));
+          }
+          currentState = data;
+          lastPollSuccess = Date.now();
+          updateConnectionStatus(true);
+          renderCurrentRoute();
+          if (activeDrawerTarget) refreshDrawer();
+        })
+        .catch(() => {
+          updateConnectionStatus(false);
+        });
+    }
+
+    function updateConnectionStatus(connected) {
+      const dot = document.getElementById('conn-dot');
+      const text = document.getElementById('conn-text');
+      if (isDemo) {
+        dot.className = 'conn-dot';
+        text.textContent = '示例模式 (?demo=1)';
+        return;
+      }
+      if (connected) {
+        dot.className = 'conn-dot';
+        text.textContent = '刚刚更新';
+      } else {
+        dot.className = 'conn-dot disconnected';
+        text.textContent = '看板服务未连接';
+      }
+    }
+
+    // --- Action Icons for Timeline ---
+    function getActionIconSvg(kind, state) {
+      const cls = `timeline-step-icon ${state || ''}`;
+      switch (kind) {
+        case 'cmd':
+          return `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>`;
+        case 'edit':
+          return `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>`;
+        case 'read':
+          return `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>`;
+        case 'think':
+          return `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7z"/><line x1="9" y1="21" x2="15" y2="21"/></svg>`;
+        case 'say':
+          return `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`;
+        case 'search':
+          return `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`;
+        case 'plan':
+          return `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>`;
+        case 'tool':
+          return `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>`;
+        default:
+          return `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
+      }
+    }
+
+    // --- Drawer Logic ---
+    function openDrawer(subtaskId, runId) {
+      activeDrawerTarget = { subtaskId, runId };
+      document.getElementById('drawer-overlay').classList.add('open');
+      document.getElementById('right-drawer').classList.add('open');
+      refreshDrawer();
+    }
+
+    function closeDrawer() {
+      activeDrawerTarget = null;
+      document.getElementById('drawer-overlay').classList.remove('open');
+      document.getElementById('right-drawer').classList.remove('open');
+    }
+
+    function toggleTechDetails(checked) {
+      showTechDetails = checked;
+      try {
+        localStorage.setItem('xay_show_tech_details', checked ? '1' : '0');
+      } catch (e) {}
+      refreshDrawer();
+    }
+
+    function copyText(val, btn) {
+      if (!val) return;
+      navigator.clipboard.writeText(val).then(() => {
+        const old = btn.textContent;
+        btn.textContent = '已复制';
+        setTimeout(() => { btn.textContent = old; }, 1500);
+      });
+    }
+
+    function refreshDrawer() {
+      if (!activeDrawerTarget) return;
+      const { subtaskId, runId } = activeDrawerTarget;
+
+      // Find subtask object in missions
+      let subtask = null;
+      let mission = null;
+      if (currentState && currentState.missions) {
+        for (const m of currentState.missions) {
+          const match = (m.subtasks || []).find(s => s.id === subtaskId || (runId && s.run === runId));
+          if (match) {
+            subtask = match;
+            mission = m;
+            break;
+          }
+        }
+      }
+
+      // If we don't have runId yet, check subtask
+      const targetRunId = runId || (subtask && subtask.run);
+
+      // If pending and no runId exists at all
+      if (!targetRunId) {
+        renderDrawerPending(subtask);
+        return;
+      }
+
+      // If demo mode
+      if (isDemo) {
+        const detail = DEMO_RUN_DETAILS[targetRunId] || {
+          run: (currentState.runs || []).find(r => r.id === targetRunId) || {
+            id: targetRunId,
+            agent: subtask ? subtask.agent : 'codex',
+            title: subtask ? subtask.title : targetRunId,
+            status: subtask ? subtask.status : 'done',
+            elapsed_s: subtask ? subtask.elapsed_s : 60,
+            effort: 'medium',
+            model: '默认模型'
+          },
+          mission_title: mission ? mission.title : '任务',
+          task: subtask ? subtask.title : '任务正文',
+          actions: subtask && subtask.now ? [subtask.now] : [],
+          rounds: [{ run: targetRunId, started: Math.floor(Date.now() / 1000) - 60, status: 'done', title: '第 1 轮' }],
+          result: '任务顺利完成。',
+          changed_files: [],
+          notice: subtask ? subtask.notice : '',
+          tech: { session: 'sess-demo-' + targetRunId, run_dir: '/demo/' + targetRunId, workdir: 'xay-dev', origin: 'xay-dev', land: 'applied', stderr_tail: 'Done.' }
+        };
+        renderDrawerContent(subtask, detail);
+        return;
+      }
+
+      // Fetch from API
+      fetch('/api/run?id=' + encodeURIComponent(targetRunId))
+        .then(res => res.json())
+        .then(detail => {
+          renderDrawerContent(subtask, detail);
+        })
+        .catch(() => {
+          // Fallback render
+          renderDrawerPending(subtask);
+        });
+    }
+
+    function renderDrawerPending(subtask) {
+      const titleEl = document.getElementById('drawer-title');
+      const tagsEl = document.getElementById('drawer-tags');
+      const bodyEl = document.getElementById('drawer-body');
+
+      const title = subtask ? subtask.title : '子任务';
+      const agent = subtask ? subtask.agent : 'codex';
+      const cfg = AGENTS_CONFIG[agent] || AGENTS_CONFIG.codex;
+
+      titleEl.textContent = title;
+      tagsEl.innerHTML = `
+        <span class="ai-badge ai-${agent}">${cfg.name}</span>
+        <span class="status-pill pending">等待中</span>
+      `;
+
+      bodyEl.innerHTML = `
+        <div class="hero-now-box" style="border-left-color: var(--status-pending)">
+          <div class="hero-now-text">还没开始</div>
+          <div class="hero-now-sub">等待上游前置任务完成并分配运行名额</div>
+        </div>
+      `;
+    }
+
+    function renderDrawerContent(subtask, detail) {
+      const run = detail.run || {};
+      const agentKey = run.agent || (subtask && subtask.agent) || 'codex';
+      const agentCfg = AGENTS_CONFIG[agentKey] || AGENTS_CONFIG.codex;
+      const statusKey = run.status || (subtask && subtask.status) || 'pending';
+      const statusCfg = STATUS_CONFIG[statusKey] || STATUS_CONFIG.pending;
+
+      const titleEl = document.getElementById('drawer-title');
+      const tagsEl = document.getElementById('drawer-tags');
+      const bodyEl = document.getElementById('drawer-body');
+
+      const title = run.title || (subtask && subtask.title) || '子任务';
+      titleEl.textContent = title;
+
+      // Tags Row
+      let tagsHtml = `
+        <span class="ai-badge ai-${agentKey}">${agentCfg.name}</span>
+        <span>${escapeHtml(run.model || agentCfg.model)}</span>
+        <span>强度：${escapeHtml(run.effort || 'medium')}</span>
+        <span class="status-pill ${statusKey}">
+          <span class="status-dot ${statusKey}"></span>
+          ${statusCfg.text}
+        </span>
+        <span>已用 ${formatDuration(run.elapsed_s || (subtask && subtask.elapsed_s))}</span>
+      `;
+
+      if (statusKey === 'running') {
+        tagsHtml += `
+          <button class="btn btn-secondary btn-sm" style="color:var(--status-failed); margin-left:auto;" onclick="openStopModal('${run.id}', '${escapeHtml(title)}')">
+            停止
+          </button>
+        `;
+      }
+      tagsEl.innerHTML = tagsHtml;
+
+      // Section: What it is doing now
+      let heroText = '已完成全部改动';
+      let heroSub = '任务已顺利结束';
+      const nowAct = run.now || (subtask && subtask.now);
+
+      if (statusKey === 'running') {
+        heroText = nowAct && nowAct.text ? nowAct.text : '正在执行中...';
+        heroSub = `已进行到第 ${run.step || (subtask && subtask.step) || 1} 步`;
+      } else if (statusKey === 'queued') {
+        heroText = '正在排队等待名额';
+        heroSub = '前置依赖已就绪';
+      } else if (statusKey === 'failed' || statusKey === 'timeout') {
+        heroText = '执行中断或失败';
+        heroSub = detail.notice || (subtask && subtask.notice) || '请查看下方技术细节与日志';
+      } else if (statusKey === 'stopped') {
+        heroText = '已被手动停止';
+        heroSub = '改动已安全清理';
+      }
+
+      // Section: Actions Timeline
+      const actions = detail.actions || [];
+      let timelineHtml = '';
+      if (actions.length === 0) {
+        timelineHtml = '<div style="color:var(--text-subtle); font-size:13px;">暂无动作记录</div>';
+      } else {
+        timelineHtml = actions.map(act => {
+          const actState = act.state || 'done';
+          const iconSvg = getActionIconSvg(act.kind, actState);
+          const rawBox = (showTechDetails && act.raw)
+            ? `<div class="timeline-step-raw">${escapeHtml(act.raw)}</div>`
+            : '';
+          return `
+            <div class="timeline-step-row">
+              ${iconSvg}
+              <div class="timeline-step-content">
+                <div class="timeline-step-text ${actState}">${escapeHtml(act.text || act.kind)}</div>
+                ${rawBox}
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // Section: Changed files
+      const changedFiles = detail.changed_files || run.changed_files || [];
+      const filesHtml = changedFiles.length > 0
+        ? changedFiles.map(f => `
+            <span class="file-pill">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              ${escapeHtml(f)}
+            </span>
+          `).join('')
+        : '<span style="color:var(--text-muted); font-size:13px;">无文件改动</span>';
+
+      // Section: Rounds switcher
+      const rounds = detail.rounds || [];
+      let roundsHtml = '';
+      if (rounds.length > 1) {
+        roundsHtml = `
+          <div class="drawer-section">
+            <div class="drawer-sec-title">返工轮次</div>
+            <div class="rounds-row">
+              ${rounds.map((r, idx) => `
+                <button class="round-btn ${r.run === run.id ? 'active' : ''}" onclick="openDrawer('${subtask ? subtask.id : ''}', '${r.run}')">
+                  ${escapeHtml(r.title || `第 ${idx + 1} 轮`)}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      // Section: Tech folded details
+      const tech = detail.tech || {};
+      const session = tech.session || run.session || '';
+      const runDir = tech.run_dir || run.id || '';
+      const workdir = tech.workdir || run.workdir || '';
+      const origin = tech.origin || '';
+      const land = tech.land || run.land || '';
+      const stderr = tech.stderr_tail || '';
+
+      bodyEl.innerHTML = `
+        <!-- Hero Box -->
+        <div class="hero-now-box" style="border-left-color: ${statusCfg.color}">
+          <div class="hero-now-text">${escapeHtml(heroText)}</div>
+          <div class="hero-now-sub">${escapeHtml(heroSub)}</div>
+        </div>
+
+        ${roundsHtml}
+
+        <!-- Timeline Section -->
+        <div class="drawer-section">
+          <div class="drawer-sec-header">
+            <span class="drawer-sec-title">它做了哪些事（${actions.length} 步）</span>
+            <label class="switch-wrap">
+              <input type="checkbox" ${showTechDetails ? 'checked' : ''} onchange="toggleTechDetails(this.checked)">
+              <span>显示技术细节</span>
+            </label>
+          </div>
+          <div class="timeline-container">
+            ${timelineHtml}
+          </div>
+        </div>
+
+        <!-- Result Section -->
+        <div class="drawer-section">
+          <span class="drawer-sec-title">工作汇报</span>
+          <div class="report-box">
+            ${renderMarkdown(detail.result)}
+          </div>
+        </div>
+
+        <!-- Changed Files Section -->
+        <div class="drawer-section">
+          <span class="drawer-sec-title">改动的文件（${changedFiles.length}）</span>
+          <div class="files-list">
+            ${filesHtml}
+          </div>
+        </div>
+
+        <!-- Tech Details Collapsible -->
+        <details class="tech-details">
+          <summary>技术细节（运行环境、会话与日志）</summary>
+          <div class="tech-details-inner">
+            <div class="tech-row">
+              <div class="tech-label">
+                <span>会话 ID</span>
+                ${session ? `<button class="btn btn-secondary btn-sm" onclick="copyText('${session}', this)">复制</button>` : ''}
+              </div>
+              <div class="tech-val">${escapeHtml(session || '无')}</div>
+            </div>
+            <div class="tech-row">
+              <div class="tech-label"><span>运行目录</span></div>
+              <div class="tech-val">${escapeHtml(runDir || '无')}</div>
+            </div>
+            <div class="tech-row">
+              <div class="tech-label"><span>实际工作区（Worktree）</span></div>
+              <div class="tech-val">${escapeHtml(workdir || '无')}</div>
+            </div>
+            <div class="tech-row">
+              <div class="tech-label"><span>原项目目录</span></div>
+              <div class="tech-val">${escapeHtml(origin || '无')}</div>
+            </div>
+            <div class="tech-row">
+              <div class="tech-label"><span>改动搬回状态</span></div>
+              <div class="tech-val">${escapeHtml(land || '未执行或直接在原目录')}</div>
+            </div>
+            <div class="tech-row">
+              <div class="tech-label"><span>STDERR 日志末尾</span></div>
+              <pre class="stderr-pre"><code>${escapeHtml(stderr || '无错误输出')}</code></pre>
+            </div>
+          </div>
+        </details>
+      `;
+    }
+
+    // --- Page 1: Tasks (Homepage) ---
+    function renderTasksPage() {
+      const container = document.getElementById('main-content');
+      const missions = (currentState && currentState.missions) || [];
+
+      const runningList = missions.filter(m => m.status === 'running');
+      const queuedList = missions.filter(m => m.status === 'queued');
+      const endedList = missions.filter(m => ['done', 'failed', 'timeout', 'stopped'].includes(m.status)).slice(0, 20);
+
+      const totalActive = runningList.length;
+      const totalQueued = queuedList.length;
+
+      let subtext = '暂无进行中的任务';
+      if (totalActive > 0 || totalQueued > 0) {
+        subtext = `进行中 ${totalActive} · 排队 ${totalQueued}`;
+      }
+
+      let groupsHtml = '';
+
+      if (missions.length === 0) {
+        groupsHtml = `
+          <div class="empty-state">
+            <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="11" y2="17"/></svg>
+            <div style="font-size:15px; font-weight:600; margin-bottom:4px; color:var(--text-main);">还没有任务</div>
+            <div>派活后会自动在此处生成实时卡片与关系泳道图</div>
+          </div>
+        `;
+      } else {
+        if (runningList.length > 0) {
+          groupsHtml += `
+            <div class="task-group">
+              <div class="group-title">
+                <span>进行中</span>
+                <span class="count">${runningList.length}</span>
+              </div>
+              <div class="cards-grid">
+                ${runningList.map(renderMissionCard).join('')}
+              </div>
+            </div>
+          `;
+        }
+
+        if (queuedList.length > 0) {
+          groupsHtml += `
+            <div class="task-group">
+              <div class="group-title">
+                <span>排队中</span>
+                <span class="count">${queuedList.length}</span>
+              </div>
+              <div class="cards-grid">
+                ${queuedList.map(renderMissionCard).join('')}
+              </div>
+            </div>
+          `;
+        }
+
+        if (endedList.length > 0) {
+          groupsHtml += `
+            <div class="task-group">
+              <div class="group-title">
+                <span>已结束</span>
+                <span class="count">${endedList.length}</span>
+              </div>
+              <div class="cards-grid">
+                ${endedList.map(renderMissionCard).join('')}
+              </div>
+            </div>
+          `;
+        }
+      }
+
+      container.innerHTML = `
+        <div class="page-header">
+          <div>
+            <div class="page-title">任务</div>
+            <div class="page-subtitle">${subtext}</div>
+          </div>
+        </div>
+        ${groupsHtml}
+      `;
+    }
+
+    function renderMissionCard(m) {
+      const statusKey = m.status || 'pending';
+      const statusCfg = STATUS_CONFIG[statusKey] || STATUS_CONFIG.pending;
+      const subtasks = m.subtasks || [];
+      const total = m.total || subtasks.length || 1;
+      const done = m.done || subtasks.filter(s => s.status === 'done').length || 0;
+      const pct = Math.round((done / Math.max(1, total)) * 100);
+
+      // Subtask preview rows (max 4)
+      const previewSlice = subtasks.slice(0, 4);
+      const remainingCount = subtasks.length - previewSlice.length;
+
+      const subtasksHtml = previewSlice.map(s => {
+        const agKey = s.agent || 'codex';
+        const agCfg = AGENTS_CONFIG[agKey] || AGENTS_CONFIG.codex;
+        let rightDesc = '等待中';
+        if (s.status === 'done') {
+          rightDesc = '<span style="color:var(--status-done)">✓ 完成</span>';
+        } else if (s.status === 'running') {
+          const actText = s.now && s.now.text ? s.now.text : '正在执行';
+          rightDesc = `<span style="color:var(--status-running)">第 ${s.step || 1} 步 · ${escapeHtml(actText)}</span>`;
+        } else if (s.status === 'queued') {
+          rightDesc = '<span style="color:var(--status-queued)">排队中</span>';
+        } else if (s.status === 'failed') {
+          rightDesc = '<span style="color:var(--status-failed)">执行失败</span>';
+        }
+
+        return `
+          <div class="subtask-preview-row">
+            <div class="subtask-preview-left">
+              <span class="ai-badge ai-${agKey}">${agCfg.name}</span>
+              <span class="subtask-name">${escapeHtml(s.title || s.id)}</span>
+            </div>
+            <div class="subtask-preview-right">
+              ${rightDesc}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Notice
+      const noticeText = m.notice || (subtasks.find(s => s.notice) || {}).notice;
+      const noticeHtml = noticeText ? `
+        <div class="notice-bar">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span>${escapeHtml(noticeText)}</span>
+        </div>
+      ` : '';
+
+      return `
+        <div class="mission-card" onclick="location.hash='#/task/${encodeURIComponent(m.id)}'">
+          <div class="card-top">
+            <div class="card-title-wrap">
+              <span class="status-dot ${statusKey}"></span>
+              <span class="mission-title">${escapeHtml(m.title || m.id)}</span>
+            </div>
+            <div class="card-meta">
+              <div class="progress-pill">
+                <div class="mini-progress-bar">
+                  <div class="mini-progress-fill" style="width: ${pct}%"></div>
+                </div>
+                <span>${done}/${total}</span>
+              </div>
+              <span>已用 ${formatDuration(m.elapsed_s)} · ${escapeHtml(m.workdir || 'origin')}</span>
+            </div>
+          </div>
+          <div class="card-subtasks">
+            ${subtasksHtml}
+            ${remainingCount > 0 ? `<div class="more-subtasks-tag">还有 ${remainingCount} 个子任务...</div>` : ''}
+          </div>
+          ${noticeHtml}
+        </div>
+      `;
+    }
+
+    // --- Page 2: Task Detail (Archify Swimlane + Subtask List) ---
+    function renderTaskDetailPage(missionId) {
+      const container = document.getElementById('main-content');
+      const missions = (currentState && currentState.missions) || [];
+      const mission = missions.find(m => m.id === missionId);
+
+      if (!mission) {
+        container.innerHTML = `
+          <div class="page-header">
+            <a href="#/" class="btn btn-secondary btn-sm">← 返回任务</a>
+          </div>
+          <div class="empty-state">
+            <div style="font-size:16px; font-weight:600;">未找到任务记录</div>
+            <div style="margin-top:6px;">ID: ${escapeHtml(missionId)}</div>
+          </div>
+        `;
+        return;
+      }
+
+      const statusKey = mission.status || 'pending';
+      const statusCfg = STATUS_CONFIG[statusKey] || STATUS_CONFIG.pending;
+      const subtasks = mission.subtasks || [];
+      const total = mission.total || subtasks.length || 1;
+      const done = mission.done || subtasks.filter(s => s.status === 'done').length || 0;
+      const pct = Math.round((done / Math.max(1, total)) * 100);
+
+      // Swimlane SVG calculation
+      const svgDiagramHtml = buildArchifyDiagramSvg(mission);
+
+      // Subtask cards list
+      const subtaskCardsHtml = subtasks.map(s => {
+        const agKey = s.agent || 'codex';
+        const agCfg = AGENTS_CONFIG[agKey] || AGENTS_CONFIG.codex;
+        const subStatusKey = s.status || 'pending';
+        const subStatusCfg = STATUS_CONFIG[subStatusKey] || STATUS_CONFIG.pending;
+
+        let actLine = '等待前置任务完成';
+        if (s.status === 'done') {
+          actLine = '✓ 已顺利完成';
+        } else if (s.status === 'running') {
+          const t = s.now && s.now.text ? s.now.text : '正在执行中';
+          actLine = `第 ${s.step || 1} 步 · ${t}`;
+        } else if (s.status === 'queued') {
+          actLine = '排队中等待名额';
+        } else if (s.status === 'failed') {
+          actLine = '执行失败';
+        } else if (s.status === 'timeout') {
+          actLine = '超时未完成';
+        } else if (s.status === 'stale') {
+          actLine = '意外中断';
+        } else if (s.status === 'stopped') {
+          actLine = '已手动停止';
+        } else if (s.status === 'skipped') {
+          actLine = '前置任务没成功，已跳过';
+        }
+
+        const roundBadge = s.rounds > 1 ? `<span class="round-tag">第 ${s.rounds} 轮</span>` : '';
+
+        return `
+          <div class="subtask-card" onclick="openDrawer('${s.id}', '${s.run || ''}')">
+            <div class="subtask-card-top">
+              <div style="display:flex; align-items:center; gap:8px; min-width:0;">
+                <span class="ai-badge ai-${agKey}">${agCfg.name}</span>
+                <span style="font-weight:600; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(s.title || s.id)}</span>
+              </div>
+              <span class="status-pill ${subStatusKey}">${subStatusCfg.text}</span>
+            </div>
+            <div class="subtask-card-action">${escapeHtml(actLine)}</div>
+            <div class="subtask-card-bottom">
+              <span>已用 ${formatDuration(s.elapsed_s)}</span>
+              ${roundBadge}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      container.innerHTML = `
+        <div class="task-detail-header">
+          <div class="back-btn-row">
+            <a href="#/" class="btn btn-secondary btn-sm">← 返回任务列表</a>
+          </div>
+          <div class="detail-title-row">
+            <div class="detail-title-group">
+              <span class="page-title">${escapeHtml(mission.title || mission.id)}</span>
+              <span class="status-pill ${statusKey}">
+                <span class="status-dot ${statusKey}"></span>
+                ${statusCfg.text}
+              </span>
+            </div>
+            ${statusKey === 'running' ? `
+              <button class="btn btn-secondary" onclick="openStopModal('${mission.id}', '${escapeHtml(mission.title || mission.id)}')">
+                停止任务
+              </button>
+            ` : ''}
+          </div>
+          <div class="detail-meta-row">
+            <div class="progress-pill">
+              <div class="mini-progress-bar" style="width: 90px; height: 7px;">
+                <div class="mini-progress-fill" style="width: ${pct}%"></div>
+              </div>
+              <span>${done}/${total} 完成</span>
+            </div>
+            <span>总耗时 ${formatDuration(mission.elapsed_s)}</span>
+            <span>工作目录：${escapeHtml(mission.workdir || 'origin')}</span>
+          </div>
+        </div>
+
+        <!-- Archify Swimlane Diagram -->
+        <div class="diagram-panel">
+          <div class="diagram-svg-container">
+            ${svgDiagramHtml}
+          </div>
+          <div class="diagram-legend">
+            <span style="font-weight:600;">图例：</span>
+            <div class="legend-item"><span class="status-dot done"></span><span>完成</span></div>
+            <div class="legend-item"><span class="status-dot running"></span><span>进行中</span></div>
+            <div class="legend-item"><span class="status-dot queued"></span><span>排队中</span></div>
+            <div class="legend-item"><span class="status-dot pending"></span><span>等待中</span></div>
+            <div class="legend-item"><span class="status-dot failed"></span><span>失败/超时</span></div>
+            <div class="legend-item"><span class="status-dot stopped"></span><span>已停止</span></div>
+            <div class="legend-item"><span class="status-dot skipped"></span><span>已跳过</span></div>
+          </div>
+        </div>
+
+        <!-- Subtask Cards List -->
+        <div class="group-title">子任务列表（${subtasks.length}）</div>
+        <div class="subtask-cards-list">
+          ${subtaskCardsHtml}
+        </div>
+      `;
+    }
+
+    // --- Archify Swimlane Layout Engine ---
+    function buildArchifyDiagramSvg(mission) {
+      const subtasks = mission.subtasks || [];
+      if (subtasks.length === 0) {
+        return '<div style="color:var(--text-muted); padding:30px 0; text-align:center;">暂无子任务节点</div>';
+      }
+
+      // 1. Determine active AIs in priority order
+      const aiOrder = ['codex', 'dsh', 'agy'];
+      const activeAis = aiOrder.filter(a => subtasks.some(s => s.agent === a));
+      if (activeAis.length === 0) activeAis.push('codex');
+
+      // 2. Determine layers/batches
+      let layers = mission.layers || [];
+      if (!layers || layers.length === 0) {
+        // Fallback compute layers from batch property or deps
+        const maxBatch = subtasks.reduce((m, s) => Math.max(m, s.batch || 0), 0);
+        layers = [];
+        for (let b = 0; b <= maxBatch; b++) {
+          layers.push(subtasks.filter(s => (s.batch || 0) === b).map(s => s.id));
+        }
+      }
+
+      const numCols = Math.max(1, layers.length);
+
+      // Node & layout dimensions
+      const nodeW = 176;
+      const nodeH = 56;
+      const nodeGapY = 12;
+      const colW = 216;
+      const paddingLeft = 24; // 分区标签在每行左上角，不需要单独的左侧标签栏
+      const paddingTop = 46;
+      const paddingBottom = 20;
+
+      // Calculate lane heights based on max nodes stacked in any batch
+      const laneHeights = {};
+      activeAis.forEach(ai => {
+        let maxInCol = 1;
+        for (let c = 0; c < numCols; c++) {
+          const colTaskIds = layers[c] || [];
+          const count = subtasks.filter(s => colTaskIds.includes(s.id) && s.agent === ai).length;
+          if (count > maxInCol) maxInCol = count;
+        }
+        laneHeights[ai] = Math.max(96, maxInCol * (nodeH + nodeGapY) + 34);
+      });
+
+      let totalHeight = paddingTop + paddingBottom;
+      const laneTops = {};
+      let curY = paddingTop;
+      activeAis.forEach(ai => {
+        laneTops[ai] = curY;
+        curY += laneHeights[ai] + 12; // 12px gap between lanes
+      });
+      totalHeight = curY + paddingBottom;
+
+      const totalWidth = Math.max(560, paddingLeft * 2 + numCols * colW);
+
+      // Map node positions
+      const nodePos = {};
+      const colCounters = {};
+
+      subtasks.forEach(s => {
+        const ai = s.agent || 'codex';
+        // Find column
+        let col = layers.findIndex(layer => layer.includes(s.id));
+        if (col === -1) col = s.batch || 0;
+        if (col >= numCols) col = numCols - 1;
+
+        const key = `${ai}-${col}`;
+        colCounters[key] = colCounters[key] || 0;
+        const stackIdx = colCounters[key]++;
+
+        const x = paddingLeft + col * colW + (colW - nodeW) / 2;
+        const laneTop = laneTops[ai] || paddingTop;
+        const y = laneTop + 30 + stackIdx * (nodeH + nodeGapY);
+
+        nodePos[s.id] = { x, y, w: nodeW, h: nodeH, subtask: s, col, ai };
+      });
+
+      // SVG Elements assembly
+      let svg = `
+        <svg width="${totalWidth}" height="${totalHeight}" viewBox="0 0 ${totalWidth} ${totalHeight}" xmlns="http://www.w3.org/2000/svg" style="display:block;">
+          <defs>
+            <!-- Dot grid pattern -->
+            <pattern id="dot-grid" x="0" y="0" width="16" height="16" patternUnits="userSpaceOnUse">
+              <circle cx="2" cy="2" r="1.2" fill="currentColor" opacity="0.12"/>
+            </pattern>
+            <!-- Arrow markers -->
+            <marker id="arrow-green" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+              <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#16a34a"/>
+            </marker>
+            <marker id="arrow-blue" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+              <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#2563eb"/>
+            </marker>
+            <marker id="arrow-gray" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+              <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#9ca3af"/>
+            </marker>
+          </defs>
+
+          <!-- Dot grid background -->
+          <rect width="${totalWidth}" height="${totalHeight}" fill="url(#dot-grid)"/>
+      `;
+
+      // Draw Column Headers
+      for (let c = 0; c < numCols; c++) {
+        const cx = paddingLeft + c * colW + colW / 2;
+        svg += `
+          <text x="${cx}" y="24" text-anchor="middle" font-size="12" font-weight="600" fill="var(--text-muted)" letter-spacing="0.5">
+            第 ${c + 1} 批
+          </text>
+        `;
+      }
+
+      // Draw Swimlanes (AI Rows)
+      activeAis.forEach((ai, idx) => {
+        const topY = laneTops[ai];
+        const h = laneHeights[ai];
+        const cfg = AGENTS_CONFIG[ai] || AGENTS_CONFIG.codex;
+        const laneW = totalWidth - 28;
+
+        // Tint background based on AI brand color
+        svg += `
+          <g class="swimlane-group">
+            <rect x="14" y="${topY}" width="${laneW}" height="${h}" rx="12"
+              fill="${cfg.color}" fill-opacity="0.04" stroke="${cfg.color}" stroke-opacity="0.25" stroke-dasharray="4 4" stroke-width="1.2"/>
+            <text x="26" y="${topY + 18}" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" font-weight="600" fill="${cfg.color}">
+              0${idx + 1} / ${cfg.name} · ${cfg.role}
+            </text>
+          </g>
+        `;
+      });
+
+      // Draw Orthogonal Connector Lines
+      subtasks.forEach(s => {
+        const target = nodePos[s.id];
+        if (!target) return;
+        const deps = s.deps || [];
+
+        deps.forEach(depId => {
+          const source = nodePos[depId];
+          if (!source) return;
+
+          const x1 = source.x + source.w;
+          const y1 = source.y + source.h / 2;
+          const x2 = target.x;
+          const y2 = target.y + target.h / 2;
+
+          let strokeColor = '#9ca3af';
+          let marker = 'arrow-gray';
+          let dashAttr = '';
+
+          if (source.subtask.status === 'done') {
+            strokeColor = '#16a34a';
+            marker = 'arrow-green';
+          }
+          if (target.subtask.status === 'running') {
+            strokeColor = '#2563eb';
+            marker = 'arrow-blue';
+            dashAttr = 'stroke-dasharray="5 4" style="animation: dash-flow 1s linear infinite;"';
+          }
+
+          let pathD = '';
+          if (x2 > x1) {
+            const xMid = Math.round((x1 + x2) / 2);
+            pathD = `M ${x1} ${y1} L ${xMid} ${y1} L ${xMid} ${y2} L ${x2} ${y2}`;
+          } else {
+            // Backward/same col routing
+            const xMid1 = x1 + 18;
+            const yMid = Math.max(source.y + source.h, target.y + target.h) + 12;
+            const xMid2 = x2 - 18;
+            pathD = `M ${x1} ${y1} L ${xMid1} ${y1} L ${xMid1} ${yMid} L ${xMid2} ${yMid} L ${xMid2} ${y2} L ${x2} ${y2}`;
+          }
+
+          svg += `
+            <path d="${pathD}" fill="none" stroke="${strokeColor}" stroke-width="1.6" marker-end="url(#${marker})" ${dashAttr}/>
+          `;
+        });
+      });
+
+      // Draw Nodes
+      subtasks.forEach(s => {
+        const pos = nodePos[s.id];
+        if (!pos) return;
+
+        const ai = s.agent || 'codex';
+        const aiCfg = AGENTS_CONFIG[ai] || AGENTS_CONFIG.codex;
+        const status = s.status || 'pending';
+        const statusCfg = STATUS_CONFIG[status] || STATUS_CONFIG.pending;
+
+        let borderStroke = 'var(--border-color)';
+        let borderDash = '';
+        let pulseClass = '';
+
+        if (status === 'done') borderStroke = '#16a34a';
+        else if (status === 'running') {
+          borderStroke = '#2563eb';
+          pulseClass = 'node-running-pulse';
+        } else if (status === 'queued') {
+          borderStroke = '#6b7280';
+          borderDash = 'stroke-dasharray="4 3"';
+        } else if (status === 'pending' || status === 'skipped') {
+          borderStroke = '#9ca3af';
+          borderDash = 'stroke-dasharray="3 3"';
+        } else if (status === 'failed' || status === 'timeout') {
+          borderStroke = '#dc2626';
+        } else if (status === 'stopped') {
+          borderStroke = '#d97706';
+        }
+
+        const titleText = (s.title || s.id).length > 11 ? (s.title || s.id).slice(0, 10) + '…' : (s.title || s.id);
+        const metaText = `${statusCfg.text} · ${formatDuration(s.elapsed_s)}`;
+
+        svg += `
+          <g class="diagram-node" cursor="pointer" onclick="openDrawer('${s.id}', '${s.run || ''}')">
+            <!-- Node Box -->
+            <rect x="${pos.x}" y="${pos.y}" width="${pos.w}" height="${pos.h}" rx="10"
+              fill="var(--bg-card-subtle)" stroke="${borderStroke}" stroke-width="${status === 'running' ? '2' : '1.4'}" ${borderDash} class="${pulseClass}"/>
+            <!-- Left AI Brand Bar -->
+            <rect x="${pos.x}" y="${pos.y}" width="4.5" height="${pos.h}" rx="2" fill="${aiCfg.color}"/>
+            <!-- Top Right Status Dot -->
+            <circle cx="${pos.x + pos.w - 14}" cy="${pos.y + 14}" r="3.5" fill="${statusCfg.color}"/>
+            <!-- Node Title -->
+            <text x="${pos.x + 14}" y="${pos.y + 24}" font-size="13" font-weight="600" fill="var(--text-main)">
+              ${escapeHtml(titleText)}
+            </text>
+            <!-- Node Subtitle / Meta -->
+            <text x="${pos.x + 14}" y="${pos.y + 42}" font-size="11" fill="var(--text-muted)">
+              ${escapeHtml(metaText)}
+            </text>
+          </g>
+        `;
+      });
+
+      svg += `</svg>`;
+      return svg;
+    }
+
+    // --- Page 3: AI Members ---
+    function renderAgentsPage() {
+      const container = document.getElementById('main-content');
+      const agents = (currentState && currentState.agents) || DEMO_STATE.agents;
+
+      const keys = ['codex', 'dsh', 'agy'];
+      const cardsHtml = keys.map(k => {
+        const ag = agents[k] || {};
+        const cfg = AGENTS_CONFIG[k];
+        const slots = ag.slots || { used: 0, max: 3, queued: 0 };
+        const currentList = ag.current || [];
+        const today = ag.today || { runs: 0, tokens: 0 };
+        const week = ag.week || { runs: 0, tokens: 0 };
+        const stats = ag.stats || { success_rate: null, avg_s: 0, reworks: 0 };
+        const recent = ag.recent || [];
+
+        // Slots segmented visual cells
+        const maxSlots = Math.max(1, slots.max || 3);
+        const usedSlots = slots.used || 0;
+        let slotCellsHtml = '';
+        for (let i = 0; i < maxSlots; i++) {
+          const isUsed = i < usedSlots;
+          slotCellsHtml += `<div class="slot-cell ${isUsed ? 'used' : ''}"></div>`;
+        }
+
+        // Current works list
+        let currentWorksHtml = '';
+        if (currentList.length === 0) {
+          currentWorksHtml = `
+            <div class="idle-banner">
+              <span class="status-dot pending"></span>
+              <span>目前空闲</span>
+            </div>
+          `;
+        } else {
+          currentWorksHtml = currentList.map(c => `
+            <div class="current-work-item" onclick="openDrawer('', '${c.run || ''}')" style="cursor:pointer">
+              <div class="current-work-mission">${escapeHtml(c.mission_title || c.mission || '任务')}</div>
+              <div style="font-weight:600; color:var(--text-main); font-size:13px;">${escapeHtml(c.title || '执行中')}</div>
+              <div class="current-work-now">${escapeHtml(c.now ? c.now.text : '正在执行')} · ${formatDuration(c.elapsed_s)}</div>
+            </div>
+          `).join('');
+        }
+
+        // Success rate format
+        const succRateStr = stats.success_rate != null ? Math.round(stats.success_rate * 100) + '%' : '-';
+
+        // Recent items list (up to 10)
+        const recentHtml = recent.slice(0, 10).map(r => {
+          const stKey = r.status || 'done';
+          const stCfg = STATUS_CONFIG[stKey] || STATUS_CONFIG.done;
+          return `
+            <div class="agent-recent-item" onclick="openDrawer('', '${r.id}')">
+              <div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:65%;">
+                ${escapeHtml(r.title || r.id)}
+              </div>
+              <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
+                <span class="status-pill ${stKey}" style="padding:1px 6px; font-size:10px;">${stCfg.text}</span>
+                <span style="color:var(--text-subtle); font-size:11px;">${formatDuration(r.elapsed_s)}</span>
+              </div>
+            </div>
+          `;
+        }).join('') || '<div style="color:var(--text-subtle); font-size:12px;">暂无历史记录</div>';
+
+        return `
+          <div class="agent-card" style="color:${cfg.color};">
+            <!-- Header -->
+            <div class="agent-header">
+              <div class="agent-avatar" style="background-color:${cfg.color}">
+                ${cfg.name.slice(0, 1).toUpperCase()}
+              </div>
+              <div class="agent-name-role">
+                <div class="agent-name-line">
+                  <span class="agent-name">${cfg.name}</span>
+                  <span class="agent-role">${cfg.role}</span>
+                </div>
+                <div class="agent-model-tag">${escapeHtml(ag.model || cfg.model)}</div>
+              </div>
+            </div>
+
+            <!-- Slots -->
+            <div class="slots-box">
+              <div class="slots-header">
+                <span>名额占用</span>
+                <span>已用 ${usedSlots} / ${maxSlots}${slots.queued > 0 ? ` · 排队 ${slots.queued}` : ''}</span>
+              </div>
+              <div class="slots-bar">
+                ${slotCellsHtml}
+              </div>
+            </div>
+
+            <!-- Current work -->
+            <div>
+              <div class="agent-section-title">正在做</div>
+              <div class="current-work-list">
+                ${currentWorksHtml}
+              </div>
+            </div>
+
+            <!-- Usage -->
+            <div>
+              <div class="agent-section-title">Token 与执行用量</div>
+              <div class="usage-grid">
+                <div class="usage-col">
+                  <span class="usage-label">今天</span>
+                  <span class="usage-val">${today.runs || 0} 次</span>
+                  <span class="usage-sub">${formatTokens(today.tokens)} Token</span>
+                </div>
+                <div class="usage-col">
+                  <span class="usage-label">最近 7 天</span>
+                  <span class="usage-val">${week.runs || 0} 次</span>
+                  <span class="usage-sub">${formatTokens(week.tokens)} Token</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Performance stats -->
+            <div>
+              <div class="agent-section-title">表现统计</div>
+              <div class="perf-row">
+                <div class="perf-box">
+                  <div class="perf-num">${succRateStr}</div>
+                  <div class="perf-lbl">成功率</div>
+                </div>
+                <div class="perf-box">
+                  <div class="perf-num">${formatDuration(stats.avg_s)}</div>
+                  <div class="perf-lbl">平均用时</div>
+                </div>
+                <div class="perf-box">
+                  <div class="perf-num">${stats.reworks || 0} 次</div>
+                  <div class="perf-lbl">返工次数</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Recent list -->
+            <div>
+              <div class="agent-section-title">最近做过的活</div>
+              <div class="agent-recent-list">
+                ${recentHtml}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      container.innerHTML = `
+        <div class="page-header">
+          <div>
+            <div class="page-title">AI 成员</div>
+            <div class="page-subtitle">查看团队 3 位 AI 的名额使用、实时任务与工作表现</div>
+          </div>
+        </div>
+        <div class="agents-grid">
+          ${cardsHtml}
+        </div>
+      `;
+    }
+
+    // --- Page 4: History ---
+    let historyFilterAgent = 'all';
+    let historyFilterStatus = 'all';
+    let historySearchQuery = '';
+
+    function renderHistoryPage() {
+      const container = document.getElementById('main-content');
+      const runs = (currentState && currentState.runs) || DEMO_STATE.runs;
+
+      // Filter runs
+      const filtered = runs.filter(r => {
+        if (historyFilterAgent !== 'all' && r.agent !== historyFilterAgent) return false;
+        if (historyFilterStatus === 'done' && r.status !== 'done') return false;
+        if (historyFilterStatus === 'running' && r.status !== 'running') return false;
+        if (historyFilterStatus === 'failed' && !['failed', 'timeout', 'stale'].includes(r.status)) return false;
+        if (historySearchQuery) {
+          const q = historySearchQuery.toLowerCase();
+          const matchTitle = (r.title || '').toLowerCase().includes(q);
+          const matchId = (r.id || '').toLowerCase().includes(q);
+          if (!matchTitle && !matchId) return false;
+        }
+        return true;
+      });
+
+      const rowsHtml = filtered.map(r => {
+        const agKey = r.agent || 'codex';
+        const agCfg = AGENTS_CONFIG[agKey] || AGENTS_CONFIG.codex;
+        const stKey = r.status || 'done';
+        const stCfg = STATUS_CONFIG[stKey] || STATUS_CONFIG.done;
+        const changedCount = (r.changed_files && r.changed_files.length) ? `${r.changed_files.length} 个文件` : '-';
+
+        return `
+          <tr onclick="openDrawer('', '${r.id}')">
+            <td style="color:var(--text-muted); font-size:12px;">${formatTimeAgo(r.started)}</td>
+            <td>
+              <div style="font-weight:600; color:var(--text-main); font-size:13px;">${escapeHtml(r.title || r.id)}</div>
+            </td>
+            <td>
+              <span class="ai-badge ai-${agKey}">${agCfg.name}</span>
+            </td>
+            <td>
+              <span class="status-pill ${stKey}">${stCfg.text}</span>
+            </td>
+            <td>${formatDuration(r.elapsed_s)}</td>
+            <td>${changedCount}</td>
+          </tr>
+        `;
+      }).join('');
+
+      container.innerHTML = `
+        <div class="page-header">
+          <div>
+            <div class="page-title">历史</div>
+            <div class="page-subtitle">查看所有已登记的任务执行与运行记录</div>
+          </div>
+        </div>
+
+        <div class="history-toolbar">
+          <div class="filter-group">
+            <button class="filter-pill ${historyFilterAgent === 'all' ? 'active' : ''}" onclick="setHistoryAgentFilter('all')">全部 AI</button>
+            <button class="filter-pill ${historyFilterAgent === 'codex' ? 'active' : ''}" onclick="setHistoryAgentFilter('codex')">Codex</button>
+            <button class="filter-pill ${historyFilterAgent === 'dsh' ? 'active' : ''}" onclick="setHistoryAgentFilter('dsh')">dsh</button>
+            <button class="filter-pill ${historyFilterAgent === 'agy' ? 'active' : ''}" onclick="setHistoryAgentFilter('agy')">agy</button>
+          </div>
+
+          <div class="filter-group">
+            <button class="filter-pill ${historyFilterStatus === 'all' ? 'active' : ''}" onclick="setHistoryStatusFilter('all')">全部状态</button>
+            <button class="filter-pill ${historyFilterStatus === 'done' ? 'active' : ''}" onclick="setHistoryStatusFilter('done')">完成</button>
+            <button class="filter-pill ${historyFilterStatus === 'running' ? 'active' : ''}" onclick="setHistoryStatusFilter('running')">进行中</button>
+            <button class="filter-pill ${historyFilterStatus === 'failed' ? 'active' : ''}" onclick="setHistoryStatusFilter('failed')">失败/中断</button>
+          </div>
+
+          <input type="text" class="search-input" placeholder="按任务名搜索..." value="${escapeHtml(historySearchQuery)}" oninput="onHistorySearch(this.value)">
+        </div>
+
+        <div class="history-table-card">
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th style="width:140px;">开始时间</th>
+                <th>任务名</th>
+                <th style="width:100px;">AI</th>
+                <th style="width:110px;">状态</th>
+                <th style="width:110px;">用时</th>
+                <th style="width:120px;">改动文件</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsHtml || `<tr><td colspan="6" style="text-align:center; padding:48px 20px; color:var(--text-muted);">未找到符合条件的记录</td></tr>`}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function setHistoryAgentFilter(val) {
+      historyFilterAgent = val;
+      renderHistoryPage();
+    }
+
+    function setHistoryStatusFilter(val) {
+      historyFilterStatus = val;
+      renderHistoryPage();
+    }
+
+    function onHistorySearch(val) {
+      historySearchQuery = val;
+      renderHistoryPage();
+    }
+
+    // --- Router ---
+    function renderCurrentRoute() {
+      const hash = window.location.hash || '#/';
+      const navTasks = document.getElementById('nav-tasks');
+      const navAgents = document.getElementById('nav-agents');
+      const navHistory = document.getElementById('nav-history');
+
+      navTasks.classList.remove('active');
+      navAgents.classList.remove('active');
+      navHistory.classList.remove('active');
+
+      if (hash.startsWith('#/task/')) {
+        navTasks.classList.add('active');
+        const taskId = decodeURIComponent(hash.slice(7));
+        renderTaskDetailPage(taskId);
+      } else if (hash === '#/agents') {
+        navAgents.classList.add('active');
+        renderAgentsPage();
+      } else if (hash === '#/history') {
+        navHistory.classList.add('active');
+        renderHistoryPage();
+      } else {
+        navTasks.classList.add('active');
+        renderTasksPage();
+      }
+    }
+
+    window.addEventListener('hashchange', renderCurrentRoute);
+
+    // ESC closes drawer and modal
+    window.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        closeDrawer();
+        closeStopModal();
+      }
+    });
+
+    // --- Init ---
+    fetchState();
+    pollTimer = setInterval(fetchState, 2000);
+  </script>
+</body>
+</html>

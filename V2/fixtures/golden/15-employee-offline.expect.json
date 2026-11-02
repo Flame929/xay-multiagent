@@ -1,0 +1,14 @@
+[
+  {
+    "path": "people.em_codex01.state",
+    "equals": "offline"
+  },
+  {
+    "path": "people.em_codex01.online",
+    "equals": false
+  },
+  {
+    "path": "conversation.plan_version",
+    "equals": 0
+  }
+]

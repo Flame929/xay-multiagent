@@ -1,0 +1,14 @@
+{"ts":1793301410,"by":"lead:cv_demo19","type":"conv.begun","subject":"cv_demo19","ws":"ws_demo01","conv":"cv_demo19","data":{"title":"排队与验收","lead_kind":"claude","aliases":["claude:demo-19"],"cwd":"/work/demo-shop"}}
+{"ts":1793301420,"by":"lead:cv_demo19","type":"employee.hired","subject":"em_codex01","ws":"ws_demo01","conv":"cv_demo19","data":{"agent":"codex"}}
+{"ts":1793301430,"by":"lead:cv_demo19","type":"task.added","subject":"tk_a","ws":"ws_demo01","conv":"cv_demo19","data":{"key":"a","title":"做轮播","owner":"em_codex01","deps":[],"writes":["web/a/**"],"card":"商品图轮播","mode":"write","reason":"首页要上新品"}}
+{"ts":1793301440,"by":"lead:cv_demo19","type":"task.added","subject":"tk_b","ws":"ws_demo01","conv":"cv_demo19","data":{"key":"b","title":"修文案","owner":"em_codex01","deps":[],"writes":["web/b/**"],"card":"修首页文案","mode":"write","reason":"文案有错"}}
+{"ts":1793301450,"by":"office","type":"task.ready","subject":"tk_a","ws":"ws_demo01","conv":"cv_demo19","data":{}}
+{"ts":1793301460,"by":"office","type":"task.queued","subject":"tk_a","ws":"ws_demo01","conv":"cv_demo19","data":{"owner":"em_codex01","position":1}}
+{"ts":1793301470,"by":"office","type":"task.ready","subject":"tk_b","ws":"ws_demo01","conv":"cv_demo19","data":{}}
+{"ts":1793301480,"by":"office","type":"task.queued","subject":"tk_b","ws":"ws_demo01","conv":"cv_demo19","data":{"owner":"em_codex01","position":2}}
+{"ts":1793301490,"by":"station:em_codex01","type":"turn.started","subject":"tn_a","ws":"ws_demo01","conv":"cv_demo19","data":{"task":"tk_a","em":"em_codex01","kind":"first"}}
+{"ts":1793301500,"by":"station:em_codex01","type":"task.progress","subject":"tk_a","ws":"ws_demo01","conv":"cv_demo19","data":{"step":1,"of":2,"text":"搭结构","source":"native_plan"}}
+{"ts":1793301510,"by":"station:em_codex01","type":"turn.ended","subject":"tn_a","ws":"ws_demo01","conv":"cv_demo19","data":{"em":"em_codex01","status":"completed","evidence":{"cli_status":"completed","claim":"done","changed_files":["web/a.js"],"diff_stat":{"files":1,"add":8,"del":1}}}}
+{"ts":1793301520,"by":"employee:em_codex01","type":"task.reported","subject":"tk_a","ws":"ws_demo01","conv":"cv_demo19","data":{"claim":"done","summary":"轮播做好了"}}
+{"ts":1793301530,"by":"office","type":"task.landed","subject":"tk_a","ws":"ws_demo01","conv":"cv_demo19","data":{"files":["web/a.js"],"add":8,"del":1}}
+{"ts":1793301540,"by":"lead:cv_demo19","type":"task.accepted","subject":"tk_a","ws":"ws_demo01","conv":"cv_demo19","data":{"note":"看起来不错"}}

@@ -1,0 +1,1726 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>xay 组织架构 · 公司</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230F1115'/%3E%3Ccircle cx='10' cy='16' r='3' fill='%2310A37F'/%3E%3Ccircle cx='22' cy='16' r='3' fill='%234D6BFE'/%3E%3C/svg%3E">
+<style>
+/* ===== 视觉 token（沿用 xay-watch.html 与 ui-v4） ===== */
+:root {
+  --bg-base: #F5F7FA; --bg-sidebar: #FFFFFF; --bg-layer-1: #FFFFFF; --bg-layer-2: #FFFFFF; --bg-module: #F0F3F7;
+  --bg-floor: #FFFFFF; --bg-floor-alt: #F8FAFC;
+  --bg-hover: rgba(38,49,72,.06); --bg-active: rgba(38,49,72,.10);
+  --label-1: #0F1115; --label-2: #61666B; --label-3: #81858C; --label-4: #ADB2B8;
+  --border-1: rgba(0,0,0,.05); --border-2: rgba(0,0,0,.09); --border-3: rgba(0,0,0,.14); --border-4: rgba(0,0,0,.20);
+  --brand: #0F1115; --brand-text: #FFFFFF; --accent: #4176E6;
+  --ok: #22C55E; --ok-bg: #E6FAED; --err: #EC1313; --err-bg: #FEE2E2;
+  --warn: #F59E0B; --warn-label: #DD8629; --warn-bg: #FEF5E7; --idle: #CFD3D6;
+  --ai-codex: #10A37F; --ai-dsh: #4D6BFE; --ai-agy: #9B72CB; --ai-gm: #E07A5F; --ai-other: #81858C;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.05);
+  --shadow-md: 0 4px 12px rgba(0,0,0,.08);
+  --sans: -apple-system, "PingFang SC", system-ui, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Roboto, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg-base: #121315; --bg-sidebar: #1A1B1E; --bg-layer-1: #1E2024; --bg-layer-2: #26282E; --bg-module: #2C2F36;
+    --bg-floor: #1A1B1E; --bg-floor-alt: #22242A;
+    --bg-hover: rgba(255,255,255,.07); --bg-active: rgba(255,255,255,.12);
+    --label-1: #F1F3F5; --label-2: #ADB2B8; --label-3: #979DA6; --label-4: #61666B;
+    --border-1: rgba(255,255,255,.07); --border-2: rgba(255,255,255,.12); --border-3: rgba(255,255,255,.18); --border-4: rgba(255,255,255,.24);
+    --brand: #F9FAFB; --brand-text: #0F1115;
+    --ok-bg: #1B3524; --err-bg: #4A1212; --warn-bg: #3B2A14; --idle: #5A5E66;
+    --ai-codex: #1CB891; --ai-dsh: #627EFE; --ai-agy: #AB86D8; --ai-gm: #F28C6E;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,.3);
+    --shadow-md: 0 4px 14px rgba(0,0,0,.45);
+  }
+}
+:root[data-theme="dark"] {
+  --bg-base: #121315; --bg-sidebar: #1A1B1E; --bg-layer-1: #1E2024; --bg-layer-2: #26282E; --bg-module: #2C2F36;
+  --bg-floor: #1A1B1E; --bg-floor-alt: #22242A;
+  --bg-hover: rgba(255,255,255,.07); --bg-active: rgba(255,255,255,.12);
+  --label-1: #F1F3F5; --label-2: #ADB2B8; --label-3: #979DA6; --label-4: #61666B;
+  --border-1: rgba(255,255,255,.07); --border-2: rgba(255,255,255,.12); --border-3: rgba(255,255,255,.18); --border-4: rgba(255,255,255,.24);
+  --brand: #F9FAFB; --brand-text: #0F1115;
+  --ok-bg: #1B3524; --err-bg: #4A1212; --warn-bg: #3B2A14; --idle: #5A5E66;
+  --ai-codex: #1CB891; --ai-dsh: #627EFE; --ai-agy: #AB86D8; --ai-gm: #F28C6E;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.3);
+  --shadow-md: 0 4px 14px rgba(0,0,0,.45);
+}
+:root[data-theme="light"] {
+  --bg-base: #F5F7FA; --bg-sidebar: #FFFFFF; --bg-layer-1: #FFFFFF; --bg-layer-2: #FFFFFF; --bg-module: #F0F3F7;
+  --bg-floor: #FFFFFF; --bg-floor-alt: #F8FAFC;
+  --bg-hover: rgba(38,49,72,.06); --bg-active: rgba(38,49,72,.10);
+  --label-1: #0F1115; --label-2: #61666B; --label-3: #81858C; --label-4: #ADB2B8;
+  --border-1: rgba(0,0,0,.05); --border-2: rgba(0,0,0,.09); --border-3: rgba(0,0,0,.14); --border-4: rgba(0,0,0,.20);
+  --brand: #0F1115; --brand-text: #FFFFFF;
+  --ok-bg: #E6FAED; --err-bg: #FEE2E2; --warn-bg: #FEF5E7; --idle: #CFD3D6;
+  --ai-codex: #10A37F; --ai-dsh: #4D6BFE; --ai-agy: #9B72CB; --ai-gm: #E07A5F;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.05);
+  --shadow-md: 0 4px 12px rgba(0,0,0,.08);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; width: 100%; }
+body {
+  font-family: var(--sans); font-size: 14px; line-height: 1.5; color: var(--label-1);
+  background: var(--bg-base); overflow: hidden; display: flex; flex-direction: column;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: inherit; text-decoration: none; }
+button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+.mono { font-family: var(--mono); }
+
+/* ===== 顶部导航条 ===== */
+header#top-bar {
+  height: 52px; min-height: 52px; background: var(--bg-layer-1); border-bottom: 1px solid var(--border-2);
+  display: flex; align-items: center; justify-content: space-between; padding: 0 16px; gap: 12px; z-index: 40;
+}
+.brand-group { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.btn-back {
+  display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 6px;
+  background: var(--bg-module); font-size: 13px; font-weight: 500; color: var(--label-2);
+  border: 1px solid var(--border-1); transition: all .15s; flex-shrink: 0;
+}
+.btn-back:hover { background: var(--bg-hover); color: var(--label-1); }
+.conv-title { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.status-bar {
+  display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--label-2); flex-wrap: nowrap;
+}
+.stat-pill {
+  white-space: nowrap; flex: none;
+  display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; border-radius: 12px;
+  background: var(--bg-module); border: 1px solid var(--border-1);
+}
+.stat-pill b { color: var(--label-1); font-weight: 600; }
+.top-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.btn-action {
+  padding: 6px 10px; border-radius: 6px; font-size: 13px; color: var(--label-2);
+  border: 1px solid var(--border-2); background: var(--bg-layer-1); display: inline-flex; align-items: center; gap: 5px;
+}
+.btn-action:hover { background: var(--bg-hover); color: var(--label-1); }
+
+/* ===== 页面主体双栏结构 ===== */
+#main-wrap { flex: 1; display: flex; position: relative; overflow: hidden; }
+#office-viewport {
+  flex: 1; position: relative; overflow-y: auto; overflow-x: hidden; padding: 24px;
+  scroll-behavior: smooth;
+}
+#office-canvas {
+  position: relative; max-width: 1100px; margin: 0 auto; display: flex; flex-direction: column; gap: 56px;
+}
+
+/* SVG 弧线连接层 */
+svg#arc-canvas {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10;
+  overflow: visible;
+}
+.arc-path {
+  fill: none; stroke: var(--accent); stroke-width: 2.2; stroke-dasharray: 6 4; opacity: .7;
+  pointer-events: stroke; cursor: pointer; transition: stroke-width .2s, opacity .2s, stroke .2s;
+}
+.arc-path:hover, .arc-path.highlighted { stroke-width: 4.5; opacity: 1; }
+.arc-path.arc-open {
+  stroke: var(--warn); stroke-width: 2.8; stroke-dasharray: 8 4; animation: arcFlow 1.6s linear infinite;
+}
+.arc-path.arc-escalation {
+  stroke: var(--err); stroke-width: 2.8; stroke-dasharray: 6 3;
+}
+.arc-path.arc-decision {
+  stroke: var(--ok); stroke-width: 2.2; stroke-dasharray: none; opacity: .6;
+}
+.arc-dot { fill: var(--warn); filter: drop-shadow(0 0 5px var(--warn)); }
+@keyframes arcFlow {
+  from { stroke-dashoffset: 24; }
+  to { stroke-dashoffset: 0; }
+}
+
+/* 弧线悬浮卡片提示 */
+#arc-tooltip {
+  position: absolute; display: none; background: var(--bg-layer-2); border: 1px solid var(--border-3);
+  box-shadow: var(--shadow-md); border-radius: 8px; padding: 6px 12px; font-size: 12px; color: var(--label-1);
+  pointer-events: none; z-index: 50; max-width: 260px; line-height: 1.4;
+}
+
+/* 总经理区 */
+#gm-zone {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; z-index: 20;
+}
+.gm-station-box {
+  background: var(--bg-layer-1); border: 1.5px solid var(--ai-gm); border-radius: 14px;
+  padding: 14px 24px; display: flex; flex-direction: column; align-items: center;
+  box-shadow: var(--shadow-md); position: relative; max-width: 380px; width: 100%;
+  background-image: radial-gradient(var(--border-2) 1px, transparent 1px); background-size: 14px 14px;
+}
+.gm-badge-title {
+  display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; color: var(--label-1);
+}
+.gm-crown-tag {
+  background: var(--ai-gm); color: #FFF; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 4px;
+}
+.gm-mission {
+  font-size: 12px; color: var(--label-2); margin-top: 4px; text-align: center;
+}
+
+/* 部门办公区网格与浅色地面 */
+#dept-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); column-gap: 56px; row-gap: 56px; align-items: start; position: relative; z-index: 20;
+}
+.dept-card {
+  background: var(--bg-floor); border: 1px solid var(--border-2); border-radius: 14px;
+  padding: 16px; display: flex; flex-direction: column; gap: 12px; position: relative;
+  box-shadow: var(--shadow-sm);
+  background-image: radial-gradient(var(--border-2) 1px, transparent 1px); background-size: 16px 16px;
+  transition: border-color .2s;
+}
+.dept-card:hover { border-color: var(--border-4); }
+.dept-card.has-open-req { border-color: var(--warn); box-shadow: 0 0 0 1px var(--warn); }
+.dept-header {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; border-bottom: 1px solid var(--border-1);
+  padding-bottom: 8px;
+}
+.dept-info { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.dept-title-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.dept-name { font-size: 15px; font-weight: 700; color: var(--label-1); }
+.dept-head-badge {
+  font-size: 11px; padding: 1px 6px; border-radius: 4px; background: var(--bg-module); color: var(--label-2);
+  border: 1px solid var(--border-1);
+}
+.dept-head-badge.head-claude { background: var(--warn-bg); color: var(--warn-label); border-color: var(--warn); }
+.dept-mission {
+  font-size: 12px; color: var(--label-3); line-height: 1.4; word-break: break-word;
+}
+.dept-stats { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.dept-members-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px;
+}
+.dept-empty {
+  padding: 20px; text-align: center; color: var(--label-4); font-size: 12px; border: 1px dashed var(--border-2);
+  border-radius: 8px; background: var(--bg-module);
+}
+
+/* 未分配员工区 */
+#unassigned-section {
+  display: none; flex-direction: column; gap: 12px; margin-top: 10px; z-index: 20; position: relative;
+  background: var(--bg-layer-1); border: 1px dashed var(--border-3); border-radius: 12px; padding: 14px;
+}
+.unassigned-title { font-size: 13px; font-weight: 600; color: var(--label-2); display: flex; align-items: center; gap: 6px; }
+
+/* ===== 右侧面板 ===== */
+#side-panel {
+  width: 360px; min-width: 360px; max-width: 420px; background: var(--bg-sidebar);
+  border-left: 1px solid var(--border-2); display: flex; flex-direction: column; z-index: 30;
+  transition: transform .25s cubic-bezier(.16,1,.3,1), width .25s ease;
+}
+#side-panel.collapsed { transform: translateX(100%); position: absolute; right: 0; height: 100%; }
+.panel-tabs {
+  height: 44px; display: flex; border-bottom: 1px solid var(--border-2); background: var(--bg-layer-1);
+}
+.tab-btn {
+  flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  font-size: 13px; font-weight: 500; color: var(--label-3); border-bottom: 2px solid transparent;
+}
+.tab-btn.active { color: var(--label-1); border-bottom-color: var(--accent); font-weight: 600; }
+.tab-content { flex: 1; overflow-y: auto; padding: 14px; display: none; }
+.tab-content.active { display: block; }
+
+/* 信件栏（第八版 §4）：像聊天记录的一封封信 */
+.letter { display: flex; gap: 8px; align-items: flex-start; flex-wrap: wrap; position: relative; }
+.letter + .letter { margin-top: 4px; }
+.letter-avatar { flex: none; width: 34px; height: 34px; border-radius: 50%; overflow: hidden; background: var(--bg-module); border: 2px solid var(--border-2); display: flex; align-items: flex-start; justify-content: center; }
+.letter-avatar svg.xc { flex: none; margin-top: -4px; }
+.letter.is-reply .letter-avatar svg.xc { width: 40px; height: 47px; }
+.letter-bubble {
+  flex: 1; min-width: 0; background: var(--bg-layer-1); border: 1px solid var(--border-2); border-radius: 4px 14px 14px 14px;
+  padding: 8px 10px; box-shadow: var(--shadow-sm); border-left: 3px solid var(--k-c, var(--border-3)); cursor: pointer;
+  transition: border-color .15s, box-shadow .15s;
+}
+.letter.selected > .letter-bubble { box-shadow: 0 0 0 2px var(--accent); }
+.letter.k-request { --k-c: var(--warn); } .letter.k-decision { --k-c: var(--ok); } .letter.k-escalation { --k-c: var(--err); }
+.letter.k-tell { --k-c: var(--accent); } .letter.k-report { --k-c: var(--label-4); }
+.letter-head { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; font-size: 11.5px; color: var(--label-2); }
+.letter-head b { font-weight: 700; }
+.letter-arrow { color: var(--label-4); }
+.letter-kind { font-size: 10px; font-weight: 700; padding: 0 6px; border-radius: 8px; color: #fff; background: var(--k-c, var(--label-4)); }
+.letter-kind.k-request { --k-c: var(--warn); } .letter-kind.k-decision { --k-c: var(--ok); } .letter-kind.k-escalation { --k-c: var(--err); }
+.letter-kind.k-tell { --k-c: var(--accent); } .letter-kind.k-report { --k-c: var(--label-4); }
+.letter-time { margin-left: auto; font-size: 10px; color: var(--label-4); }
+.letter-subject { font-weight: 700; font-size: 13px; color: var(--label-1); margin-top: 4px; line-height: 1.4; }
+.letter-body { font-size: 12px; color: var(--label-2); line-height: 1.5; margin-top: 2px; white-space: pre-wrap; word-break: break-word; }
+.letter-body.clamp { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.letter-more { font-size: 11px; color: var(--accent); padding: 0; margin-top: 2px; }
+.letter-answer { margin-top: 6px; padding: 6px 8px; border-radius: 8px; background: var(--ok-bg); font-size: 12px; color: var(--label-1); line-height: 1.45; }
+.letter-foot { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
+.letter-foot:empty { display: none; }
+.letter-chip { font-size: 10px; padding: 1px 6px; border-radius: 8px; background: var(--bg-module); color: var(--label-3); display: inline-flex; align-items: center; gap: 2px; }
+.letter-chip.chip-wait { background: var(--warn-bg); color: var(--warn-label); font-weight: 700; }
+.letter-chip.chip-ok, .letter-chip.chip-sent { background: var(--ok-bg); color: var(--ok); }
+.letter-chip.chip-err { background: var(--err-bg); color: var(--err); }
+.letter-chip.chip-going { background: var(--warn-bg); color: var(--warn-label); }
+.letter-chip .hourglass { display: inline-block; animation: hourglassSpin 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+.letter-replies { flex-basis: 100%; margin: 6px 0 0 16px; padding-left: 14px; border-left: 2px dashed var(--border-3); display: flex; flex-direction: column; gap: 6px; }
+.letter.is-reply .letter-avatar { width: 28px; height: 28px; }
+.letter-new { animation: letterIn .45s cubic-bezier(.2,.8,.3,1.2); }
+@keyframes letterIn { from { opacity: 0; transform: translateY(14px) scale(.97); } to { opacity: 1; transform: none; } }
+.flash-ping { animation: flashPing 1.2s ease-out; }
+@keyframes flashPing { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 70%, transparent); } 70% { box-shadow: 0 0 0 14px transparent; } 100% { box-shadow: none; } }
+@media (prefers-reduced-motion: reduce) { .letter-new, .flash-ping, .letter-chip .hourglass { animation: none !important; } }
+
+/* 任务拆解 plan 树卡片 */
+.plan-item-card {
+  background: var(--bg-layer-1); border: 1px solid var(--border-2); border-left: 3px solid var(--accent);
+  border-radius: 8px; padding: 10px 12px; display: flex; flex-direction: column; gap: 5px; font-size: 12px;
+}
+.plan-item-title { font-weight: 600; font-size: 13px; color: var(--label-1); display: flex; align-items: center; gap: 6px; }
+.plan-dept-pill { font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 10px; color: #FFF; }
+.plan-deps { font-size: 11px; color: var(--label-3); display: flex; align-items: center; gap: 4px; }
+
+/* ===== 工位卡片与原创角色样式 ===== */
+.station-card {
+  background: var(--bg-layer-1); border: 1px solid var(--border-2); border-radius: 12px;
+  padding: 12px 10px 10px; display: flex; flex-direction: column; align-items: center;
+  position: relative; transition: all .2s ease; cursor: pointer; text-decoration: none;
+  box-shadow: var(--shadow-sm); user-select: none;
+}
+.station-card:hover {
+  transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: var(--accent);
+}
+.station-svg-wrap { width: 140px; height: 105px; position: relative; }
+.station-meta { margin-top: 6px; text-align: center; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.station-name-row { display: flex; align-items: center; justify-content: center; gap: 6px; max-width: 100%; }
+.station-worker-name { font-size: 13px; font-weight: 600; color: var(--label-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.agent-tag {
+  font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 1px 5px; border-radius: 4px;
+  color: #FFFFFF; letter-spacing: 0.5px;
+}
+.agent-tag.tag-codex { background: var(--ai-codex); }
+.agent-tag.tag-dsh { background: var(--ai-dsh); }
+.agent-tag.tag-agy { background: var(--ai-agy); }
+.agent-tag.tag-claude, .agent-tag.tag-gm { background: var(--ai-gm); }
+.agent-tag.tag-other { background: var(--ai-other); }
+
+.station-now-text {
+  font-size: 11px; color: var(--label-3); line-height: 1.3; max-width: 140px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center;
+}
+.station-state-badge {
+  position: absolute; top: 8px; left: 8px; font-size: 10px; font-weight: 600; padding: 1px 6px;
+  border-radius: 8px; border: 1px solid transparent; display: flex; align-items: center; gap: 4px;
+}
+.state-working { background: var(--ok-bg); color: var(--ok); border-color: var(--ok); }
+.state-sleeping { background: var(--bg-module); color: var(--label-4); }
+.state-blocked { background: var(--err-bg); color: var(--err); border-color: var(--err); }
+.state-failed { background: var(--err-bg); color: var(--err); font-weight: bold; }
+.state-waiting { background: var(--warn-bg); color: var(--warn); }
+.state-idle { background: var(--bg-module); color: var(--label-3); }
+
+/* SVG 动画与图元关键帧 */
+@keyframes codeScroll { 0% { transform: translateY(0); } 100% { transform: translateY(-20px); } }
+@keyframes typingMotion { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
+@keyframes floatZzz {
+  0% { transform: translate(0, 0) scale(0.8); opacity: 0; }
+  40% { opacity: 0.9; }
+  100% { transform: translate(8px, -14px) scale(1.1); opacity: 0; }
+}
+@keyframes pulseQuestion {
+  0%, 100% { transform: scale(1) translateY(0); }
+  50% { transform: scale(1.15) translateY(-3px); }
+}
+@keyframes hourglassSpin {
+  0%, 40% { transform: rotate(0deg); }
+  50%, 90% { transform: rotate(180deg); }
+  100% { transform: rotate(360deg); }
+}
+@keyframes redMonitorPulse {
+  0%, 100% { fill: #4A1212; stroke: #EC1313; }
+  50% { fill: #7F1D1D; stroke: #F87171; }
+}
+
+.anim-scroll-lines { animation: codeScroll 1.6s linear infinite; }
+.anim-typing { animation: typingMotion 0.6s ease-in-out infinite; transform-origin: center; }
+.anim-zzz { animation: floatZzz 2.2s cubic-bezier(0.2, 0.8, 0.3, 1) infinite; }
+.anim-zzz-2 { animation: floatZzz 2.2s cubic-bezier(0.2, 0.8, 0.3, 1) 1.1s infinite; }
+.anim-question { animation: pulseQuestion 1.4s ease-in-out infinite; transform-origin: center; transform-box: fill-box; }
+.anim-hourglass { animation: hourglassSpin 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite; transform-origin: center; transform-box: fill-box; }
+.anim-red-monitor { animation: redMonitorPulse 1.2s infinite; }
+
+/* ===== 第八版：部门房间、监工席、组织树、写信动画、进度条（ui-v8-org-cartoon.md）===== */
+:root { --line: #CDD4DD; --line-glow: #4176E6; }
+:root[data-theme="dark"] { --line: #3B414B; --line-glow: #7FA4FF; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --line: #3B414B; --line-glow: #7FA4FF; } }
+
+/* 总经理：只留名字和角色 */
+.gm-station-box {
+  background: var(--bg-layer-1); background-image: none; border: 1px solid color-mix(in srgb, var(--ai-gm) 35%, transparent);
+  border-radius: 24px; padding: 14px 28px 8px; max-width: 320px; gap: 0;
+  box-shadow: 0 14px 34px -16px color-mix(in srgb, var(--ai-gm) 55%, transparent);
+}
+.gm-name { display: inline-flex; align-items: center; gap: 7px; font-size: 15px; font-weight: 700; color: var(--label-1); }
+.gm-name::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--ai-gm); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ai-gm) 22%, transparent); }
+.gm-desk-wrap { width: 230px; height: 152px; margin-top: 4px; }
+
+/* 部门房间：浅色底 + 柔和投影，不要粗边和装饰 */
+.dept-card.room {
+  padding: 0; gap: 0; border-radius: 24px; background-image: none;
+  border: 1px solid color-mix(in srgb, var(--room-c) 22%, transparent);
+  background: color-mix(in srgb, var(--room-c) 5%, var(--bg-layer-1));
+  box-shadow: 0 16px 36px -20px color-mix(in srgb, var(--room-c) 50%, transparent);
+  transition: box-shadow .25s, transform .25s;
+}
+.dept-card.room:hover { border-color: color-mix(in srgb, var(--room-c) 40%, transparent); transform: translateY(-2px); }
+.room-head { display: flex; align-items: center; gap: 10px; padding: 16px 18px 2px; }
+.room-name { display: inline-flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 700; color: var(--label-1); letter-spacing: .3px; }
+.room-name::before { content: ""; width: 10px; height: 10px; border-radius: 4px; background: var(--room-c); }
+.room-pill { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 10px; background: color-mix(in srgb, var(--room-c) 10%, transparent); color: color-mix(in srgb, var(--room-c) 80%, var(--label-1)); }
+.room-pill.warn { background: var(--warn-bg); color: var(--warn-label); }
+.room-pill .live { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--ok); margin-right: 4px; vertical-align: 1px; animation: livePulse 1.6s ease-in-out infinite; }
+@keyframes livePulse { 50% { opacity: .35; transform: scale(.7); } }
+.room-floor { display: flex; gap: 12px; padding: 14px 18px 18px; align-items: flex-start; }
+.room-staff { flex: 1; min-width: 0; }
+.head-desk {
+  flex: none; width: 84px; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 4px 8px;
+  border-radius: 16px; background: color-mix(in srgb, var(--room-c) 9%, var(--bg-layer-1));
+}
+.head-desk .head-title { font-size: 11px; font-weight: 700; color: color-mix(in srgb, var(--room-c) 75%, var(--label-1)); }
+.head-desk svg.xc { display: block; }
+.robot { display: block; animation: robotBob 2.4s ease-in-out infinite; }
+.robot .robot-eyes { transform-origin: 30px 25px; animation: robotBlink 4s infinite; }
+.room.busy .robot-bulb { animation: bulbBlink 1s steps(2, end) infinite; }
+@keyframes robotBob { 50% { transform: translateY(-2px); } }
+@keyframes robotBlink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(.1); } }
+@keyframes bulbBlink { 50% { fill: #fde68a; } }
+
+/* 工位：干净的白卡片 */
+.station-card { border: 1px solid var(--border-1); border-radius: 18px; padding: 10px 10px 12px; box-shadow: 0 6px 18px -12px rgba(15,17,21,.35); }
+.station-card:hover { transform: translateY(-3px); border-color: var(--border-2); box-shadow: 0 14px 26px -14px rgba(15,17,21,.4); }
+.station-state-badge { border: none; padding: 2px 8px; border-radius: 10px; font-weight: 700; }
+.station-state-badge .dot { display: none; }
+.station-worker-name { font-size: 13.5px; font-weight: 700; }
+.station-progress { width: 104px; height: 4px; border-radius: 4px; background: var(--bg-module); overflow: hidden; margin-top: 6px; }
+.station-progress > i { display: block; height: 100%; width: 100%; border-radius: 4px; }
+.station-progress.p-working > i {
+  background: linear-gradient(90deg, transparent 0%, var(--ok) 35%, color-mix(in srgb, var(--ok) 40%, #fff) 50%, var(--ok) 65%, transparent 100%);
+  background-size: 200% 100%; animation: progSweep 1.4s linear infinite;
+}
+.station-progress.p-idle > i { background: color-mix(in srgb, var(--ok) 45%, transparent); }
+.station-progress.p-failed > i { background: var(--err); }
+.station-progress.p-blocked > i { background: var(--warn); }
+.station-progress.p-waiting > i { background: var(--warn); width: 30%; animation: progWait 1.6s ease-in-out infinite alternate; }
+.station-progress.p-sleeping > i { background: var(--idle); }
+@keyframes progSweep { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+@keyframes progWait { to { transform: translateX(233%); } }
+.name-codex { color: var(--ai-codex); } .name-dsh { color: var(--ai-dsh); } .name-agy { color: var(--ai-agy); } .name-gm { color: var(--ai-gm); }
+
+/* 组织树：细线 + 圆角拐弯；有人干活的部门，一颗光点沿线往下走 */
+.org-line { fill: none; stroke: var(--line); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.org-node { fill: var(--bg-base); stroke: var(--line); stroke-width: 2; }
+.org-branch { fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; opacity: .55; }
+.org-flow { fill: none; stroke-width: 3.5; stroke-linecap: round; stroke-dasharray: 0 99999; filter: drop-shadow(0 0 5px currentColor); }
+.room-progress { width: 64px; height: 6px; border-radius: 6px; background: color-mix(in srgb, var(--room-c) 14%, transparent); overflow: hidden; margin-left: auto; }
+.room-progress > i { display: block; height: 100%; border-radius: 6px; background: var(--room-c); transition: width .6s cubic-bezier(.2,.8,.3,1); }
+.room-progress-text { font-size: 11px; font-weight: 700; color: var(--label-3); font-variant-numeric: tabular-nums; }
+/* 每个人的任务清单 */
+.todo { list-style: none; width: 100%; margin: 6px 0 0; padding: 0 2px; display: flex; flex-direction: column; gap: 3px; text-align: left; }
+.todo li { display: flex; align-items: center; gap: 6px; font-size: 11.5px; line-height: 1.35; color: var(--label-2); min-width: 0; }
+.todo li span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.todo li i { flex: none; width: 13px; height: 13px; border-radius: 50%; border: 1.5px solid var(--label-4); position: relative; }
+.todo li.todo-done { color: var(--label-3); }
+.todo li.todo-done i { background: var(--ok); border-color: var(--ok); }
+.todo li.todo-done i::after { content: ""; position: absolute; left: 3.5px; top: 1px; width: 3px; height: 6px; border: solid #fff; border-width: 0 1.6px 1.6px 0; transform: rotate(45deg); }
+.todo li.todo-running { color: var(--label-1); font-weight: 600; }
+.todo li.todo-running i { border-color: color-mix(in srgb, var(--accent) 25%, transparent); border-top-color: var(--accent); animation: todoSpin .9s linear infinite; }
+.todo li.todo-failed { color: var(--err); }
+.todo li.todo-failed i { background: var(--err); border-color: var(--err); }
+.todo li.todo-failed i::after { content: "×"; position: absolute; inset: -3px 0 0; color: #fff; font-size: 11px; font-weight: 800; text-align: center; line-height: 14px; }
+.todo li.todo-queued i { border-style: dashed; }
+.todo li.todo-more, .todo li.todo-idle { color: var(--label-4); font-size: 10.5px; }
+.todo li.todo-more { padding-left: 19px; }
+@keyframes todoSpin { to { transform: rotate(360deg); } }
+/* 任务拆解：任务 → 谁在做 */
+.plan-summary { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.plan-group { margin-bottom: 14px; }
+.plan-group-title { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--label-2); margin-bottom: 6px; }
+.plan-group-title::before { content: ""; width: 8px; height: 8px; border-radius: 3px; background: var(--g-c, var(--label-4)); }
+.plan-row { display: flex; align-items: center; gap: 8px; padding: 7px 8px; border-radius: 12px; background: var(--bg-layer-1); border: 1px solid var(--border-1); margin-bottom: 5px; }
+.plan-row .plan-ava { flex: none; width: 30px; height: 30px; border-radius: 50%; overflow: hidden; display: flex; justify-content: center; background: var(--bg-module); }
+.plan-row .plan-ava svg.xc { flex: none; margin-top: -3px; }
+.plan-row .plan-main { flex: 1; min-width: 0; }
+.plan-row .plan-title { font-size: 12.5px; font-weight: 600; color: var(--label-1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.plan-row .plan-who { font-size: 11px; color: var(--label-3); }
+.plan-state { flex: none; font-size: 10.5px; font-weight: 700; padding: 1px 7px; border-radius: 9px; background: var(--bg-module); color: var(--label-3); }
+.plan-state.s-done { background: var(--ok-bg); color: var(--ok); }
+.plan-state.s-running { background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); }
+.plan-state.s-failed { background: var(--err-bg); color: var(--err); }
+.plan-state.s-queued { background: var(--warn-bg); color: var(--warn-label); }
+
+/* 写信飞行、落地牌子、彩带 */
+.letter-fly { position: absolute; left: 0; top: 0; z-index: 60; pointer-events: none; width: 30px; height: 22px; margin: -11px 0 0 -15px; filter: drop-shadow(0 4px 6px rgba(0,0,0,.22)); }
+.land-ping {
+  position: absolute; z-index: 61; pointer-events: none; font-size: 11px; font-weight: 700; color: #fff; padding: 3px 9px; border-radius: 12px;
+  transform: translate(-50%, -100%); animation: landPop 1.4s ease-out forwards; white-space: nowrap; box-shadow: 0 6px 14px -6px rgba(0,0,0,.35);
+}
+@keyframes landPop { 0% { opacity: 0; transform: translate(-50%, -60%) scale(.6); } 20% { opacity: 1; transform: translate(-50%, -120%) scale(1.06); } 80% { opacity: 1; transform: translate(-50%, -140%) scale(1); } 100% { opacity: 0; transform: translate(-50%, -170%); } }
+.confetti { position: absolute; z-index: 62; width: 7px; height: 10px; border-radius: 2px; pointer-events: none; }
+@media (prefers-reduced-motion: reduce) {
+  .robot, .robot .robot-eyes, .org-flow, .station-progress > i, .room-pill .live { animation: none !important; }
+  .org-flow { display: none; }
+  .todo li.todo-running i { animation: none !important; }
+}
+@media (max-width: 560px) {
+  .room-floor { flex-direction: column; align-items: stretch; }
+  .head-desk { width: auto; align-self: flex-start; flex-direction: row; gap: 6px; padding: 3px 12px 3px 6px; border-radius: 14px; }
+  .head-desk svg { width: 30px !important; height: auto !important; }
+  .room-staff { width: 100%; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .room-staff .station-svg-wrap { width: 100%; height: auto; aspect-ratio: 140 / 105; }
+  .room-staff .station-progress { width: 80%; }
+  .gm-desk-wrap { width: 190px; height: 126px; }
+}
+
+/* 响应式：手机端适配 390px */
+@media (max-width: 768px) {
+  header#top-bar { padding: 0 10px; height: 48px; }
+  .conv-title { max-width: 120px; }
+  .status-bar .stat-hide-sm { display: none; }
+}
+@media (max-width: 560px) {
+  .status-bar { display: none; }
+  #office-viewport { padding: 12px; }
+  #dept-grid { grid-template-columns: 1fr; gap: 40px; padding-left: 18px; }
+  #side-panel {
+    position: fixed; top: 52px; bottom: 0; right: 0; width: 100%; max-width: 100%;
+    transform: translateX(100%); box-shadow: -4px 0 20px rgba(0,0,0,.25);
+  }
+  #side-panel.mobile-open { transform: translateX(0); }
+}
+</style>
+</head>
+<body>
+
+<header id="top-bar">
+  <div class="brand-group">
+    <a href="/" id="back-link" class="btn-back" title="返回主看板">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M9.78 12.78a.75.75 0 0 1-1.06 0L4.47 8.53a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 1.06L6.06 8l3.72 3.72a.75.75 0 0 1 0 1.06z"/></svg>
+      <span>看板</span>
+    </a>
+    <div class="conv-title" id="bar-title">AI 公司组织架构</div>
+  </div>
+  <div class="status-bar" id="bar-stats">
+    <span class="stat-pill"><span class="dot" style="background:var(--accent);"></span> <b id="stat-depts">0</b> 部门</span>
+    <span class="stat-pill"><span class="dot ok"></span> <b id="stat-workers">0</b> 员工在岗</span>
+    <span class="stat-pill stat-hide-sm" id="stat-req-box"><span class="dot warn"></span> <b id="stat-requests">0</b> 待答需求</span>
+  </div>
+  <div class="top-actions">
+    <button class="btn-action" id="theme-btn" title="切换明暗主题">🌓</button>
+    <button class="btn-action" id="panel-toggle-btn" title="展开/收起侧边栏">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M2 3.75C2 2.784 2.784 2 3.75 2h8.5c.966 0 1.75.784 1.75 1.75v8.5A1.75 1.75 0 0 1 12.25 14h-8.5A1.75 1.75 0 0 1 2 12.25v-8.5zm8.5-.25v9h1.75a.25.25 0 0 0 .25-.25v-8.5a.25.25 0 0 0-.25-.25h-1.75z"/></svg>
+      <span class="stat-hide-sm">记录与规划</span>
+    </button>
+  </div>
+</header>
+
+<div id="main-wrap">
+  <div id="office-viewport">
+    <div id="office-canvas">
+      <svg id="arc-canvas"></svg>
+      <div id="arc-tooltip"></div>
+
+      <!-- 总经理工位 -->
+      <section id="gm-zone" aria-label="总经理办公室"></section>
+
+      <!-- 各部门办公区 -->
+      <section id="dept-grid" aria-label="部门办公区"></section>
+
+      <!-- 未分配员工区 -->
+      <section id="unassigned-section" aria-label="待分配工位"></section>
+    </div>
+  </div>
+
+  <!-- 右侧任务拆解与沟通记录面板 -->
+  <aside id="side-panel">
+    <div class="panel-tabs">
+      <button class="tab-btn active" data-tab="bus">
+        <span>信件</span>
+        <span class="stat-pill" style="padding:1px 6px;font-size:11px;" id="bus-count">0</span>
+      </button>
+      <button class="tab-btn" data-tab="plan">
+        <span>任务拆解</span>
+        <span class="stat-pill" style="padding:1px 6px;font-size:11px;" id="plan-count">0</span>
+      </button>
+      <button class="btn-action" id="panel-close-btn" style="padding:0 12px;font-size:18px;color:var(--label-3);line-height:1;" title="关闭面板">×</button>
+    </div>
+    <div class="tab-content active" id="tab-bus">
+      <div id="bus-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+    </div>
+    <div class="tab-content" id="tab-plan">
+      <div id="plan-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+    </div>
+  </aside>
+</div>
+
+<script src="/xay-chars/core.js"></script>
+<script src="/xay-chars/codex.js"></script>
+<script src="/xay-chars/dsh.js"></script>
+<script src="/xay-chars/agy.js"></script>
+<script src="/xay-chars/claude.js"></script>
+<script src="/xay-chars/rules.js"></script>
+<script>
+// xay-org.html 核心逻辑
+(function() {
+  'use strict';
+
+  let _uid = 0;
+  function nextId() { return 'id_' + (++_uid); }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  // ===== 人员目录：员工统一显示成「AI 名 + 序号」（Codex 1、DeepSeek 2…），工位和信件栏共用 =====
+  const AI_NAMES = { codex: 'Codex', dsh: 'DeepSeek', agy: 'Gemini', gm: 'Claude', other: 'AI' };
+  const labelSeq = {};     // AI 类型 → 已发到几号
+  const labelOf = {};      // 'dept/worker' → 'Codex 1'（发过号就不再变）
+  let roster = {};         // 'dept/worker' → { key, dept, worker, agent, type, label }
+  function buildRoster(data) {
+    roster = {};
+    const add = (deptId, m) => {
+      const type = getAgentType(m.agent);
+      const key = (deptId || '') + '/' + (m.worker || '');
+      if (!labelOf[key]) {
+        labelSeq[type] = (labelSeq[type] || 0) + 1;
+        labelOf[key] = AI_NAMES[type] + ' ' + labelSeq[type];
+      }
+      roster[key] = { key, dept: deptId, worker: m.worker, agent: m.agent, type, label: labelOf[key] };
+    };
+    (data.departments || []).forEach(d => (d.members || []).forEach(m => add(d.id, m)));
+    (data.unassigned || []).forEach(m => add('unassigned', m));
+  }
+  // who：'gm'、{ dept, worker } 或部门 id 字符串；返回 { label, type, key }，找不到时用原名
+  function whoIs(who, depts) {
+    if (!who || who === 'gm' || who.dept === 'gm' || who.worker === 'gm') return { key: 'gm', type: 'gm', label: '总经理' };
+    if (typeof who === 'string') {
+      const d = (depts || []).find(x => x.id === who);
+      return { key: 'dept:' + who, type: 'dept', label: d ? (d.name || who) : who };
+    }
+    const hit = roster[(who.dept || '') + '/' + (who.worker || '')] ||
+      Object.values(roster).find(r => r.worker === who.worker);
+    return hit || { key: 'x:' + who.worker, type: 'other', label: who.worker || '某人' };
+  }
+  function humanize(text) {
+    let out = String(text || '');
+    Object.values(roster).forEach(r => { if (r.worker && r.worker.length >= 2 && r.worker !== r.label) out = out.split(r.worker).join(r.label); });
+    return out;
+  }
+  // 小头像（信件栏、监工席用）：有角色脚本就用角色，否则用 AI 色块圆点
+  function avatarHtml(type, size, state) {
+    if (hasChars() && type !== 'dept' && type !== 'other') {
+      return XayChars.render(type === 'gm' ? 'claude' : type, { state: state || 'idle', size: size || 28 });
+    }
+    return `<span class="avatar-dot tag-${type}" style="width:${size || 28}px;height:${size || 28}px;"></span>`;
+  }
+
+  function getAgentType(agent) {
+    const a = (agent || '').toLowerCase();
+    if (a.includes('codex')) return 'codex';
+    if (a.includes('dsh') || a.includes('deepseek')) return 'dsh';
+    if (a.includes('agy') || a.includes('antigravity') || a.includes('gemini')) return 'agy';
+    if (a.includes('claude') || a.includes('gm')) return 'gm';
+    return 'other';
+  }
+
+  // 原创几何小角色 SVG（Codex 黑绿、dsh 蓝、agy 紫、GM 暖橙；纯原创几何形状）
+  function renderCharacterSvg(agentType, state) {
+    const isTyping = state === 'working';
+    const typingCls = isTyping ? ' anim-typing' : '';
+
+    if (agentType === 'codex') {
+      // Codex: 方角赛博终端体，黑绿配色，单眼发光感光带，机械耳麦
+      return `
+        <g class="${typingCls}" transform-origin="108 42">
+          <!-- 机械耳麦/天线 -->
+          <line x1="108" y1="23" x2="108" y2="16" stroke="#10A37F" stroke-width="2"/>
+          <circle cx="108" cy="15" r="2.5" fill="#10A37F"/>
+          <!-- 方角头部 -->
+          <rect x="94" y="23" width="28" height="24" rx="4" fill="#18231E" stroke="#10A37F" stroke-width="2"/>
+          <!-- 绿色感光单眼 -->
+          <rect x="98" y="32" width="20" height="6" rx="2" fill="#10A37F"/>
+          <circle cx="104" cy="35" r="1.5" fill="#E6FAED"/>
+          <!-- 身体躯干与双臂 -->
+          <path d="M96 47 L120 47 L124 66 L92 66 Z" fill="#202F28"/>
+          <!-- 敲键小手 -->
+          <circle cx="93" cy="67" r="3" fill="#10A37F"/>
+          <circle cx="123" cy="67" r="3" fill="#10A37F"/>
+        </g>`;
+    } else if (agentType === 'dsh') {
+      // dsh: 蔚蓝流线飞行机器人，圆角盾形头部，发光蓝眸与侧翼
+      return `
+        <g class="${typingCls}" transform-origin="108 42">
+          <!-- 动能侧翼 -->
+          <polygon points="94,34 88,28 92,38" fill="#4D6BFE"/>
+          <polygon points="122,34 128,28 124,38" fill="#4D6BFE"/>
+          <!-- 椭圆头部 -->
+          <ellipse cx="108" cy="34" rx="14" ry="12" fill="#171F36" stroke="#4D6BFE" stroke-width="2"/>
+          <!-- 双蓝眸 -->
+          <rect x="99" y="32" width="6" height="4" rx="1.5" fill="#627EFE"/>
+          <rect x="111" y="32" width="6" height="4" rx="1.5" fill="#627EFE"/>
+          <!-- 躯干与手臂 -->
+          <path d="M96 46 Q108 49 120 46 L123 66 L93 66 Z" fill="#1D2644"/>
+          <!-- 机械手部 -->
+          <circle cx="94" cy="67" r="3" fill="#627EFE"/>
+          <circle cx="122" cy="67" r="3" fill="#627EFE"/>
+        </g>`;
+    } else if (agentType === 'agy') {
+      // agy: 紫色反重力悬浮棱晶机器人，八面体晶核 + 轨道悬浮光环
+      return `
+        <g class="${typingCls}" transform-origin="108 42">
+          <!-- 轨道悬浮光环 -->
+          <ellipse cx="108" cy="33" rx="18" ry="6" fill="none" stroke="#AB86D8" stroke-width="1.5" stroke-dasharray="4 2"/>
+          <!-- 八面体棱晶头部 -->
+          <polygon points="108,18 122,33 108,48 94,33" fill="#241B33" stroke="#9B72CB" stroke-width="2"/>
+          <!-- 晶体中心发光核心 -->
+          <circle cx="108" cy="33" r="3.5" fill="#E9D5FF"/>
+          <!-- 悬浮躯干 -->
+          <path d="M98 48 Q108 51 118 48 L121 66 L95 66 Z" fill="#291E3B"/>
+          <!-- 悬浮力场感应爪 -->
+          <circle cx="95" cy="67" r="3" fill="#AB86D8"/>
+          <circle cx="121" cy="67" r="3" fill="#AB86D8"/>
+        </g>`;
+    } else if (agentType === 'gm') {
+      // GM (Claude): 暖橙尊荣六边形中枢，尊贵领导光芒
+      return `
+        <g class="${typingCls}" transform-origin="108 42">
+          <!-- 领导者外环 -->
+          <circle cx="108" cy="34" r="16" fill="none" stroke="#E07A5F" stroke-width="1.2" stroke-dasharray="3 3"/>
+          <!-- 六边形首脑 -->
+          <polygon points="108,19 121,26 121,42 108,49 95,42 95,26" fill="#2E1C16" stroke="#E07A5F" stroke-width="2"/>
+          <!-- 核心能量徽印 -->
+          <path d="M108 27 L110 32 L115 33 L111 36 L113 41 L108 38 L103 41 L105 36 L101 33 L106 32 Z" fill="#F28C6E"/>
+          <!-- 稳重机躯 -->
+          <path d="M95 48 L121 48 L125 66 L91 66 Z" fill="#3B231B"/>
+          <circle cx="93" cy="67" r="3.5" fill="#E07A5F"/>
+          <circle cx="123" cy="67" r="3.5" fill="#E07A5F"/>
+        </g>`;
+    } else {
+      // 默认小角色：极简几何圆球机器人
+      return `
+        <g class="${typingCls}" transform-origin="108 42">
+          <circle cx="108" cy="33" r="13" fill="#25282E" stroke="#81858C" stroke-width="2"/>
+          <circle cx="104" cy="33" r="2" fill="#ADB2B8"/>
+          <circle cx="112" cy="33" r="2" fill="#ADB2B8"/>
+          <path d="M97 46 L119 46 L122 66 L94 66 Z" fill="#2D3037"/>
+          <circle cx="95" cy="67" r="3" fill="#81858C"/>
+          <circle cx="121" cy="67" r="3" fill="#81858C"/>
+        </g>`;
+    }
+  }
+
+  // ===== 第七版角色（scripts/xay-chars/，设计见 references/plans/ui-v7-characters.md §4）=====
+  // 角色在工位画布（150×102）里的位置：手落在桌面上，桌子挡住下半身
+  const CHAR_BOX = { x: 72, y: -2, w: 76 };
+  const TRANSIENT_MS = 2000;
+  const baseStates = {};   // 角色 key → 接口给的状态
+  const transients = {};   // 角色 key → { state, until }：talking / celebrate 这类瞬时状态
+
+  function hasChars() { return !!(window.XayChars && window.XayChars.render); }
+  function charAgent(agentType) { return agentType === 'gm' ? 'claude' : agentType; }
+  function effectiveState(key) {
+    const t = transients[key];
+    return t && t.until > Date.now() ? t.state : (baseStates[key] || 'idle');
+  }
+  function renderCharInDesk(agentType, key) {
+    const svg = XayChars.render(charAgent(agentType), { state: effectiveState(key), size: CHAR_BOX.w });
+    return svg.replace('<svg ', `<svg x="${CHAR_BOX.x}" y="${CHAR_BOX.y}" data-char-key="${escapeHtml(key)}" `);
+  }
+  // 只改属性切状态，不重画（动画不重播、不闪）
+  function syncChars() {
+    document.querySelectorAll('svg.xc[data-char-key]').forEach(el => {
+      const want = effectiveState(el.getAttribute('data-char-key'));
+      if (el.getAttribute('data-state') !== want) XayChars.setState(el, want);
+    });
+  }
+  function flash(key, state) {
+    if (!key || !(key in baseStates)) return;
+    transients[key] = { state, until: Date.now() + TRANSIENT_MS };
+    setTimeout(syncChars, TRANSIENT_MS + 30);
+  }
+
+  // 把新 HTML 合进容器：角色集合没变时保留原来的角色节点，只替换其余部分
+  function hasChar(node) { return node.nodeType === 1 && (node.matches('svg.xc') || !!node.querySelector('svg.xc')); }
+  function patchNode(oldEl, newEl) {
+    if (newEl.nodeType === 1 && newEl.matches('svg.xc')) return;   // 角色自己由 syncChars 切状态
+    if (!hasChar(oldEl) || !hasChar(newEl)) {
+      if (!oldEl.isEqualNode(newEl)) oldEl.replaceWith(newEl);
+      return;
+    }
+    if (oldEl.tagName !== newEl.tagName) { oldEl.replaceWith(newEl); return; }
+    [...oldEl.attributes].forEach(a => { if (!newEl.hasAttribute(a.name)) oldEl.removeAttribute(a.name); });
+    [...newEl.attributes].forEach(a => { if (oldEl.getAttribute(a.name) !== a.value) oldEl.setAttribute(a.name, a.value); });
+    patchChildren(oldEl, newEl);
+  }
+  // 含角色的子节点原地保留（移动节点会让动画重播），其余子节点按新内容换掉
+  function patchChildren(oldEl, newEl) {
+    const olds = [...oldEl.childNodes], news = [...newEl.childNodes];
+    const oldChars = olds.filter(hasChar);
+    if (oldChars.length !== news.filter(hasChar).length) { oldEl.replaceChildren(...news); return; }
+    if (olds.length === news.length && olds.every((c, i) => hasChar(c) === hasChar(news[i]))) {
+      olds.forEach((child, i) => patchNode(child, news[i]));
+      return;
+    }
+    olds.forEach(c => { if (!hasChar(c)) c.remove(); });
+    let i = 0, prev = null;
+    news.forEach(n => {
+      if (hasChar(n)) { prev = oldChars[i++]; patchNode(prev, n); }
+      else if (prev) { prev.after(n); prev = n; }
+      else { oldEl.insertBefore(n, oldEl.firstChild); prev = n; }
+    });
+  }
+  function morph(container, html) {
+    const next = document.createElement(container.tagName);
+    next.innerHTML = html;
+    const sig = root => [...root.querySelectorAll('svg.xc[data-char-key]')].map(el => el.getAttribute('data-char-key') + '|' + el.getAttribute('data-agent')).join(',');
+    if (!hasChars() || !container.firstChild || sig(container) !== sig(next)) {
+      container.innerHTML = html;
+      return;
+    }
+    patchChildren(container, next);
+  }
+
+  // 工位书桌、显示器与状态动效渲染
+  function renderDeskSvg(agentType, state, charKey) {
+    const uid = nextId();
+    const useChars = hasChars() && charKey;
+    const charSvg = useChars ? renderCharInDesk(agentType, charKey) : renderCharacterSvg(agentType, state);
+
+    // 显示器内部状态动效
+    let monitorContent = '';
+    let extraEffects = '';
+
+    if (state === 'working') {
+      // 显示器滚动代码行
+      monitorContent = `
+        <clipPath id="clip-${uid}"><rect x="22" y="26" width="54" height="36" rx="2"/></clipPath>
+        <g clip-path="url(#clip-${uid})">
+          <g class="anim-scroll-lines">
+            <line x1="26" y1="31" x2="65" y2="31" stroke="#22C55E" stroke-width="2" stroke-linecap="round"/>
+            <line x1="26" y1="37" x2="55" y2="37" stroke="#4D6BFE" stroke-width="2" stroke-linecap="round"/>
+            <line x1="26" y1="43" x2="70" y2="43" stroke="#F59E0B" stroke-width="2" stroke-linecap="round"/>
+            <line x1="26" y1="49" x2="48" y2="49" stroke="#9B72CB" stroke-width="2" stroke-linecap="round"/>
+            <line x1="26" y1="55" x2="62" y2="55" stroke="#22C55E" stroke-width="2" stroke-linecap="round"/>
+            <!-- 重复滚动线 -->
+            <line x1="26" y1="63" x2="65" y2="63" stroke="#22C55E" stroke-width="2" stroke-linecap="round"/>
+            <line x1="26" y1="69" x2="55" y2="69" stroke="#4D6BFE" stroke-width="2" stroke-linecap="round"/>
+            <line x1="26" y1="75" x2="70" y2="75" stroke="#F59E0B" stroke-width="2" stroke-linecap="round"/>
+          </g>
+        </g>`;
+    } else if (state === 'sleeping') {
+      // 显示器变暗 + 飘出 z z
+      monitorContent = `<rect x="20" y="24" width="58" height="40" rx="3" fill="#0B0D11" opacity="0.45"/>`;
+      extraEffects = `
+        <g class="anim-zzz"><text x="115" y="21" font-size="11" font-weight="bold" fill="var(--label-3)" font-family="var(--mono)">z</text></g>
+        <g class="anim-zzz-2"><text x="123" y="15" font-size="9" font-weight="bold" fill="var(--label-3)" font-family="var(--mono)">z</text></g>`;
+    } else if (state === 'blocked') {
+      // 头顶问号气泡
+      monitorContent = `
+        <line x1="26" y1="36" x2="60" y2="36" stroke="#EF4444" stroke-width="2" stroke-dasharray="3 3"/>
+        <line x1="26" y1="44" x2="45" y2="44" stroke="#EF4444" stroke-width="2" stroke-dasharray="3 3"/>`;
+      extraEffects = `
+        <g transform="translate(108, 12)"><g class="anim-question">
+          <circle cx="0" cy="0" r="8.5" fill="#EC1313"/>
+          <text x="0" y="4" text-anchor="middle" font-size="11" font-weight="900" fill="#FFFFFF" font-family="var(--sans)">?</text>
+        </g></g>`;
+    } else if (state === 'failed') {
+      // 显示器闪烁红光警报
+      monitorContent = `
+        <rect x="20" y="24" width="58" height="40" rx="3" class="anim-red-monitor"/>
+        <text x="49" y="49" text-anchor="middle" font-size="18" font-weight="900" fill="#FFFFFF" font-family="var(--sans)">!</text>`;
+    } else if (state === 'waiting') {
+      // 翻转沙漏
+      monitorContent = `
+        <g transform="translate(49, 44)"><g class="anim-hourglass">
+          <path d="M-6 -8 L6 -8 L1 -1 L6 6 L-6 6 L-1 -1 Z" fill="#F59E0B" stroke="#B45309" stroke-width="0.8"/>
+        </g></g>`;
+    } else {
+      // idle 状态：光标闪烁
+      monitorContent = `
+        <text x="26" y="42" font-size="11" fill="#10A37F" font-family="var(--mono)">&gt;_</text>
+        <line x1="26" y1="48" x2="50" y2="48" stroke="var(--border-3)" stroke-width="1.5"/>`;
+    }
+
+    return `
+      <svg class="station-svg" viewBox="0 0 150 102" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <filter id="shadow-${uid}" x="-10%" y="-10%" width="120%" height="130%">
+            <feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity="0.12"/>
+          </filter>
+        </defs>
+
+        <!-- 角色本体 -->
+        ${charSvg}
+
+        <!-- 书桌与键盘底座 -->
+        <g filter="url(#shadow-${uid})">
+          <!-- 桌面 -->
+          <rect x="10" y="66" width="130" height="9" rx="3" fill="var(--bg-layer-2)" stroke="var(--border-3)" stroke-width="1"/>
+          <!-- 桌腿 -->
+          <rect x="18" y="75" width="5" height="24" rx="1.5" fill="var(--border-3)"/>
+          <rect x="127" y="75" width="5" height="24" rx="1.5" fill="var(--border-3)"/>
+          <line x1="23" y1="84" x2="127" y2="84" stroke="var(--border-2)" stroke-width="1.5"/>
+        </g>
+
+        <!-- 键盘与触控板 -->
+        <rect x="86" y="68" width="38" height="4" rx="1" fill="var(--bg-module)" stroke="var(--border-3)" stroke-width="0.5"/>
+
+        <!-- 显示器支架 -->
+        <rect x="46" y="58" width="6" height="9" fill="var(--border-3)"/>
+        <rect x="38" y="66" width="22" height="2" rx="1" fill="var(--border-4)"/>
+
+        <!-- 显示器外框 -->
+        <rect x="18" y="22" width="62" height="44" rx="4" fill="#16181D" stroke="var(--border-4)" stroke-width="1.5" filter="url(#shadow-${uid})"/>
+        <!-- 显示器屏幕底色 -->
+        <rect x="20" y="24" width="58" height="40" rx="2.5" fill="#0D0F12"/>
+
+        <!-- 显示器内部动效 -->
+        ${monitorContent}
+
+        <!-- 额外状态效果（气泡、Zzz 等；新角色自带，不再叠加） -->
+        ${useChars ? '' : extraEffects}
+      </svg>`;
+  }
+
+  // 状态文案
+  function getStateLabel(state) {
+    switch (state) {
+      case 'working': return '工作中';
+      case 'sleeping': return '休眠中';
+      case 'blocked': return '已阻塞';
+      case 'failed': return '上一轮失败';
+      case 'waiting': return '等待中';
+      default: return '空闲';
+    }
+  }
+
+  // 每个人的任务清单（像待办清单）：✓ 做完、转圈 在做、✕ 没做成、空心 排队；只显示最近 3 件
+  function taskListHtml(worker, state) {
+    let tasks = (worker.tasks || []).slice();
+    if (!tasks.length && worker.now) {
+      tasks = [{ title: worker.now, status: state === 'working' ? 'running' : state === 'failed' ? 'failed' : state === 'waiting' ? 'queued' : 'done' }];
+    }
+    if (!tasks.length) return '<ul class="todo"><li class="todo-idle"><i></i><span>还没有任务</span></li></ul>';
+    const shown = tasks.slice(-3), more = tasks.length - shown.length;
+    return `<ul class="todo">${more > 0 ? `<li class="todo-more">…前面还有 ${more} 件</li>` : ''}${shown.map(t =>
+      `<li class="todo-${escapeHtml(t.status || 'done')}"><i></i><span title="${escapeHtml(t.title)}">${escapeHtml(t.title)}</span></li>`).join('')}</ul>`;
+  }
+
+  // 渲染单个员工工位卡片
+  function renderStationCard(worker, convId, deptId) {
+    const agentType = getAgentType(worker.agent);
+    const state = worker.state || 'idle';
+    const stateLabel = getStateLabel(state);
+    const charKey = (deptId || '') + '/' + (worker.worker || '');
+    const label = escapeHtml((roster[charKey] || {}).label || worker.worker || '员工');
+    baseStates[charKey] = state;
+    const svgHtml = renderDeskSvg(agentType, state, charKey);
+    const nowText = worker.now ? escapeHtml(worker.now) : '待命中';
+    const workerName = escapeHtml(worker.worker || '员工');
+    const agentName = escapeHtml(worker.agent || 'AI');
+
+    // 点击员工跳到现有看板该线程（/#/c/<conversation> 并定位到线程）
+    let threadHref = `/#/c/${encodeURIComponent(convId || '')}`;
+    if (worker.thread) {
+      threadHref += `?thread=${encodeURIComponent(worker.thread)}`;
+    }
+
+    return `
+      <a href="${threadHref}" class="station-card" data-worker="${workerName}" data-dept="${deptId || ''}" title="点击跳转至看板线程：${workerName} (${agentName})">
+        <span class="station-state-badge state-${state}">
+          <span class="dot ${state === 'working' ? 'ok' : state === 'failed' || state === 'blocked' ? 'err' : state === 'waiting' ? 'warn' : 'idle'}"></span>
+          ${stateLabel}
+        </span>
+        <div class="station-svg-wrap">
+          ${svgHtml}
+        </div>
+        <div class="station-meta">
+          <div class="station-name-row">
+            <span class="station-worker-name name-${agentType}" title="${workerName}">${label}</span>
+          </div>
+          ${taskListHtml(worker, state)}
+          <div class="station-progress p-${state}" title="${stateLabel}${worker.rounds ? ' · 第 ' + (Number(worker.rounds) || 1) + ' 轮' : ''}"><i></i></div>
+        </div>
+      </a>`;
+  }
+
+  // 渲染总经理工位
+  function renderGmZone(gm, convId) {
+    const gmZone = document.getElementById('gm-zone');
+    if (!gmZone) return;
+    const gmTitle = escapeHtml((gm && gm.title) || '总经理');
+    const gmKind = escapeHtml((gm && gm.kind) || 'claude');
+    const gmState = (gm && gm.state) || 'working';
+    baseStates.gm = gmState;
+    const gmSvg = renderDeskSvg('gm', gmState, 'gm');
+
+    morph(gmZone, `
+      <div class="gm-station-box" id="node-gm" data-node="gm" title="${gmKind}">
+        <div class="gm-name">${gmTitle}</div>
+        <div class="gm-desk-wrap">
+          ${gmSvg}
+        </div>
+      </div>`);
+  }
+
+  const ROOM_COLORS = ['#4D6BFE', '#10A37F', '#E07A5F', '#9B72CB', '#E0A100', '#0EA5E9'];
+  const ROBOT_SVG = `<svg class="robot" viewBox="0 0 60 64" width="52" height="56" aria-hidden="true">
+    <line x1="30" y1="5" x2="30" y2="12" stroke="#2b2b2b" stroke-width="2"/>
+    <circle class="robot-bulb" cx="30" cy="5" r="3.5" fill="#F59E0B" stroke="#2b2b2b" stroke-width="1.5"/>
+    <rect x="10" y="12" width="40" height="28" rx="9" fill="#cfd8e3" stroke="#2b2b2b" stroke-width="2"/>
+    <rect x="15" y="17" width="30" height="17" rx="6" fill="#1f2937"/>
+    <g class="robot-eyes"><circle cx="24" cy="25" r="3" fill="#5eead4"/><circle cx="36" cy="25" r="3" fill="#5eead4"/></g>
+    <path d="M25 30q5 3 10 0" stroke="#5eead4" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+    <path d="M12 47l-6 7M48 47l6 7" stroke="#2b2b2b" stroke-width="3" stroke-linecap="round"/>
+    <rect x="16" y="42" width="28" height="19" rx="6" fill="#aab6c5" stroke="#2b2b2b" stroke-width="2"/>
+    <rect x="23" y="46" width="14" height="10" rx="2" fill="#fff" stroke="#2b2b2b" stroke-width="1.2"/>
+    <path d="M26 49h8M26 52h6" stroke="#9aa3ad" stroke-width="1.2"/>
+  </svg>`;
+
+  // 监工席：Claude 监工用小一号的 Claude 娘，规则监工是一个拿夹板的小机器人
+  function renderHeadDesk(d, isClaudeHead, headText, busy, hasOpenReq) {
+    const key = 'head:' + (d.id || '');
+    const state = hasOpenReq ? 'blocked' : busy ? 'working' : 'idle';
+    let face = ROBOT_SVG;
+    if (hasChars()) {
+      baseStates[key] = state;
+      face = XayChars.render(isClaudeHead ? 'claude' : 'rules', { state: effectiveState(key), size: 64 })
+        .replace('<svg ', `<svg data-char-key="${escapeHtml(key)}" `);
+    }
+    return `<div class="head-desk" id="node-head-${escapeHtml(d.id || '')}" title="${escapeHtml(headText)}">
+      ${face}
+      <div class="head-title">${isClaudeHead ? 'Claude 监工' : '监工娘'}</div>
+    </div>`;
+  }
+
+  // 渲染所有部门与未分配员工
+  function renderDepartments(departments, unassigned, convId) {
+    const deptGrid = document.getElementById('dept-grid');
+    if (!deptGrid) return;
+
+    // 没建部门时，直接派活的员工也放进一间房，页面不空着
+    if ((!departments || !departments.length) && unassigned && unassigned.length) {
+      departments = [{ id: 'unassigned', name: '直接派活', head: 'none', members: unassigned, counts: {} }];
+      unassigned = [];
+    }
+    if (!departments || departments.length === 0) {
+      deptGrid.innerHTML = `<div class="dept-empty" style="grid-column: 1 / -1; padding: 40px;">还没有员工</div>`;
+      return;
+    }
+
+    morph(deptGrid, departments.map(d => {
+      const deptId = escapeHtml(d.id || '');
+      const deptName = escapeHtml(d.name || d.id || '部门');
+      const mission = escapeHtml(d.mission || '暂无使命描述');
+      const headText = d.head === 'rules' ? '规则监工' : 'Claude 监工';
+      const isClaudeHead = d.head === 'claude';
+      const openReqs = (d.counts && d.counts.open_requests) || 0;
+      const hasOpenReq = openReqs > 0;
+      const members = d.members || [];
+
+      const membersHtml = members.length > 0
+        ? members.map(m => renderStationCard(m, convId, d.id)).join('')
+        : `<div class="dept-empty" style="grid-column: 1 / -1;">本部门暂无在岗员工</div>`;
+      const busy = members.some(m => m.state === 'working');
+      const allTasks = members.flatMap(m => m.tasks || []);
+      const doneTasks = allTasks.filter(t => t.status === 'done').length;
+      const roomColor = ROOM_COLORS[departments.indexOf(d) % ROOM_COLORS.length];
+
+      return `
+        <div class="dept-card room ${busy ? 'busy' : ''}" id="node-dept-${deptId}" data-node="dept" data-dept-id="${deptId}" style="--room-c:${roomColor}">
+          <div class="room-head">
+            <span class="room-name room-sign" title="${mission}">${deptName}</span>
+            <span class="room-pill">${busy ? '<span class="live"></span>' : ''}${members.length} 人</span>
+            ${hasOpenReq ? `<span class="room-pill warn">${openReqs} 待答</span>` : ''}
+            ${allTasks.length ? `<span class="room-progress" title="完成 ${doneTasks} / ${allTasks.length} 件"><i style="width:${Math.round(doneTasks * 100 / allTasks.length)}%"></i></span><span class="room-progress-text">${doneTasks}/${allTasks.length}</span>` : ''}
+          </div>
+          <div class="room-floor">
+            ${d.head === 'none' ? '' : renderHeadDesk(d, isClaudeHead, headText, busy, hasOpenReq)}
+            <div class="room-staff dept-members-grid">
+              ${membersHtml}
+            </div>
+          </div>
+        </div>`;
+    }).join(''));
+
+    // 未分配工位区
+    const unassignedSec = document.getElementById('unassigned-section');
+    if (unassignedSec) {
+      if (unassigned && unassigned.length > 0) {
+        unassignedSec.style.display = 'flex';
+        morph(unassignedSec, `
+          <div class="unassigned-title">
+            <span class="dot"></span>
+            <span>未入驻部门员工（${unassigned.length} 名）</span>
+          </div>
+          <div class="dept-members-grid">
+            ${unassigned.map(m => renderStationCard(m, convId, 'unassigned')).join('')}
+          </div>`);
+      } else {
+        unassignedSec.style.display = 'none';
+        unassignedSec.innerHTML = '';
+      }
+    }
+  }
+
+  // 渲染顶部状态栏
+  function updateTopStats(data) {
+    const conv = data.conversation || {};
+    const convId = conv.id || '';
+    const convTitle = conv.title || 'AI 公司组织架构';
+    const depts = data.departments || [];
+
+    const totalDepts = depts.length;
+    let totalWorkers = 0;
+    let workingWorkers = 0;
+    let totalOpenReqs = 0;
+
+    depts.forEach(d => {
+      const counts = d.counts || {};
+      totalWorkers += (counts.members !== undefined ? counts.members : (d.members || []).length);
+      workingWorkers += (counts.working !== undefined ? counts.working : (d.members || []).filter(m => m.state === 'working').length);
+      totalOpenReqs += (counts.open_requests || 0);
+    });
+
+    if (data.unassigned) {
+      totalWorkers += data.unassigned.length;
+      workingWorkers += data.unassigned.filter(m => m.state === 'working').length;
+    }
+
+    document.getElementById('bar-title').textContent = convTitle + ' · 公司架构';
+    document.getElementById('stat-depts').textContent = String(totalDepts);
+    document.getElementById('stat-workers').textContent = `${workingWorkers}/${totalWorkers}`;
+    document.getElementById('stat-requests').textContent = String(totalOpenReqs);
+
+    const backLink = document.getElementById('back-link');
+    if (backLink && convId) {
+      backLink.href = `/#/c/${encodeURIComponent(convId)}`;
+    }
+  }
+
+  // 部门间消息弧线计算与 SVG 渲染
+  // 组织树：总经理 → 各部门房间（静态规整的线；有人在干活的部门，线上有往下流的小点）。
+  // 第八版删掉了跨部门消息弧线和来回跑的小圆点，消息改由写信动画和右侧信件栏表达。
+  // 折线点 → 圆角路径（拐弯处用二次曲线，半径 r）
+  function roundedPath(pts, r) {
+    const p = pts.filter((q, i) => i === 0 || Math.abs(q[0] - pts[i - 1][0]) > .5 || Math.abs(q[1] - pts[i - 1][1]) > .5);
+    const f = n => n.toFixed(1);
+    let d = `M ${f(p[0][0])} ${f(p[0][1])}`;
+    for (let i = 1; i < p.length - 1; i++) {
+      const [x0, y0] = p[i - 1], [x1, y1] = p[i], [x2, y2] = p[i + 1];
+      const k1 = Math.min(r, Math.hypot(x1 - x0, y1 - y0) / 2), k2 = Math.min(r, Math.hypot(x2 - x1, y2 - y1) / 2);
+      const ax = x1 - Math.sign(x1 - x0) * k1, ay = y1 - Math.sign(y1 - y0) * k1;
+      const bx = x1 + Math.sign(x2 - x1) * k2, by = y1 + Math.sign(y2 - y1) * k2;
+      d += ` L ${f(ax)} ${f(ay)} Q ${f(x1)} ${f(y1)} ${f(bx)} ${f(by)}`;
+    }
+    const last = p[p.length - 1];
+    return d + ` L ${f(last[0])} ${f(last[1])}`;
+  }
+  function renderArcs() {
+    const svg = document.getElementById('arc-canvas');
+    const canvas = document.getElementById('office-canvas');
+    const gmEl = document.getElementById('node-gm');
+    if (!svg || !canvas || !gmEl) return;
+    const base = canvas.getBoundingClientRect();
+    const rel = el => { const r = el.getBoundingClientRect(); return { l: r.left - base.left, r: r.right - base.left, t: r.top - base.top, b: r.bottom - base.top, cx: (r.left + r.right) / 2 - base.left }; };
+    const rooms = [...document.querySelectorAll('#dept-grid .dept-card.room')].map(el => ({ el, box: rel(el), color: el.style.getPropertyValue('--room-c') || '#4176E6' }));
+    if (!rooms.length) { svg.innerHTML = ''; return; }
+    const gm = rel(gmEl);
+    const oneCol = new Set(rooms.map(r => Math.round(r.box.l))).size === 1;
+    const firstRow = rooms.filter(r => Math.abs(r.box.t - rooms[0].box.t) < 4).sort((a, b) => a.box.l - b.box.l);
+    const trunkX = oneCol ? rooms[0].box.l - 10 : (firstRow[0].box.r + firstRow[1].box.l) / 2;
+    const splitY = oneCol ? gm.b + 18 : gm.b + Math.max(14, (rooms[0].box.t - gm.b) / 2);
+    let trunkEnd = splitY, branches = '', flows = [];
+    rooms.forEach(({ el, box, color }) => {
+      // 分支：从主干上的分叉点出发，用部门颜色
+      let fork, tail;
+      if (oneCol) { fork = [trunkX, box.t + 28]; tail = [[box.l, box.t + 28]]; }
+      else {
+        const y = Math.abs(box.t - rooms[0].box.t) < 4 ? splitY : box.t - 28;
+        fork = [trunkX, y]; tail = [[box.cx, y], [box.cx, box.t]];
+      }
+      trunkEnd = Math.max(trunkEnd, fork[1]);
+      const end = tail[tail.length - 1];
+      branches += `<path class="org-branch" style="stroke:${color}" d="${roundedPath([fork, ...tail], 16)}"/>` +
+        `<circle class="org-node" style="stroke:${color}" cx="${end[0].toFixed(1)}" cy="${end[1].toFixed(1)}" r="4"/>`;
+      if (el.classList.contains('busy')) {
+        const pts = [[gm.cx, gm.b], [gm.cx, splitY], [trunkX, splitY], fork, ...tail];
+        flows.push({ d: roundedPath(pts, 16), color });
+      }
+    });
+    const trunk = `<path class="org-line" d="${roundedPath([[gm.cx, gm.b], [gm.cx, splitY], [trunkX, splitY], [trunkX, trunkEnd]], 16)}"/>` +
+      `<circle class="org-node" cx="${gm.cx.toFixed(1)}" cy="${gm.b.toFixed(1)}" r="4"/>`;
+    svg.innerHTML = trunk + branches + flows.map(f => `<path class="org-flow" style="stroke:${f.color};color:${f.color}" d="${f.d}"/>`).join('');
+    if (reducedMotion()) return;
+    // 光点：一小段亮线沿整条路径从总经理流到部门，循环
+    svg.querySelectorAll('.org-flow').forEach((path, i) => {
+      const len = path.getTotalLength();
+      path.style.strokeDasharray = `22 ${Math.ceil(len + 30)}`;
+      path.animate([{ strokeDashoffset: 22 }, { strokeDashoffset: -Math.ceil(len) }],
+        { duration: Math.max(1600, len * 4), iterations: Infinity, easing: 'ease-in-out', delay: i * 400 });
+    });
+  }
+
+  // ===== 写信动画：信封从发信人飞到收信人，落地冒一个小牌子 =====
+  const LETTER_COLORS = { request: '#F59E0B', decision: '#22C55E', escalation: '#EC1313', report: '#81858C', auto: '#81858C' };
+  const LETTER_WORDS = { request: '需求', decision: '结论', escalation: '上报', report: '汇报', auto: '通知', tell: '留言', reply: '回信' };
+  let flying = 0;
+  const flightQueue = [];
+  function reducedMotion() { return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; }
+  function nodeEl(key) {
+    if (!key) return null;
+    if (key === 'gm') return document.getElementById('node-gm');
+    if (key.startsWith('dept:')) { const room = document.getElementById('node-dept-' + key.slice(5)); return room && (room.querySelector('.room-sign') || room); }
+    const i = key.indexOf('/');
+    const dept = key.slice(0, i), worker = key.slice(i + 1);
+    return [...document.querySelectorAll('.station-card')].find(c => c.getAttribute('data-dept') === dept && c.getAttribute('data-worker') === worker) || null;
+  }
+  function centerOf(el) {
+    const base = document.getElementById('office-canvas').getBoundingClientRect();
+    const r = el.getBoundingClientRect();
+    return { x: (r.left + r.right) / 2 - base.left, y: r.top + Math.min(r.height / 2, 46) - base.top };
+  }
+  function flyLetter(fromKey, toKey, type) {
+    if (reducedMotion()) return;
+    if (flying >= 3) { flightQueue.push([fromKey, toKey, type]); return; }
+    const a = nodeEl(fromKey), b = nodeEl(toKey), canvas = document.getElementById('office-canvas');
+    if (!a || !b || !canvas || a === b) return;
+    const p0 = centerOf(a), p2 = centerOf(b);
+    const p1 = { x: (p0.x + p2.x) / 2, y: Math.min(p0.y, p2.y) - 90 };
+    const color = LETTER_COLORS[type] || '#4176E6';
+    const env = document.createElement('div');
+    env.className = 'letter-fly';
+    env.innerHTML = `<svg viewBox="0 0 30 22" width="30" height="22"><rect x="1" y="1" width="28" height="20" rx="3" fill="#fff" stroke="${color}" stroke-width="2"/><path d="M2 3l13 10L28 3" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round"/><circle cx="15" cy="13" r="3" fill="${color}"/></svg>`;
+    canvas.appendChild(env);
+    const frames = [];
+    for (let i = 0; i <= 16; i++) {
+      const t = i / 16, u = 1 - t;
+      const x = u * u * p0.x + 2 * u * t * p1.x + t * t * p2.x;
+      const y = u * u * p0.y + 2 * u * t * p1.y + t * t * p2.y;
+      const scale = 0.6 + Math.sin(Math.PI * t) * 0.6;
+      frames.push({ transform: `translate(${x}px, ${y}px) rotate(${(t - 0.5) * 30}deg) scale(${scale})`, opacity: t > 0.92 ? 0.4 : 1 });
+    }
+    flying++;
+    const anim = env.animate(frames, { duration: 1300, easing: 'ease-in-out' });
+    anim.onfinish = () => {
+      env.remove();
+      const ping = document.createElement('div');
+      ping.className = 'land-ping';
+      ping.style.cssText = `left:${p2.x}px;top:${p2.y - 30}px;background:${color}`;
+      ping.textContent = '✉ ' + (LETTER_WORDS[type] || '信件') + '送达';
+      canvas.appendChild(ping);
+      setTimeout(() => ping.remove(), 1500);
+      flying--;
+      if (flightQueue.length) setTimeout(() => flyLetter(...flightQueue.shift()), 150);
+    };
+  }
+
+  // 庆祝：工位上方撒一把彩带
+  function confetti(key) {
+    if (reducedMotion()) return;
+    const el = nodeEl(key), canvas = document.getElementById('office-canvas');
+    if (!el || !canvas) return;
+    const c = centerOf(el);
+    const colors = ['#F59E0B', '#22C55E', '#4D6BFE', '#E07A5F', '#9B72CB', '#EC4899'];
+    for (let i = 0; i < 16; i++) {
+      const bit = document.createElement('span');
+      bit.className = 'confetti';
+      bit.style.background = colors[i % colors.length];
+      canvas.appendChild(bit);
+      const dx = (Math.random() - 0.5) * 140, up = 40 + Math.random() * 50, rot = (Math.random() - 0.5) * 720;
+      bit.animate([
+        { transform: `translate(${c.x}px, ${c.y}px) rotate(0)`, opacity: 1 },
+        { transform: `translate(${c.x + dx * 0.6}px, ${c.y - up}px) rotate(${rot / 2}deg)`, opacity: 1, offset: 0.4 },
+        { transform: `translate(${c.x + dx}px, ${c.y + 40}px) rotate(${rot}deg)`, opacity: 0 }
+      ], { duration: 1300 + Math.random() * 400, easing: 'cubic-bezier(.2,.7,.4,1)' }).onfinish = () => bit.remove();
+    }
+  }
+
+  // 格式化时间戳
+  function formatTime(ts) {
+    if (!ts) return '';
+    const d = new Date(ts > 1e11 ? ts : ts * 1000);
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`;
+  }
+
+  // ===== 右侧信件栏：按时间正序，像聊天记录；答复挂在原信下面；只追加新信件，不整块重画 =====
+  const LETTER_KINDS = { request: ['需求', 'k-request'], decision: ['结论', 'k-decision'], escalation: ['上报', 'k-escalation'],
+    tell: ['留言', 'k-tell'], reply: ['回信', 'k-tell'], report: ['汇报', 'k-report'], auto: ['系统', 'k-report'], notice: ['通知', 'k-tell'] };
+  function letterFoot(m, answered) {
+    const parts = [];
+    if (m.type === 'request') parts.push(m.status === 'open' && !answered ? '<span class="letter-chip chip-wait">待答复</span>' : '<span class="letter-chip chip-ok">已答复</span>');
+    if (m.verdict) {
+      const v = String(m.verdict).toLowerCase();
+      parts.push(`<span class="letter-chip ${v === 'reject' ? 'chip-err' : v === 'modify' ? 'chip-wait' : 'chip-ok'}">${v === 'reject' ? '驳回' : v === 'modify' ? '按修改执行' : '同意'}</span>`);
+    }
+    if (m.delivered === true) parts.push('<span class="letter-chip chip-sent">✓ 已送达</span>');
+    else if (m.delivered === false) parts.push('<span class="letter-chip chip-going"><span class="hourglass">⏳</span> 投递中</span>');
+    if (m.contract) parts.push(`<span class="letter-chip">约定 ${escapeHtml(m.contract)}</span>`);
+    return parts.join('');
+  }
+  function letterHtml(m, answered, depts) {
+    const from = whoIs(m.from, depts);
+    const to = m.to_worker ? whoIs({ dept: m.to, worker: m.to_worker }, depts) : whoIs(m.to || 'gm', depts);
+    const [kindText, kindCls] = LETTER_KINDS[m.type] || [m.type || '信件', 'k-report'];
+    const id = escapeHtml(m.id || '');
+    const body = String(m.body || '');
+    return `<div class="letter ${kindCls}" id="msg-card-${id}" data-id="${id}">
+      <div class="letter-avatar">${avatarHtml(from.type, 48, 'idle')}</div>
+      <div class="letter-bubble">
+        <div class="letter-head"><b class="name-${from.type}">${escapeHtml(from.label)}</b><span class="letter-arrow">→</span><b class="name-${to.type}">${escapeHtml(to.label)}</b>
+          <span class="letter-kind ${kindCls}">${kindText}</span><span class="letter-time mono">${formatTime(m.ts)}</span></div>
+        ${m.subject ? `<div class="letter-subject">${escapeHtml(humanize(m.subject))}</div>` : ''}
+        ${body && body !== m.subject ? `<div class="letter-body clamp">${escapeHtml(humanize(body))}</div>${body.length > 70 ? '<button class="letter-more" type="button">展开</button>' : ''}` : ''}
+        ${m.answer && m.answer !== body ? `<div class="letter-answer"><b>答复：</b>${escapeHtml(humanize(m.answer))}</div>` : ''}
+        <div class="letter-foot">${letterFoot(m, answered)}</div>
+      </div>
+    </div>`;
+  }
+  function renderBusMessages(messages) {
+    const listEl = document.getElementById('bus-list');
+    const countEl = document.getElementById('bus-count');
+    if (!listEl) return;
+    const depts = (currentData && currentData.departments) || [];
+    const msgs = (messages || []).filter(m => m && m.type !== 'delivered').slice().sort((x, y) => (x.ts || 0) - (y.ts || 0));
+    if (countEl) countEl.textContent = String(msgs.length);
+    if (!msgs.length) { listEl.innerHTML = '<div class="dept-empty">还没有信件</div>'; return; }
+
+    const byId = new Map(msgs.map(m => [m.id, m]));
+    const answered = new Set(msgs.filter(m => m.reply_to && byId.has(m.reply_to)).map(m => m.reply_to));
+    // 根信：reply_to 指向列表外的（或没有）；答复挂在它的根信下面
+    const rootOf = m => { let cur = m, guard = 0; while (cur.reply_to && byId.has(cur.reply_to) && guard++ < 20) cur = byId.get(cur.reply_to); return cur.id; };
+    const scroller = listEl.closest('.tab-content');
+    const atBottom = !scroller || scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight < 80;
+    const known = new Set([...listEl.querySelectorAll('.letter[data-id]')].map(el => el.getAttribute('data-id')));
+    const fresh = !listEl.querySelector('.letter') || [...known].some(id => !byId.has(id));
+    if (fresh) listEl.innerHTML = '';
+    let added = 0;
+    msgs.forEach(m => {
+      const id = String(m.id || '');
+      const existing = !fresh && document.getElementById('msg-card-' + id);
+      if (existing) {
+        const foot = existing.querySelector(':scope > .letter-bubble > .letter-foot');
+        const html = letterFoot(m, answered.has(m.id));
+        if (foot && foot.innerHTML !== html) foot.innerHTML = html;
+        return;
+      }
+      const holder = document.createElement('div');
+      holder.innerHTML = letterHtml(m, answered.has(m.id), depts);
+      const el = holder.firstElementChild;
+      if (!fresh) el.classList.add('letter-new');
+      const root = rootOf(m);
+      if (root !== m.id) {
+        const rootEl = document.getElementById('msg-card-' + root);
+        if (rootEl) {
+          let box = rootEl.querySelector(':scope > .letter-replies');
+          if (!box) { box = document.createElement('div'); box.className = 'letter-replies'; rootEl.appendChild(box); }
+          el.classList.add('is-reply');
+          box.appendChild(el);
+          added++;
+          return;
+        }
+      }
+      listEl.appendChild(el);
+      added++;
+    });
+    if (scroller && (fresh || (added && atBottom))) scroller.scrollTo({ top: scroller.scrollHeight, behavior: fresh ? 'auto' : 'smooth' });
+    if (!listEl.dataset.bound) {
+      listEl.dataset.bound = '1';
+      listEl.addEventListener('click', e => {
+        const more = e.target.closest('.letter-more');
+        if (more) {
+          const bodyEl = more.previousElementSibling;
+          const open = bodyEl.classList.toggle('clamp');
+          more.textContent = open ? '展开' : '收起';
+          e.stopPropagation();
+          return;
+        }
+        const card = e.target.closest('.letter[data-id]');
+        if (card) selectMessage(card.getAttribute('data-id'), true);
+      });
+    }
+  }
+
+  // 渲染任务拆解 (Plan 树)
+  // 任务拆解：每件事交给了谁、做到哪了（按部门分组；没有部门的放"直接派活"）
+  const PLAN_STATE = { done: ['已完成', 's-done'], running: ['进行中', 's-running'], in_progress: ['进行中', 's-running'], working: ['进行中', 's-running'],
+    failed: ['没做成', 's-failed'], queued: ['排队中', 's-queued'], pending: ['待开始', 's-queued'] };
+  function renderPlanTree(plan, departments) {
+    const listEl = document.getElementById('plan-list');
+    const countEl = document.getElementById('plan-count');
+    if (!listEl) return;
+    const items = (plan || []).slice();
+    if (countEl) countEl.textContent = String(items.length);
+    if (!items.length) { listEl.innerHTML = '<div class="dept-empty">还没有派出任务</div>'; return; }
+    const depts = departments || [];
+    const groups = new Map();
+    items.forEach(p => { const k = p.dept || ''; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(p); });
+    const count = st => items.filter(p => (PLAN_STATE[p.status] || [])[1] === st).length;
+    const summary = `<div class="plan-summary"><span class="plan-state s-done">完成 ${count('s-done')}</span><span class="plan-state s-running">进行中 ${count('s-running')}</span>` +
+      `${count('s-queued') ? `<span class="plan-state s-queued">等待 ${count('s-queued')}</span>` : ''}${count('s-failed') ? `<span class="plan-state s-failed">没做成 ${count('s-failed')}</span>` : ''}</div>`;
+    listEl.innerHTML = summary + [...groups.entries()].map(([deptId, rows]) => {
+      const idx = depts.findIndex(d => d.id === deptId);
+      const d = depts[idx];
+      const color = idx >= 0 ? ROOM_COLORS[idx % ROOM_COLORS.length] : 'var(--label-4)';
+      return `<div class="plan-group" style="--g-c:${color}"><div class="plan-group-title">${escapeHtml(d ? (d.name || d.id) : (deptId || '直接派活'))}</div>` +
+        rows.map(p => {
+          const who = p.worker ? whoIs({ dept: p.dept, worker: p.worker }, depts) : { type: getAgentType(p.agent), label: AI_NAMES[getAgentType(p.agent)] || '待分配' };
+          const [stText, stCls] = PLAN_STATE[p.status] || ['待开始', 's-queued'];
+          return `<div class="plan-row"><span class="plan-ava">${avatarHtml(who.type, 40, 'idle')}</span>
+            <div class="plan-main"><div class="plan-title" title="${escapeHtml(p.title || '')}">${escapeHtml(p.title || '任务')}</div>
+            <div class="plan-who">交给 <b class="name-${who.type}">${escapeHtml(who.label)}</b></div></div>
+            <span class="plan-state ${stCls}">${stText}</span></div>`;
+        }).join('') + '</div>';
+    }).join('');
+  }
+
+  // 选中并高亮消息
+  // 选中一封信：信件高亮；发信人、收信人的工位闪一下
+  function selectMessage(msgId, fromPanel) {
+    if (!msgId) return;
+    const sidePanel = document.getElementById('side-panel');
+    if (sidePanel && !fromPanel) {
+      sidePanel.classList.remove('collapsed');
+      if (window.innerWidth <= 768) sidePanel.classList.add('mobile-open');
+    }
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.toggle('active', btn.getAttribute('data-tab') === 'bus'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === 'tab-bus'));
+    document.querySelectorAll('.letter.selected').forEach(c => c.classList.remove('selected'));
+    const target = document.getElementById('msg-card-' + msgId);
+    if (target) {
+      target.classList.add('selected');
+      if (!fromPanel) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    const m = ((currentData && currentData.messages) || []).find(x => String(x.id) === String(msgId));
+    if (!m) return;
+    const to = m.to_worker ? { dept: m.to, worker: m.to_worker } : (m.to === 'gm' ? 'gm' : null);
+    const keys = [workerKey(currentData, m.from), workerKey(currentData, to) || (m.to ? 'dept:' + m.to : null)];
+    keys.forEach(k => {
+      let el = nodeEl(k);
+      if (el && el.classList.contains('room-sign')) el = el.closest('.dept-card') || el;
+      if (!el) return;
+      el.classList.remove('flash-ping');
+      void el.offsetWidth;
+      el.classList.add('flash-ping');
+      setTimeout(() => el.classList.remove('flash-ping'), 1300);
+    });
+  }
+
+  // 绑定侧边栏 Tab 切换与展开折叠
+  function setupSidePanelEvents() {
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tab = btn.getAttribute('data-tab');
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        const activeContent = document.getElementById('tab-' + tab);
+        if (activeContent) activeContent.classList.add('active');
+      });
+    });
+
+    const toggleBtn = document.getElementById('panel-toggle-btn');
+    const closeBtn = document.getElementById('panel-close-btn');
+    const sidePanel = document.getElementById('side-panel');
+    if (toggleBtn && sidePanel) {
+      toggleBtn.addEventListener('click', () => {
+        if (window.innerWidth <= 768) {
+          sidePanel.classList.toggle('mobile-open');
+        } else {
+          sidePanel.classList.toggle('collapsed');
+        }
+      });
+    }
+    if (closeBtn && sidePanel) {
+      closeBtn.addEventListener('click', () => {
+        sidePanel.classList.remove('mobile-open');
+        sidePanel.classList.add('collapsed');
+      });
+    }
+
+    const themeBtn = document.getElementById('theme-btn');
+    if (themeBtn) {
+      themeBtn.addEventListener('click', () => {
+        const root = document.documentElement;
+        const current = root.getAttribute('data-theme');
+        const next = current === 'dark' ? 'light' : 'dark';
+        root.setAttribute('data-theme', next);
+      });
+    }
+  }
+
+  // 内嵌示例数据（?demo=1 时启用：3个部门、7名员工含 dsh×3、1条 open request、1条 decision、1条 escalation）
+  const DEMO_DATA = {
+    conversation: { id: "conv-demo", title: "示例：给网店做一个新的商品页" },
+    gm: { kind: "claude", title: "总经理" },
+    departments: [
+      { id: "fe", name: "页面部", mission: "把商品页做出来", head: "rules", status: "active",
+        counts: { members: 2, working: 2, open_requests: 0 },
+        members: [
+          { worker: "小A", agent: "codex", state: "working", now: "做商品图轮播", thread: "t-a", rounds: 3,
+            tasks: [{ title: "搭好页面骨架", status: "done" }, { title: "做商品图轮播", status: "running" }, { title: "做购物车按钮", status: "queued" }] },
+          { worker: "小B", agent: "dsh", state: "working", now: "写商品详情文案", thread: "t-b", rounds: 2,
+            tasks: [{ title: "整理商品卖点", status: "done" }, { title: "写商品详情文案", status: "running" }] }
+        ] },
+      { id: "be", name: "数据部", mission: "让页面显示真实价格和库存", head: "rules", status: "active",
+        counts: { members: 3, working: 1, open_requests: 1 },
+        members: [
+          { worker: "小C", agent: "dsh", state: "working", now: "接上库存数据", thread: "t-c", rounds: 4,
+            tasks: [{ title: "读懂现有价格表", status: "done" }, { title: "接上库存数据", status: "running" }] },
+          { worker: "小D", agent: "dsh", state: "waiting", now: "排队等名额：算运费", thread: "t-d", rounds: 1,
+            tasks: [{ title: "算运费", status: "queued" }] },
+          { worker: "小E", agent: "agy", state: "blocked", now: "等页面部确认：价格要不要含税", thread: "t-e", rounds: 2,
+            tasks: [{ title: "设计价格显示规则", status: "done" }, { title: "确认价格要不要含税", status: "running" }] }
+        ] },
+      { id: "qa", name: "验收部", mission: "在手机和电脑上把页面挨个点一遍", head: "claude", status: "active",
+        counts: { members: 2, working: 0, open_requests: 0 },
+        members: [
+          { worker: "小F", agent: "codex", state: "failed", now: "手机上检查：图片没对齐", thread: "t-f", rounds: 2,
+            tasks: [{ title: "电脑上检查", status: "done" }, { title: "手机上检查", status: "failed" }] },
+          { worker: "小G", agent: "agy", state: "sleeping", now: "检查完了，等新活", thread: "t-g", rounds: 3,
+            tasks: [{ title: "检查页面能不能打开", status: "done" }, { title: "检查明暗两种颜色", status: "done" }] }
+        ] }
+    ],
+    unassigned: [],
+    messages: [
+      { id: "m1", ts: Math.floor(Date.now() / 1000) - 900, from: { dept: "be", worker: "小C" }, to: "fe", type: "decision", reply_to: "m0", verdict: "accept",
+        subject: "同意：价格统一显示两位小数", body: "数据部这边按两位小数给，页面直接显示就行。", status: "closed", delivered: true },
+      { id: "m2", ts: Math.floor(Date.now() / 1000) - 360, from: { dept: "be", worker: "小E" }, to: "fe", type: "request",
+        subject: "价格要不要含税？", body: "页面上显示的价格是含税价还是不含税价？定了我才能继续。", status: "open", delivered: false },
+      { id: "m3", ts: Math.floor(Date.now() / 1000) - 120, from: { dept: "qa", worker: "小F" }, to: "gm", type: "escalation",
+        subject: "手机上图片没对齐，要不要先上线？", body: "电脑上没问题，手机上商品图偏了一点。是先上线还是修好再上？请总经理定。", status: "open", delivered: true }
+    ],
+    contracts: [],
+    plan: [
+      { id: "p1", title: "搭好页面骨架", worker: "小A", agent: "codex", dept: "fe", status: "done" },
+      { id: "p2", title: "做商品图轮播", worker: "小A", agent: "codex", dept: "fe", status: "running" },
+      { id: "p3", title: "写商品详情文案", worker: "小B", agent: "dsh", dept: "fe", status: "running" },
+      { id: "p4", title: "接上库存数据", worker: "小C", agent: "dsh", dept: "be", status: "running" },
+      { id: "p5", title: "算运费", worker: "小D", agent: "dsh", dept: "be", status: "queued" },
+      { id: "p6", title: "确认价格要不要含税", worker: "小E", agent: "agy", dept: "be", status: "running" },
+      { id: "p7", title: "手机上检查", worker: "小F", agent: "codex", dept: "qa", status: "failed" },
+      { id: "p8", title: "检查明暗两种颜色", worker: "小G", agent: "agy", dept: "qa", status: "done" }
+    ]
+  };
+
+  let currentData = null;
+  let reloadTimer = null;
+  let prevSeen = null;   // 上一次的 { states: key→state, delivered: 消息id→是否送达 }
+
+  function memberKeys(data) {
+    const out = {};
+    (data.departments || []).forEach(d => (d.members || []).forEach(m => { out[(d.id || '') + '/' + (m.worker || '')] = m; }));
+    (data.unassigned || []).forEach(m => { out['unassigned/' + (m.worker || '')] = m; });
+    return out;
+  }
+  function workerKey(data, who) {
+    if (!who) return null;
+    if (who === 'gm' || who.worker === 'gm' || who.dept === 'gm') return 'gm';
+    const keys = memberKeys(data);
+    if (who.dept && keys[who.dept + '/' + who.worker]) return who.dept + '/' + who.worker;
+    return Object.keys(keys).find(k => k.endsWith('/' + who.worker)) || null;
+  }
+  // 消息新送达 → 收发双方说话 2 秒；working 变成 idle（成功做完）→ 庆祝 2 秒
+  function detectTransients(data) {
+    const members = memberKeys(data);
+    const seen = { states: {}, delivered: {} };
+    Object.keys(members).forEach(k => { seen.states[k] = members[k].state || 'idle'; });
+    (data.messages || []).forEach(m => { seen.delivered[m.id] = !!m.delivered; });
+    const prev = prevSeen;
+    prevSeen = seen;
+    if (!prev) return [];
+    const out = [];
+    Object.keys(seen.states).forEach(k => {
+      if (prev.states[k] === 'working' && seen.states[k] === 'idle') out.push([k, 'celebrate']);
+    });
+    (data.messages || []).forEach(m => {
+      if (m.type === 'delivered' || !m.delivered || prev.delivered[m.id]) return;
+      const to = m.to_worker ? { dept: m.to, worker: m.to_worker } : (m.to === 'gm' ? 'gm' : null);
+      const fromKey = workerKey(data, m.from), toKey = workerKey(data, to) || (m.to ? 'dept:' + m.to : null);
+      [fromKey, toKey].forEach(k => { if (k) out.push([k, 'talking']); });
+      if (fromKey && toKey) out.push([fromKey, 'fly', toKey, m.type]);
+    });
+    return out;
+  }
+
+  // 渲染整页
+  function renderAll(data) {
+    if (!data) return;
+    currentData = data;
+    if (data.gm && !data.gm.state) {
+      const anyWorking = Object.values(memberKeys(data)).some(m => m.state === 'working');
+      data.gm.state = anyWorking ? 'working' : 'idle';
+    }
+    buildRoster(data);
+    const flashes = hasChars() ? detectTransients(data) : [];
+
+    const conv = data.conversation || {};
+    const convId = conv.id || '';
+
+    updateTopStats(data);
+    renderGmZone(data.gm, convId);
+    renderDepartments(data.departments, data.unassigned, convId);
+    renderBusMessages(data.messages);
+    renderPlanTree(data.plan, data.departments);
+    if (hasChars()) {
+      flashes.forEach(([key, state]) => { if (state !== 'fly') flash(key, state); });
+      syncChars();
+    }
+    // 动画片效果：等布局稳定后再飞信、撒彩带
+    setTimeout(() => {
+      let delay = 0;
+      flashes.forEach(([key, state, toKey, type]) => {
+        if (state === 'fly') { setTimeout(() => flyLetter(key, toKey, type), delay); delay += 350; }
+        else if (state === 'celebrate') confetti(key);
+      });
+    }, 60);
+
+    // 等待 DOM 布局绘制完成后渲染弧线
+    (window.requestAnimationFrame || window.setTimeout)(() => {
+      renderArcs(data.messages);
+    }, 16);
+  }
+
+  // 加载数据
+  async function loadData() {
+    const params = new URLSearchParams(window.location.search);
+    const isDemo = params.get('demo') === '1';
+
+    if (isDemo) {
+      renderAll(DEMO_DATA);
+      if (!demoTimer) demoTimer = setInterval(demoTick, 4000);
+      return;
+    }
+
+    const convId = params.get('conversation') || '';
+    const apiUrl = '/api/org' + (convId ? `?conversation=${encodeURIComponent(convId)}` : '');
+
+    try {
+      const res = await fetch(apiUrl);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      renderAll(data);
+    } catch (err) {
+      console.warn('读取真实组织数据失败，降级展示示例数据:', err);
+      renderAll(DEMO_DATA);
+    }
+  }
+
+  // 示例模式的"假动态"：干完活庆祝、开工、送达消息、换状态，走和真实数据一样的渲染路径
+  let demoTimer = null, demoSeq = 2000;
+  const DEMO_JOBS = ['做优惠券弹窗', '检查手机上的按钮', '补上商品评价区', '把图片压小一点', '写退货说明', '调好页面配色', '核对库存数字'];
+  const DEMO_NOTES = ['这部分做完了，你接着检查一下', '能把最新的设计图发我吗？', '按钮颜色我改好了，看看行不行', '库存数字对上了', '这里我卡住了，帮我看一眼'];
+  function demoTick() {
+    const data = JSON.parse(JSON.stringify(currentData || DEMO_DATA));
+    if (data.gm) delete data.gm.state;
+    const all = [];
+    (data.departments || []).forEach(d => (d.members || []).forEach(m => all.push([d, m])));
+    if (!all.length) return;
+    const [dept, m] = all[Math.floor(Math.random() * all.length)];
+    const pick = list => list[Math.floor(Math.random() * list.length)];
+    const setPlan = (title, status) => {
+      const row = (data.plan || []).find(p => p.worker === m.worker && p.title === title);
+      if (row) row.status = status;
+      else (data.plan = data.plan || []).push({ id: 'p' + (++demoSeq), title, worker: m.worker, agent: m.agent, dept: dept.id, status });
+    };
+    m.tasks = m.tasks || [];
+    const running = m.tasks.find(t => t.status === 'running');
+    const roll = Math.random();
+    if (roll < 0.3) {
+      const [od, om] = pick(all);
+      data.messages = (data.messages || []).concat([{
+        id: 'm_demo_' + (++demoSeq), ts: Math.floor(Date.now() / 1000), from: { dept: dept.id, worker: m.worker },
+        ...(Math.random() < 0.3 ? { to: 'gm' } : { to: od.id, to_worker: om.worker }), type: 'tell',
+        subject: pick(DEMO_NOTES), body: '', status: 'closed', delivered: true
+      }]).slice(-12);
+    } else if (m.state === 'working' && running) {
+      running.status = 'done'; setPlan(running.title, 'done');
+      m.state = 'idle'; m.now = '刚做完：' + running.title;
+    } else {
+      const job = pick(DEMO_JOBS);
+      m.tasks.push({ title: job, status: 'running' }); m.tasks = m.tasks.slice(-6);
+      setPlan(job, 'running');
+      m.state = 'working'; m.now = job;
+    }
+    renderAll(data);
+  }
+
+  // 防抖 1 秒触发重新拉取
+  function debouncedReload() {
+    clearTimeout(reloadTimer);
+    reloadTimer = setTimeout(() => {
+      loadData();
+    }, 1000);
+  }
+
+  // 初始化 SSE 事件监听（org.changed 事件）
+  function setupSSE() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('demo') === '1') return;
+
+    const convId = params.get('conversation') || '';
+    const sseUrl = '/api/events' + (convId ? `?conversation=${encodeURIComponent(convId)}` : '');
+
+    try {
+      const es = new EventSource(sseUrl);
+      es.addEventListener('org.changed', () => {
+        debouncedReload();
+      });
+      es.onerror = () => {
+        // EventSource 会自动尝试重连
+      };
+    } catch (e) {
+      console.warn('SSE 连接异常:', e);
+    }
+  }
+
+  // 初始化入口
+  function init() {
+    setupSidePanelEvents();
+
+    window.addEventListener('resize', () => {
+      if (currentData) {
+        renderArcs(currentData.messages);
+      }
+    });
+
+    loadData();
+    setupSSE();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+  window.XayOrg = {
+    flyLetter,
+    confetti,
+    whoIs,
+    avatarHtml,
+    getAgentType,
+    renderCharacterSvg,
+    renderDeskSvg,
+    renderStationCard,
+    renderGmZone,
+    renderDepartments,
+    renderArcs,
+    renderBusMessages,
+    renderPlanTree,
+    selectMessage,
+    updateTopStats,
+    loadData,
+    DEMO_DATA
+  };
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,65 @@
+#!/bin/bash
+# xay-land：手动重试一个冲突的独立工作区搬回，或丢弃它。
+# 用法：xay-land <run_dir> [--discard]
+set -u
+run_dir="${1:-}"; discard=0
+[ "${2:-}" = "--discard" ] && discard=1
+[ -n "$run_dir" ] || { echo "用法：xay-land <run_dir> [--discard]" >&2; exit 2; }
+[ -f "$run_dir/meta.json" ] || { echo "找不到 meta.json：$run_dir" >&2; exit 2; }
+command -v jq >/dev/null || { echo "需要 jq" >&2; exit 2; }
+meta="$run_dir/meta.json"
+origin=$(jq -r '.origin // empty' "$meta")
+repo_root=$(git -C "$origin" rev-parse --show-toplevel 2>/dev/null || true)
+worktree=$(jq -r '.worktree // empty' "$meta")
+branch=$(jq -r '.branch // empty' "$meta")
+base=$(jq -r '.base_commit // empty' "$meta")
+xay_home="${XAY_HOME:-$HOME/.xay}"
+[ -n "$repo_root" ] || { echo "找不到项目仓库" >&2; exit 2; }
+key=$(printf '%s' "$repo_root" | md5 2>/dev/null | cut -c1-12)
+[ -n "$key" ] || key=$(printf '%s' "$repo_root" | shasum | cut -c1-12)
+lock="$xay_home/locks/land-$key"; mkdir -p "$xay_home/locks"
+while ! mkdir "$lock" 2>/dev/null; do
+  holder=$(cat "$lock/pid" 2>/dev/null)
+  if [ -n "$holder" ] && ! kill -0 "$holder" 2>/dev/null; then rm -rf "$lock"; continue; fi
+  sleep 1
+done
+echo "$$" > "$lock/pid"
+cleanup() { [ "$(cat "$lock/pid" 2>/dev/null)" = "$$" ] && rm -rf "$lock"; }
+trap cleanup EXIT
+remove_worktree() {
+  [ -d "$worktree" ] && git -C "$repo_root" worktree remove --force "$worktree" >/dev/null 2>&1 || true
+  [ -n "$branch" ] && git -C "$repo_root" branch -D "$branch" >/dev/null 2>&1 || true
+}
+update_meta() {
+  local land="$1" notice="$2" tmp="$run_dir/meta.json.tmp"
+  jq --arg land "$land" --arg notice "$notice" '. + {land:$land,notice:$notice}' "$meta" > "$tmp" && mv -f "$tmp" "$meta"
+}
+if [ "$discard" -eq 1 ]; then
+  remove_worktree
+  update_meta discarded "已手动丢弃独立工作区"
+  echo "已丢弃：$run_dir"
+  exit 0
+fi
+land_now=$(jq -r '.land // empty' "$meta")
+[ "$land_now" = "conflict" ] || { echo "只有 land=conflict 的运行可以重试搬回" >&2; exit 2; }
+[ -d "$worktree" ] || { echo "独立工作区不存在：$worktree" >&2; exit 2; }
+git -C "$worktree" add -A -- . ':!.xay' >/dev/null 2>&1 || true
+if [ -f "$run_dir/.untracked-before" ]; then
+  while IFS= read -r rel; do
+    [ -f "$worktree/$rel" ] || continue
+    old=$(shasum -a 256 "$origin/$rel" 2>/dev/null | awk '{print $1}')
+    now=$(shasum -a 256 "$worktree/$rel" 2>/dev/null | awk '{print $1}')
+    [ -n "$old" ] && [ "$old" = "$now" ] && git -C "$worktree" reset -q -- "$rel" || true
+  done < "$run_dir/.untracked-before"
+fi
+patch="$run_dir/land.retry.patch"
+git -C "$worktree" diff --cached --binary "${base:-HEAD}" > "$patch"
+if [ ! -s "$patch" ]; then
+  remove_worktree; update_meta empty ""; echo "没有需要搬回的改动：$run_dir"; exit 0
+fi
+if git -C "$repo_root" apply --whitespace=nowarn "$patch" >/dev/null 2>&1 || git -C "$repo_root" apply --3way "$patch" >/dev/null 2>&1; then
+  remove_worktree; update_meta applied ""; echo "已搬回：$run_dir"; exit 0
+fi
+update_meta conflict "改动和别的任务冲突，需要负责人手动合并：$worktree"
+echo "仍然冲突，独立工作区已保留：$worktree" >&2
+exit 1

@@ -1,0 +1,22 @@
+[
+  {
+    "path": "conversation.plan_version",
+    "equals": 2
+  },
+  {
+    "path": "tasks[0].id",
+    "equals": "tk_a"
+  },
+  {
+    "path": "tasks[0].title",
+    "equals": "做商品图轮播（改过）"
+  },
+  {
+    "path": "tasks[0].status",
+    "equals": "planned"
+  },
+  {
+    "path": "plan.version",
+    "equals": 2
+  }
+]

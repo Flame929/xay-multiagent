@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>xay 角色图鉴</title>
+<style>
+:root{color-scheme:light;--bg:#f5f7fa;--panel:#fff;--ink:#20242b;--muted:#68717d;--line:#dfe4ea}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){color-scheme:dark;--bg:#15171b;--panel:#22252b;--ink:#f3f5f7;--muted:#aab2bd;--line:#3a4049}}
+:root[data-theme=dark]{color-scheme:dark;--bg:#15171b;--panel:#22252b;--ink:#f3f5f7;--muted:#aab2bd;--line:#3a4049}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 -apple-system,BlinkMacSystemFont,"PingFang SC","Segoe UI",sans-serif}
+header{position:sticky;top:0;z-index:2;background:var(--bg);border-bottom:1px solid var(--line);padding:16px clamp(16px,4vw,48px);display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+h1{font-size:22px;margin:0}header p{margin:2px 0;color:var(--muted)}
+.tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+button,select{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:6px;padding:7px 10px;font:inherit}button{cursor:pointer}
+main{padding:24px clamp(16px,4vw,48px)}
+.agent{margin-bottom:40px}
+.agent h2{font-size:18px;margin:0 0 12px;border-left:4px solid var(--agent-color);padding-left:10px}
+.agent h2 small{color:var(--muted);font-weight:400}
+.agent h3{font-size:13px;color:var(--muted);font-weight:500;margin:16px 0 8px}
+.live{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:8px}
+.grid{display:grid;grid-template-columns:auto repeat(9,minmax(0,1fr));gap:6px;overflow-x:auto}
+.cell{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 4px;text-align:center;min-width:0}
+.cell svg{display:block;margin:auto;max-width:100%;height:auto}
+.cell small,.rowhead,.colhead{display:block;color:var(--muted);font-size:11px}
+.rowhead{align-self:center;text-align:right;padding-right:4px;white-space:nowrap}
+.colhead{text-align:center;align-self:end}
+footer{padding:24px clamp(16px,4vw,48px) 40px;color:var(--muted);border-top:1px solid var(--line);font-size:12px}
+@media(max-width:760px){
+  header{align-items:flex-start;flex-direction:column}
+  .live{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .grid{grid-template-columns:auto repeat(9,72px)}
+}
+</style>
+</head>
+<body>
+<header>
+  <div><h1>xay AI 员工角色图鉴</h1><p>每个角色：上面一行是实际使用时的样子（默认表情+动画），下面是 8 种状态 × 9 种表情。</p></div>
+  <div class="tools">
+    <button id="theme" type="button">切换明暗</button>
+    <label>大小 <select id="size"><option value="64">64px</option><option value="100" selected>100px</option><option value="200">200px</option></select></label>
+    <label>角色 <select id="agent"><option value="">全部</option></select></label>
+  </div>
+</header>
+<main id="gallery"></main>
+<footer>角色头像来自 <a href="https://github.com/lmy414/ai-chan-sheets">lmy414/ai-chan-sheets</a> 设定图（原始角色设定 ZipZipPipe，补全 lmy414），CC BY-NC-SA 4.0，本项目仅裁切与去底，仅限个人非商业使用。</footer>
+<script src="/xay-chars/core.js"></script>
+<!-- 角色文件：/xay-chars/codex.js /xay-chars/dsh.js /xay-chars/agy.js /xay-chars/claude.js；缺文件时安静回退通用角色。 -->
+<script>
+const agents = ['codex', 'dsh', 'agy', 'claude'];
+const stateNames = { working: '干活', idle: '空闲', waiting: '等名额', blocked: '等答复', failed: '失败', sleeping: '睡着', talking: '说话', celebrate: '庆祝' };
+const root = document.getElementById('gallery');
+const sizeEl = document.getElementById('size'), agentEl = document.getElementById('agent');
+const params = new URLSearchParams(location.search);
+
+function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]); }
+
+function draw() {
+  const size = Number(sizeEl.value), only = agentEl.value;
+  const states = XayChars.STATES, expressions = XayChars.EXPRESSIONS;
+  root.innerHTML = agents.filter(a => !only || a === only).map(agent => {
+    const info = XayChars.info(agent);
+    const live = states.map(state => `<div class="cell">${XayChars.render(agent, { state, size: Math.max(size, 100) })}<small>${stateNames[state]} · ${state}</small></div>`).join('');
+    const head = '<span></span>' + expressions.map(e => `<span class="colhead">${e}</span>`).join('');
+    const rows = states.map(state => `<span class="rowhead">${stateNames[state]}</span>` +
+      expressions.map(expression => `<div class="cell" title="${state} · ${expression}">${XayChars.render(agent, { state, expression, size })}</div>`).join('')).join('');
+    return `<section class="agent" style="--agent-color:${esc(info.color)}">
+      <h2>${esc(info.name)} <small>(${agent}${XayChars.has(agent) ? '' : '，还没画，暂用通用角色'})</small></h2>
+      <h3>实际效果</h3><div class="live">${live}</div>
+      <h3>状态 × 表情</h3><div class="grid">${head}${rows}</div></section>`;
+  }).join('');
+}
+
+function syncUrl() {
+  const q = new URLSearchParams();
+  if (agentEl.value) q.set('agent', agentEl.value);
+  if (sizeEl.value !== '100') q.set('size', sizeEl.value);
+  history.replaceState(null, '', location.pathname + (q.toString() ? '?' + q : ''));
+}
+
+sizeEl.addEventListener('change', () => { syncUrl(); draw(); });
+agentEl.addEventListener('change', () => { syncUrl(); draw(); });
+document.getElementById('theme').addEventListener('click', () => {
+  const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+  const cur = document.documentElement.dataset.theme || (dark ? 'dark' : 'light');
+  document.documentElement.dataset.theme = cur === 'dark' ? 'light' : 'dark';
+});
+
+Promise.all(agents.map(agent => fetch('/xay-chars/' + agent + '.js', { cache: 'no-store' })
+  .then(r => r.ok ? r.text() : '')
+  .then(source => { if (source) { const s = document.createElement('script'); s.textContent = source; document.body.appendChild(s); } })
+  .catch(() => {}))).then(() => {
+  agentEl.insertAdjacentHTML('beforeend', agents.map(a => `<option value="${a}">${esc(XayChars.info(a).name)}</option>`).join(''));
+  if (agents.includes(params.get('agent'))) agentEl.value = params.get('agent');
+  if (['64', '100', '200'].includes(params.get('size'))) sizeEl.value = params.get('size');
+  draw();
+});
+</script>
+</body></html>

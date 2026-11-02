@@ -1,0 +1,8 @@
+{"ts":1793300800,"by":"lead:cv_demo10","type":"conv.begun","subject":"cv_demo10","ws":"ws_demo01","conv":"cv_demo10","data":{"title":"需要你：没改动","lead_kind":"claude","aliases":["claude:demo-10"],"cwd":"/work/demo-shop"}}
+{"ts":1793300810,"by":"lead:cv_demo10","type":"employee.hired","subject":"em_codex01","ws":"ws_demo01","conv":"cv_demo10","data":{"agent":"codex"}}
+{"ts":1793300820,"by":"lead:cv_demo10","type":"task.added","subject":"tk_a","ws":"ws_demo01","conv":"cv_demo10","data":{"key":"a","title":"做轮播","owner":"em_codex01","deps":[],"writes":["web/a/**"],"card":"商品图轮播","mode":"write","reason":"首页要上新品"}}
+{"ts":1793300830,"by":"station:em_codex01","type":"turn.started","subject":"tn_a","ws":"ws_demo01","conv":"cv_demo10","data":{"task":"tk_a","em":"em_codex01","kind":"first"}}
+{"ts":1793300840,"by":"station:em_codex01","type":"turn.ended","subject":"tn_a","ws":"ws_demo01","conv":"cv_demo10","data":{"em":"em_codex01","status":"completed","evidence":{"cli_status":"completed","claim":"done","changed_files":[],"diff_stat":{"files":0,"add":0,"del":0}}}}
+{"ts":1793300850,"by":"employee:em_codex01","type":"task.reported","subject":"tk_a","ws":"ws_demo01","conv":"cv_demo10","data":{"claim":"done","summary":"做完了"}}
+{"ts":1793300860,"by":"station:em_codex01","type":"task.kept","subject":"tk_a","ws":"ws_demo01","conv":"cv_demo10","data":{"reason":"mismatch","detail":"说做完了但没有改动"}}
+{"ts":1793300870,"by":"office","type":"decision.opened","subject":"dc_001","ws":"ws_demo01","conv":"cv_demo10","data":{"kind":"mismatch","title":"Codex 1 说做完了但没有改动","detail":"账本里没有文件改动，请决定怎么处理","task":"tk_a","em":"em_codex01","options":[{"id":"merge","label":"合并改动"},{"id":"rework","label":"让他接着改"},{"id":"discard","label":"丢掉改动","danger":true}],"owner":"lead"}}

@@ -1,0 +1,32 @@
+{
+  "codex.jsonl": {
+    "source": "codex-exec",
+    "constructed": false,
+    "origin": "tests/fixtures/codex.jsonl",
+    "note": "真实录制，原样复制"
+  },
+  "dsh.jsonl": {
+    "source": "dsh-headless",
+    "constructed": false,
+    "origin": "tests/fixtures/dsh.jsonl",
+    "note": "真实录制，原样复制"
+  },
+  "agy.jsonl": {
+    "source": "agy-stream",
+    "constructed": false,
+    "origin": "tests/fixtures/agy.jsonl",
+    "note": "真实录制，原样复制"
+  },
+  "appserver.jsonl": {
+    "source": "codex-app-server",
+    "constructed": true,
+    "basis": "references/plans/research/codex.md §2/§3",
+    "note": "按 JSON-RPC 协议手工构造；含 delta、审批/拒绝、提问、completed/interrupted/failed 三种 turn 状态"
+  },
+  "control.jsonl": {
+    "source": "xay-control",
+    "constructed": true,
+    "basis": "arch-v4 §3.4/§3.5",
+    "note": "xay-agent 侧车事件，手工构造"
+  }
+}

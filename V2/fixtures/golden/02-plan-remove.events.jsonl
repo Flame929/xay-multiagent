@@ -1,0 +1,4 @@
+{"ts":1793300060,"by":"lead:cv_demo02","type":"conv.begun","subject":"cv_demo02","ws":"ws_demo01","conv":"cv_demo02","data":{"title":"旧首页清理","lead_kind":"claude","aliases":["claude:demo-02"],"cwd":"/work/demo-shop"}}
+{"ts":1793300070,"by":"lead:cv_demo02","type":"task.added","subject":"tk_home","ws":"ws_demo01","conv":"cv_demo02","data":{"key":"home","title":"改首页","deps":[],"writes":["web/home/**"],"card":"首页太旧，重做一版","mode":"write","reason":"首页要改版"}}
+{"ts":1793300080,"by":"lead:cv_demo02","type":"task.added","subject":"tk_old","ws":"ws_demo01","conv":"cv_demo02","data":{"key":"old","title":"做旧版首页","deps":[],"writes":["web/old/**"],"card":"旧版首页","mode":"write","reason":"留个旧版"}}
+{"ts":1793300090,"by":"lead:cv_demo02","type":"task.removed","subject":"tk_old","ws":"ws_demo01","conv":"cv_demo02","data":{"reason":"旧版首页不做了"}}

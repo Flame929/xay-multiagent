@@ -1,0 +1,18 @@
+[
+  {
+    "path": "people.em_deepseek01.state",
+    "equals": "idle"
+  },
+  {
+    "path": "people.em_deepseek01.context.pct",
+    "equals": 70
+  },
+  {
+    "path": "people.em_deepseek01.context.estimated",
+    "equals": true
+  },
+  {
+    "path": "people.em_deepseek01.context.calibrating",
+    "equals": false
+  }
+]

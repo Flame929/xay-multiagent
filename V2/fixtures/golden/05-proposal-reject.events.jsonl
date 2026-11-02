@@ -1,0 +1,5 @@
+{"ts":1793300210,"by":"lead:cv_demo05","type":"conv.begun","subject":"cv_demo05","ws":"ws_demo01","conv":"cv_demo05","data":{"title":"申请被拒","lead_kind":"claude","aliases":["claude:demo-05"],"cwd":"/work/demo-shop"}}
+{"ts":1793300220,"by":"lead:cv_demo05","type":"employee.hired","subject":"em_codex01","ws":"ws_demo01","conv":"cv_demo05","data":{"agent":"codex"}}
+{"ts":1793300230,"by":"lead:cv_demo05","type":"task.added","subject":"tk_old","ws":"ws_demo01","conv":"cv_demo05","data":{"key":"old","title":"做旧版首页","owner":"em_codex01","deps":[],"writes":["web/old/**"],"card":"旧版首页","mode":"write","reason":"先留着"}}
+{"ts":1793300240,"by":"employee:em_codex01","type":"proposal.made","subject":"pp_002","ws":"ws_demo01","conv":"cv_demo05","data":{"changes":[{"op":"remove","task":"tk_old"}],"reason":"这个先不做","to":"gm","from":"em_codex01"}}
+{"ts":1793300250,"by":"lead:cv_demo05","type":"proposal.decided","subject":"pp_002","ws":"ws_demo01","conv":"cv_demo05","data":{"verdict":"reject","note":"先留着"}}

@@ -1,0 +1,30 @@
+[
+  {
+    "path": "conversation.plan_version",
+    "equals": 1
+  },
+  {
+    "path": "tasks[0].id",
+    "equals": "tk_old"
+  },
+  {
+    "path": "tasks[0].title",
+    "equals": "做旧版首页"
+  },
+  {
+    "path": "tasks[0].status",
+    "equals": "planned"
+  },
+  {
+    "path": "plan.version",
+    "equals": 1
+  },
+  {
+    "path": "plan.history[0].version",
+    "equals": 1
+  },
+  {
+    "path": "proposals",
+    "equals": []
+  }
+]

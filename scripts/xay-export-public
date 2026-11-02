@@ -1,0 +1,375 @@
+#!/usr/bin/env python3
+"""xay-export-public：导出一份干净的公开副本（不带历史、不带私人素材）。
+
+用法：
+    scripts/xay-export-public <目标目录>
+    scripts/xay-export-public -h | --help
+
+选项：
+    -h, --help    显示此帮助信息并退出
+
+说明：
+    1. 只拷贝当前仓库通过 git ls-files 跟踪的文件（不带 .git 历史）；
+    2. 自动根据仓库根目录下的 .public-exclude 规则排除敏感、版权或本地开发文件；
+    3. 支持 .public-allow 白名单（文件路径:要放过的字符串），跳过特定测试用例中的假密钥等样本；
+    4. 目标目录如果已存在且非空，直接拒绝，避免覆盖已有文件；
+    5. 拷贝完成后在目标目录中深度扫描潜在脏数据：
+       - 密钥：sk- 紧跟至少 16 位字母数字或下划线（忽略 CSS 类名如 sk-card、sk-group 等）；
+       - 本机路径：/Users/mac 等作者本机私有路径；
+       - 真实项目名：Flame、EWEADN、shopify、lingxing 及真实邮箱格式；
+       - 若发现脏数据：逐条列出（文件:行号），按'密钥 / 本机路径 / 真实项目名'三类分别汇总统计，返回退出码 1，提示：
+         改源文件或加进 .public-exclude 再导一次
+       - 若完全干净：在目标目录执行 git init 并创建初始提交（提交说明："xay 首次公开版本"），不 push、不加 remote。
+"""
+
+import codecs
+import fnmatch
+import os
+import re
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+
+USAGE = """用法：scripts/xay-export-public <目标目录>
+      scripts/xay-export-public -h | --help
+
+选项：
+    -h, --help    显示此帮助信息并退出
+"""
+
+CATEGORY_KEY = "密钥"
+CATEGORY_PATH = "本机路径"
+CATEGORY_PROJECT = "真实项目名"
+
+# 脏数据匹配规则定义：(分类, 标签, 正则)
+DIRTY_PATTERNS = [
+    (CATEGORY_PATH, "/Users/mac", re.compile(r"/Users/mac")),
+    (CATEGORY_PROJECT, "Flame", re.compile(r"\bFlame\b")),
+    (CATEGORY_PROJECT, "EWEADN", re.compile(r"EWEADN", re.IGNORECASE)),
+    (CATEGORY_PROJECT, "shopify", re.compile(r"shopify", re.IGNORECASE)),
+    (CATEGORY_PROJECT, "lingxing", re.compile(r"lingxing", re.IGNORECASE)),
+]
+
+# sk- 必须紧跟至少 16 位连续字母、数字或下划线（排除 sk-card, sk-group 等样式名）
+SK_PATTERN = re.compile(r"\bsk-[A-Za-z0-9_]{16,}\b")
+EMAIL_PATTERN = re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b")
+
+# 虚拟/示例邮箱域名白名单
+DUMMY_EMAIL_DOMAINS = {
+    "example.com", "example.org", "example.net",
+    "test.com", "dummy.com", "sample.com", "domain.com",
+    "localhost", "local", "invalid",
+    "users.noreply.github.com",
+}
+
+
+def print_usage(file=sys.stdout):
+    print(USAGE.strip(), file=file)
+
+
+def get_repo_root() -> Path:
+    res = subprocess.run(
+        ["git", "rev-parse", "--show-toplevel"],
+        capture_output=True,
+        text=True,
+    )
+    if res.returncode == 0 and res.stdout.strip():
+        return Path(res.stdout.strip()).resolve()
+    # 兼容在沙箱/特定 worktree 环境下回退到脚本上一级目录
+    return Path(__file__).resolve().parents[1]
+
+
+def load_exclude_patterns(repo_root: Path) -> list[str]:
+    exclude_file = repo_root / ".public-exclude"
+    if not exclude_file.is_file():
+        return []
+    patterns = []
+    for line in exclude_file.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        patterns.append(line)
+    return patterns
+
+
+def load_allow_rules(repo_root: Path) -> list[tuple[str, str]]:
+    allow_file = repo_root / ".public-allow"
+    if not allow_file.is_file():
+        return []
+    rules = []
+    for line in allow_file.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if ":" in line:
+            pat, allowed_str = line.split(":", 1)
+            rules.append((pat.strip(), allowed_str.strip()))
+    return rules
+
+
+def is_allowed(rel_path: str, line: str, matched_str: str, allow_rules: list[tuple[str, str]]) -> bool:
+    rel_path_posix = rel_path.replace("\\", "/")
+    for path_pat, allowed_str in allow_rules:
+        if (
+            fnmatch.fnmatch(rel_path_posix, path_pat)
+            or fnmatch.fnmatch(rel_path_posix, "*/" + path_pat)
+            or rel_path_posix.endswith("/" + path_pat)
+            or rel_path_posix == path_pat
+        ):
+            if allowed_str and (allowed_str in matched_str or allowed_str in line):
+                return True
+    return False
+
+
+def is_path_excluded(rel_path: str, patterns: list[str]) -> bool:
+    rel_path = rel_path.replace("\\", "/")
+    parts = rel_path.split("/")
+    filename = parts[-1]
+
+    for raw_pat in patterns:
+        pat = raw_pat.strip().replace("\\", "/")
+        if not pat or pat.startswith("#"):
+            continue
+
+        # 目录排除规则（以 / 结尾，如 .claude/）
+        if pat.endswith("/"):
+            dir_prefix = pat.rstrip("/")
+            if rel_path == dir_prefix or rel_path.startswith(dir_prefix + "/"):
+                return True
+            if any(p == dir_prefix for p in parts[:-1]):
+                return True
+
+        if "/" in pat:
+            clean_pat = pat.lstrip("/")
+            if fnmatch.fnmatch(rel_path, clean_pat):
+                return True
+            if fnmatch.fnmatch(rel_path, "*/" + clean_pat):
+                return True
+        else:
+            if fnmatch.fnmatch(filename, pat):
+                return True
+            if any(fnmatch.fnmatch(p, pat) for p in parts):
+                return True
+            if fnmatch.fnmatch(rel_path, pat):
+                return True
+
+    return False
+
+
+def get_git_files(repo_root: Path) -> list[str]:
+    # -z：文件名不转义。不加的话中文名（如"员工手册.md"）会变成带引号的八进制串，对不上真实文件，整份被漏导出
+    res = subprocess.run(
+        ["git", "ls-files", "-z"],
+        cwd=repo_root,
+        capture_output=True,
+    )
+    if res.returncode == 0:
+        return [p for p in res.stdout.decode("utf-8").split("\0") if p]
+
+    # 在沙箱/受限 worktree 环境下回退遍历代码文件
+    files = []
+    for root, dirs, filenames in os.walk(repo_root):
+        dirs[:] = [d for d in dirs if d != ".git"]
+        for f in filenames:
+            if f == ".git":
+                continue
+            full = Path(root) / f
+            rel = full.relative_to(repo_root).as_posix()
+            files.append(rel)
+    return files
+
+
+def is_binary_file(filepath: Path) -> bool:
+    try:
+        with open(filepath, "rb") as f:
+            chunk = f.read(1024)
+            if b"\0" in chunk:
+                return True
+            # 增量解码：只读前 1024 字节，可能正好把一个中文字（3 字节）截成两半，
+            # 这不算二进制；否则中文多的文档会被整份漏扫。
+            codecs.getincrementaldecoder("utf-8")().decode(chunk, final=False)
+            return False
+    except UnicodeDecodeError:
+        return True
+    except Exception:
+        return False
+
+
+def is_dummy_email(email_str: str) -> bool:
+    parts = email_str.split("@")
+    if len(parts) != 2:
+        return True
+    user, domain = parts[0].lower(), parts[1].lower()
+    if domain in DUMMY_EMAIL_DOMAINS:
+        return True
+    if domain.endswith(".example.com") or domain.endswith(".invalid") or domain.endswith(".local"):
+        return True
+    if user in {"someone", "username", "example", "user", "test"}:
+        return True
+    return False
+
+
+def scan_dirty_content(target_dir: Path, allow_rules: list[tuple[str, str]]) -> list[tuple[str, str]]:
+    """扫描目标目录，返回违规列表 [(category, msg), ...]"""
+    violations = []
+
+    for root, _, files in os.walk(target_dir):
+        if ".git" in Path(root).parts:
+            continue
+        for file in sorted(files):
+            if file == ".git":
+                continue
+            full_path = Path(root) / file
+            rel_path = full_path.relative_to(target_dir).as_posix()
+
+            # 跳过导出工具自身、测试文件及规则文件（它们本来就写着要查的词）
+            if (
+                rel_path in (".public-allow", ".public-exclude", "scripts/xay-export-public", "tests/test_export_public.py")
+                or file in (".public-allow", ".public-exclude", "xay-export-public", "test_export_public.py")
+                or rel_path.endswith("scripts/xay-export-public")
+                or rel_path.endswith("tests/test_export_public.py")
+            ):
+                continue
+
+            if is_binary_file(full_path):
+                continue
+
+            try:
+                content = full_path.read_text(encoding="utf-8", errors="replace")
+            except Exception:
+                continue
+
+            for idx, line in enumerate(content.splitlines(), start=1):
+                # 1. 关键词检查（本机路径、真实项目名）
+                for cat, label, pat in DIRTY_PATTERNS:
+                    match = pat.search(line)
+                    if match:
+                        matched_val = match.group(0)
+                        if is_allowed(rel_path, line, matched_val, allow_rules):
+                            continue
+                        violations.append((cat, f"{rel_path}:{idx}: [{cat}] 命中 {label}"))
+
+                # 2. 真实格式密钥检查（sk- 紧跟至少 16 位连续字母数字/下划线）
+                for sk_match in SK_PATTERN.finditer(line):
+                    sk_val = sk_match.group(0)
+                    if is_allowed(rel_path, line, sk_val, allow_rules):
+                        continue
+                    violations.append((CATEGORY_KEY, f"{rel_path}:{idx}: [{CATEGORY_KEY}] 命中疑似密钥 {sk_val}"))
+
+                # 3. 真实邮箱格式检查
+                for email_match in EMAIL_PATTERN.finditer(line):
+                    email_val = email_match.group(0)
+                    if not is_dummy_email(email_val):
+                        if is_allowed(rel_path, line, email_val, allow_rules):
+                            continue
+                        violations.append((CATEGORY_PROJECT, f"{rel_path}:{idx}: [{CATEGORY_PROJECT}] 命中真实邮箱格式 {email_val}"))
+
+    return violations
+
+
+def export_public(target_dir_str: str) -> int:
+    repo_root = get_repo_root()
+    target_dir = Path(target_dir_str).resolve()
+
+    if target_dir == repo_root or repo_root in target_dir.parents:
+        print("错误：目标目录不能是源仓库本身或其子目录", file=sys.stderr)
+        return 1
+
+    if target_dir.exists():
+        try:
+            if any(target_dir.iterdir()):
+                print(f"错误：目标目录已存在且非空：{target_dir}", file=sys.stderr)
+                return 1
+        except Exception as e:
+            print(f"错误：检查目标目录失败：{e}", file=sys.stderr)
+            return 1
+
+    patterns = load_exclude_patterns(repo_root)
+    allow_rules = load_allow_rules(repo_root)
+    git_files = get_git_files(repo_root)
+
+    to_copy = []
+    excluded_count = 0
+    for rel_path in git_files:
+        if is_path_excluded(rel_path, patterns):
+            excluded_count += 1
+            continue
+        to_copy.append(rel_path)
+
+    target_dir.mkdir(parents=True, exist_ok=True)
+
+    for rel_path in to_copy:
+        src = repo_root / rel_path
+        dst = target_dir / rel_path
+        if src.is_file() or src.is_symlink():
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(src, dst)
+
+    # 脏数据扫描
+    violations = scan_dirty_content(target_dir, allow_rules)
+    if violations:
+        print("发现脏数据或敏感内容：", file=sys.stderr)
+        for _, msg in violations:
+            print(f"{msg}", file=sys.stderr)
+
+        count_keys = sum(1 for cat, _ in violations if cat == CATEGORY_KEY)
+        count_paths = sum(1 for cat, _ in violations if cat == CATEGORY_PATH)
+        count_projects = sum(1 for cat, _ in violations if cat == CATEGORY_PROJECT)
+        print(f"统计：密钥 {count_keys} 处，本机路径 {count_paths} 处，真实项目名 {count_projects} 处", file=sys.stderr)
+        print("改源文件或加进 .public-exclude 再导一次", file=sys.stderr)
+        return 1
+
+    # 初始化新仓库并创建第一个提交
+    try:
+        subprocess.run(["git", "init"], cwd=target_dir, check=True, capture_output=True)
+        subprocess.run(["git", "add", "."], cwd=target_dir, check=True, capture_output=True)
+        env = os.environ.copy()
+        env.setdefault("GIT_AUTHOR_NAME", "xay")
+        env.setdefault("GIT_AUTHOR_EMAIL", "xay@local")
+        env.setdefault("GIT_COMMITTER_NAME", "xay")
+        env.setdefault("GIT_COMMITTER_EMAIL", "xay@local")
+        subprocess.run(
+            [
+                "git",
+                "-c", "user.name=xay",
+                "-c", "user.email=xay@local",
+                "commit",
+                "-m", "xay 首次公开版本",
+            ],
+            cwd=target_dir,
+            check=True,
+            env=env,
+            capture_output=True,
+        )
+    except Exception as e:
+        print(f"错误：初始化导出仓库 Git 提交失败：{e}", file=sys.stderr)
+        return 1
+
+    print(f"已成功导出公开副本到：{target_dir}")
+    print(f"共复制 {len(to_copy)} 个文件，排除 {excluded_count} 个文件。")
+    print("已在目标目录创建初始提交（提交说明：'xay 首次公开版本'），未添加 remote。")
+    return 0
+
+
+def main():
+    if len(sys.argv) < 2:
+        print_usage(sys.stderr)
+        sys.exit(2)
+
+    arg = sys.argv[1]
+    if arg in ("-h", "--help"):
+        print(__doc__.strip())
+        sys.exit(0)
+
+    if len(sys.argv) != 2:
+        print("错误：只能提供一个目标目录参数", file=sys.stderr)
+        print_usage(sys.stderr)
+        sys.exit(2)
+
+    sys.exit(export_public(arg))
+
+
+if __name__ == "__main__":
+    main()

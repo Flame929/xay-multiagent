@@ -1,0 +1,17 @@
+{"ts":1793300630,"by":"lead:cv_demo09","type":"conv.begun","subject":"cv_demo09","ws":"ws_demo01","conv":"cv_demo09","data":{"title":"证据：失败与中断","lead_kind":"claude","aliases":["claude:demo-09"],"cwd":"/work/demo-shop"}}
+{"ts":1793300640,"by":"lead:cv_demo09","type":"employee.hired","subject":"em_codex01","ws":"ws_demo01","conv":"cv_demo09","data":{"agent":"codex"}}
+{"ts":1793300650,"by":"lead:cv_demo09","type":"task.added","subject":"tk_a","ws":"ws_demo01","conv":"cv_demo09","data":{"key":"a","title":"做轮播","owner":"em_codex01","deps":[],"writes":["web/a/**"],"card":"商品图轮播","mode":"write","reason":"首页要上新品"}}
+{"ts":1793300660,"by":"lead:cv_demo09","type":"task.added","subject":"tk_b","ws":"ws_demo01","conv":"cv_demo09","data":{"key":"b","title":"修文案","owner":"em_codex01","deps":[],"writes":["web/b/**"],"card":"修首页文案","mode":"write","reason":"文案有错"}}
+{"ts":1793300670,"by":"lead:cv_demo09","type":"task.added","subject":"tk_c","ws":"ws_demo01","conv":"cv_demo09","data":{"key":"c","title":"换图片","owner":"em_codex01","deps":[],"writes":["web/c/**"],"card":"换首页图片","mode":"write","reason":"图片太旧"}}
+{"ts":1793300680,"by":"station:em_codex01","type":"turn.started","subject":"tn_a","ws":"ws_demo01","conv":"cv_demo09","data":{"task":"tk_a","em":"em_codex01","kind":"first"}}
+{"ts":1793300690,"by":"station:em_codex01","type":"turn.ended","subject":"tn_a","ws":"ws_demo01","conv":"cv_demo09","data":{"em":"em_codex01","status":"failed","evidence":{"cli_status":"failed","claim":"blocked","changed_files":["web/a.js"],"diff_stat":{"files":1,"add":7,"del":2},"error":"命令报错"}}}
+{"ts":1793300700,"by":"employee:em_codex01","type":"task.reported","subject":"tk_a","ws":"ws_demo01","conv":"cv_demo09","data":{"claim":"blocked","summary":"改到一半卡住了"}}
+{"ts":1793300710,"by":"office","type":"task.kept","subject":"tk_a","ws":"ws_demo01","conv":"cv_demo09","data":{"reason":"failed_with_changes","detail":"失败但留下了改动"}}
+{"ts":1793300720,"by":"station:em_codex01","type":"turn.started","subject":"tn_b","ws":"ws_demo01","conv":"cv_demo09","data":{"task":"tk_b","em":"em_codex01","kind":"first"}}
+{"ts":1793300730,"by":"station:em_codex01","type":"turn.ended","subject":"tn_b","ws":"ws_demo01","conv":"cv_demo09","data":{"em":"em_codex01","status":"failed","evidence":{"cli_status":"failed","claim":"blocked","changed_files":[],"diff_stat":{"files":0,"add":0,"del":0},"error":"命令报错"}}}
+{"ts":1793300740,"by":"employee:em_codex01","type":"task.reported","subject":"tk_b","ws":"ws_demo01","conv":"cv_demo09","data":{"claim":"blocked","summary":"起不来"}}
+{"ts":1793300750,"by":"office","type":"task.failed","subject":"tk_b","ws":"ws_demo01","conv":"cv_demo09","data":{"reason":"命令报错","detail":"连续两次起不来"}}
+{"ts":1793300760,"by":"station:em_codex01","type":"turn.started","subject":"tn_c","ws":"ws_demo01","conv":"cv_demo09","data":{"task":"tk_c","em":"em_codex01","kind":"first"}}
+{"ts":1793300770,"by":"station:em_codex01","type":"turn.ended","subject":"tn_c","ws":"ws_demo01","conv":"cv_demo09","data":{"em":"em_codex01","status":"interrupted","evidence":{"cli_status":"interrupted","claim":"blocked","changed_files":[],"diff_stat":{"files":0,"add":0,"del":0}}}}
+{"ts":1793300780,"by":"employee:em_codex01","type":"task.reported","subject":"tk_c","ws":"ws_demo01","conv":"cv_demo09","data":{"claim":"blocked","summary":"被停下来了"}}
+{"ts":1793300790,"by":"office","type":"task.kept","subject":"tk_c","ws":"ws_demo01","conv":"cv_demo09","data":{"reason":"interrupted","detail":"被用户打断"}}

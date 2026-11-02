@@ -1,0 +1,78 @@
+[
+  {
+    "path": "conversation.plan_version",
+    "equals": 2
+  },
+  {
+    "path": "tasks[0].id",
+    "equals": "tk_a"
+  },
+  {
+    "path": "tasks[0].title",
+    "equals": "做轮播"
+  },
+  {
+    "path": "tasks[0].deps",
+    "equals": []
+  },
+  {
+    "path": "tasks[0].writes",
+    "equals": [
+      "web/b/**",
+      "web/c/**"
+    ]
+  },
+  {
+    "path": "plan.version",
+    "equals": 2
+  },
+  {
+    "path": "plan.history[1].by",
+    "equals": "gm"
+  },
+  {
+    "path": "plan.history[1].changes[0].op",
+    "equals": "change"
+  },
+  {
+    "path": "plan.history[1].changes[0].title",
+    "equals": "做轮播"
+  },
+  {
+    "path": "plan.history[1].changes[0].before.writes",
+    "equals": [
+      "web/a/**"
+    ]
+  },
+  {
+    "path": "plan.history[1].changes[0].after.writes",
+    "equals": [
+      "web/b/**",
+      "web/c/**"
+    ]
+  },
+  {
+    "path": "plan.history[1].reason",
+    "equals": "写入范围改成 b 和 c"
+  },
+  {
+    "path": "tasks[0].dept",
+    "equals": "fe"
+  },
+  {
+    "path": "tasks[0].owner",
+    "equals": "em_codex01"
+  },
+  {
+    "path": "tasks[0].status",
+    "equals": "planned"
+  },
+  {
+    "path": "plan.history[1].changes[0].before.title",
+    "equals": null
+  },
+  {
+    "path": "plan.history[1].changes[0].after.title",
+    "equals": null
+  }
+]

@@ -1,0 +1,226 @@
+#!/usr/bin/env python3
+"""xay-backfill-leads：为历史 run / dag 回填负责人对话（ui-v5-api §1）。
+
+用法：xay-backfill-leads [--projects ~/.claude/projects] [--claude-sessions <目录>] [--force] [--dry-run]
+
+- 只处理 registry 里还没有 lead_session（也没有登记 ls_ 会话）的 run 和 dag。
+- 到 ~/.claude/projects/*/*.jsonl（文件名就是会话 ID）里搜索 run_id 或 dag stamp 字符串。
+- 结果写进 $XAY_HOME/lead_map.json：{run_dir|dag_dir: lead_session}。可重复运行，已有映射默认保留。
+- 只做字节级字符串匹配：不保存、不输出任何对话内容，只输出计数。
+
+多个对话都提到同一个任务时（例如别的对话读过 registry），按以下顺序选：
+  1. 任务开始时已经存在的对话优先（负责人对话一定早于它派的活）；
+  2. 其中提到次数最多的（派活的对话会反复看到这个任务的输出）；
+  3. 再按对话创建时间更晚者（离派活时间最近）。
+子代理记录（<会话ID>/subagents/*.jsonl）归到父对话，但只在任务开始前就存在时才算。
+都没命中时兜底：任务目录恰好是某个 Claude 桌面版对话的工作目录、且任务开始时它在活动期，
+且这样的对话只有一个（只读该对话元数据里的 cwd/originCwd/createdAt/lastActivityAt）。
+"""
+import argparse
+import glob
+import json
+import os
+import sys
+import time
+
+
+def read_json(path, default=None):
+    try:
+        with open(path, encoding="utf-8") as fh:
+            return json.load(fh)
+    except (OSError, ValueError):
+        return default
+
+
+def parse_time(value):
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str) and value:
+        try:
+            return float(value)
+        except ValueError:
+            pass
+        for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S"):
+            try:
+                return time.mktime(time.strptime(value, fmt))
+            except ValueError:
+                pass
+    return 0.0
+
+
+def registry_items(home):
+    """registry 里的 run/dag（同一目录多行时合并），只保留目录仍存在的。"""
+    merged = {}
+    try:
+        lines = open(os.path.join(home, "registry.jsonl"), encoding="utf-8", errors="replace").read().splitlines()
+    except OSError:
+        return []
+    for line in lines:
+        try:
+            row = json.loads(line)
+        except ValueError:
+            continue
+        if not isinstance(row, dict) or row.get("kind") not in ("run", "dag"):
+            continue
+        path = row.get("run_dir") if row["kind"] == "run" else row.get("dag_dir")
+        if not path:
+            continue
+        path = os.path.abspath(os.path.expanduser(str(path)))
+        merged[path] = {**merged.get(path, {}), **row}
+    return [(path, row) for path, row in merged.items() if os.path.isdir(path)]
+
+
+def has_lead(home, path, row):
+    files = ("start.json", "meta.json") if row.get("kind") == "run" else ("state.json",)
+    sources = [row] + [read_json(os.path.join(path, name), {}) or {} for name in files]
+    if any(isinstance(s, dict) and s.get("lead_session") for s in sources):
+        return True
+    for source in sources:
+        session = isinstance(source, dict) and source.get("session")
+        if session and os.path.isfile(os.path.join(home, "sessions", str(session) + ".json")):
+            return True
+    return False
+
+
+def needles(path, row):
+    name = os.path.basename(path.rstrip("/"))
+    if row.get("kind") == "run":
+        run_id = str(row.get("run") or name)
+        return [run_id] if run_id == name else [run_id, name]
+    # dag stamp 形如 20261029-161709：优先匹配带目录的写法，再退回裸 stamp。
+    return ["dag/" + name, name]
+
+
+def started_at(path, row):
+    if row.get("kind") == "run":
+        start = read_json(os.path.join(path, "start.json"), {}) or {}
+        return parse_time(start.get("started")) or parse_time(row.get("time"))
+    state = read_json(os.path.join(path, "state.json"), {}) or {}
+    return parse_time(state.get("started")) or parse_time(row.get("time"))
+
+
+def claude_sessions(root):
+    """Claude 桌面版会话元数据：只取 cliSessionId、cwd、originCwd、createdAt、lastActivityAt。"""
+    output = []
+    for path in glob.glob(os.path.join(os.path.expanduser(root), "*", "*", "local_*.json")):
+        data = read_json(path, {}) or {}
+        if not isinstance(data, dict) or not data.get("cliSessionId"):
+            continue
+        dirs = {os.path.realpath(str(data[k])) for k in ("cwd", "originCwd") if data.get(k)}
+        output.append({"id": str(data["cliSessionId"]), "dirs": dirs,
+                       "created": parse_time(data.get("createdAt")) / 1000.0,
+                       "last": parse_time(data.get("lastActivityAt")) / 1000.0})
+    return output
+
+
+def born(stat):
+    return getattr(stat, "st_birthtime", None) or stat.st_ctime
+
+
+def main(argv=None):
+    ap = argparse.ArgumentParser(description="为历史 run/dag 回填负责人对话")
+    ap.add_argument("--projects", default=os.environ.get("XAY_CLAUDE_PROJECTS", "~/.claude/projects"))
+    ap.add_argument("--claude-sessions", default=os.environ.get("XAY_CLAUDE_SESSIONS", "~/Library/Application Support/Claude/claude-code-sessions"))
+    ap.add_argument("--force", action="store_true", help="重新计算已有映射")
+    ap.add_argument("--dry-run", action="store_true", help="只统计，不写 lead_map.json")
+    args = ap.parse_args(argv)
+    home = os.path.abspath(os.path.expanduser(os.environ.get("XAY_HOME", "~/.xay")))
+    map_path = os.path.join(home, "lead_map.json")
+    lead_map = {} if args.force else (read_json(map_path, {}) or {})
+    if not isinstance(lead_map, dict):
+        lead_map = {}
+
+    items = registry_items(home)
+    todo = []
+    already = 0
+    for path, row in items:
+        if has_lead(home, path, row):
+            already += 1
+            continue
+        if path in lead_map:
+            continue
+        todo.append((path, row, needles(path, row), started_at(path, row)))
+
+    projects = os.path.expanduser(args.projects)
+    # 顶层对话：<project>/<会话ID>.jsonl；负责人派出的子代理：<project>/<会话ID>/subagents/*.jsonl，归到父对话。
+    transcripts = [(os.path.splitext(os.path.basename(t))[0], t, False)
+                   for t in sorted(glob.glob(os.path.join(projects, "*", "*.jsonl")))]
+    transcripts += [(os.path.basename(os.path.dirname(os.path.dirname(t))), t, True)
+                    for t in sorted(glob.glob(os.path.join(projects, "*", "*", "subagents", "*.jsonl")))]
+    candidates = {path: [] for path, *_ in todo}
+    for session, transcript, is_sub in transcripts:
+        if not todo:
+            break
+        try:
+            stat = os.stat(transcript)
+            with open(transcript, "rb") as fh:
+                blob = fh.read()
+        except OSError:
+            continue
+        for path, _row, keys, started in todo:
+            # 子代理记录只有在任务开始前就存在才算（派活者必然早于任务；避免事后读 registry 的子代理误认）
+            if is_sub and (not started or born(stat) > started + 60):
+                continue
+            for key in keys:
+                count = blob.count(key.encode("utf-8"))
+                if count:
+                    candidates[path].append((session, count, born(stat)))
+                    break
+        del blob  # 不保留任何对话内容
+
+    found = by_cwd = 0
+    claude = claude_sessions(args.claude_sessions)
+    for path, row, _keys, started in todo:
+        options = candidates.get(path) or []
+        if options:
+            # 同一对话的主记录和子代理记录合并计数
+            merged = {}
+            for session, count, birth in options:
+                old = merged.get(session)
+                merged[session] = (session, count + (old[1] if old else 0), min(birth, old[2]) if old else birth)
+            options = sorted(merged.values(), key=lambda c: (bool(started) and c[2] <= started + 60, c[1], c[2]), reverse=True)
+            lead_map[path] = options[0][0]
+            found += 1
+            continue
+        # 兜底：任务目录正好是某个 Claude 对话的工作目录，且任务开始时该对话处于活动期
+        origin = row.get("origin") or row.get("base") or ""
+        if not origin and row.get("kind") == "run":
+            origin = (read_json(os.path.join(path, "start.json"), {}) or {}).get("origin") or ""
+        if origin and started:
+            origin = os.path.realpath(origin)
+            hits = [c for c in claude if origin in c["dirs"] and c["created"] - 60 <= started <= c["last"] + 600]
+            if len({c["id"] for c in hits}) == 1:
+                lead_map[path] = hits[0]["id"]
+                found += 1
+                by_cwd += 1
+
+    if not args.dry_run:
+        os.makedirs(home, exist_ok=True)
+        tmp = map_path + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as fh:
+            json.dump(lead_map, fh, ensure_ascii=False, indent=1, sort_keys=True)
+            fh.write("\n")
+        os.replace(tmp, map_path)
+
+    runs = sum(1 for _p, r in items if r.get("kind") == "run")
+    dags = len(items) - runs
+    needs = [p for p, r in items if not has_lead(home, p, r)]
+    total_missing = len(needs)
+    mapped = sum(1 for p in needs if p in lead_map)
+    print(json.dumps({
+        "registry": {"run": runs, "dag": dags},
+        "already_has_lead": already,
+        "needs_backfill": total_missing,
+        "matched_now": found,
+        "matched_by_cwd": by_cwd,
+        "mapped_total": mapped,
+        "hit_rate": round(mapped / total_missing, 3) if total_missing else None,
+        "transcripts_scanned": len(transcripts),
+        "lead_map": map_path if not args.dry_run else None,
+        "conversations": len({lead_map[p] for p, r in items if p in lead_map}),
+    }, ensure_ascii=False, indent=1))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

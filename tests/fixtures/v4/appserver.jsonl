@@ -1,0 +1,29 @@
+{"jsonrpc":"2.0","method":"thread/started","params":{"threadId":"th_9f1c2a","thread":{"id":"th_9f1c2a","cwd":"/tmp/xay-wire","model":"gpt-5-codex","sandbox":"workspace-write","approvalPolicy":"never"}}}
+{"jsonrpc":"2.0","method":"thread/status/changed","params":{"threadId":"th_9f1c2a","status":"active"}}
+{"jsonrpc":"2.0","method":"turn/started","params":{"threadId":"th_9f1c2a","turnId":"nturn_1"}}
+{"jsonrpc":"2.0","method":"item/started","params":{"threadId":"th_9f1c2a","turnId":"nturn_1","item":{"id":"item_1","type":"reasoning","text":""}}}
+{"jsonrpc":"2.0","method":"item/completed","params":{"threadId":"th_9f1c2a","turnId":"nturn_1","item":{"id":"item_1","type":"reasoning","text":"先读规格，再改 slugify。"}}}
+{"jsonrpc":"2.0","method":"item/started","params":{"threadId":"th_9f1c2a","turnId":"nturn_1","item":{"id":"item_2","type":"commandExecution","command":["/bin/zsh","-lc","sed -n 1,80p spec.md"],"cwd":"/tmp/xay-wire","status":"inProgress"}}}
+{"jsonrpc":"2.0","method":"item/commandExecution/outputDelta","params":{"threadId":"th_9f1c2a","turnId":"nturn_1","itemId":"item_2","delta":"# slugify 规格\n"}}
+{"jsonrpc":"2.0","method":"item/completed","params":{"threadId":"th_9f1c2a","turnId":"nturn_1","item":{"id":"item_2","type":"commandExecution","command":["/bin/zsh","-lc","sed -n 1,80p spec.md"],"cwd":"/tmp/xay-wire","exitCode":0,"status":"completed","aggregatedOutput":"# slugify 规格\n函数 slugify(text, max_len=50)"}}}
+{"jsonrpc":"2.0","method":"item/completed","params":{"threadId":"th_9f1c2a","turnId":"nturn_1","item":{"id":"item_3","type":"fileChange","status":"completed","changes":[{"path":"/tmp/xay-wire/slug.py","kind":"add","add":3,"del":0,"diff":"@@ -0,0 +1,3 @@\n+import re\n+\n+def slugify(text, max_len=50):\n"}]}}}
+{"jsonrpc":"2.0","method":"item/completed","params":{"threadId":"th_9f1c2a","turnId":"nturn_1","item":{"id":"item_4","type":"mcpToolCall","server":"lingxing","tool":"query_inventory","status":"completed","result":{"items":2}}}}
+{"jsonrpc":"2.0","id":7,"method":"item/commandExecution/requestApproval","params":{"threadId":"th_9f1c2a","turnId":"nturn_1","itemId":"item_5","cwd":"/tmp/xay-wire","command":"rm -rf build","reason":"需要写权限"}}
+{"jsonrpc":"2.0","id":7,"result":{"decision":"denied"}}
+{"jsonrpc":"2.0","id":8,"method":"item/tool/requestUserInput","params":{"threadId":"th_9f1c2a","turnId":"nturn_1","itemId":"item_6","questions":[{"id":"q1","question":"要保留旧接口吗？","options":["保留","删除"]}]}}
+{"jsonrpc":"2.0","id":8,"result":{"answers":{"q1":"保留"}}}
+{"jsonrpc":"2.0","method":"item/started","params":{"threadId":"th_9f1c2a","turnId":"nturn_1","item":{"id":"item_7","type":"agentMessage","text":""}}}
+{"jsonrpc":"2.0","method":"item/agentMessage/delta","params":{"threadId":"th_9f1c2a","turnId":"nturn_1","itemId":"item_7","delta":"结果：完成"}}
+{"jsonrpc":"2.0","method":"item/agentMessage/delta","params":{"threadId":"th_9f1c2a","turnId":"nturn_1","itemId":"item_7","delta":"。\n改动文件：slug.py"}}
+{"jsonrpc":"2.0","method":"item/completed","params":{"threadId":"th_9f1c2a","turnId":"nturn_1","item":{"id":"item_7","type":"agentMessage","text":""}}}
+{"jsonrpc":"2.0","method":"thread/tokenUsage/updated","params":{"threadId":"th_9f1c2a","tokenUsage":{"inputTokens":26120,"cachedInputTokens":9088,"outputTokens":431,"totalTokens":26551}}}
+{"jsonrpc":"2.0","method":"warning","params":{"message":"3 个无效配置项被忽略"}}
+{"jsonrpc":"2.0","method":"error","params":{"message":"MCP lingxing 返回 401"}}
+{"jsonrpc":"2.0","method":"turn/completed","params":{"threadId":"th_9f1c2a","turnId":"nturn_1","status":"completed","usage":{"inputTokens":26120,"cachedInputTokens":9088,"outputTokens":431,"totalTokens":26551}}}
+{"jsonrpc":"2.0","method":"turn/started","params":{"threadId":"th_9f1c2a","turnId":"nturn_2"}}
+{"jsonrpc":"2.0","method":"item/started","params":{"threadId":"th_9f1c2a","turnId":"nturn_2","item":{"id":"item_8","type":"commandExecution","command":["/bin/zsh","-lc","sleep 60"],"cwd":"/tmp/xay-wire","status":"inProgress"}}}
+{"jsonrpc":"2.0","method":"turn/completed","params":{"threadId":"th_9f1c2a","turnId":"nturn_2","status":"interrupted"}}
+{"jsonrpc":"2.0","method":"turn/started","params":{"threadId":"th_9f1c2a","turnId":"nturn_3"}}
+{"jsonrpc":"2.0","method":"error","params":{"message":"model overloaded"}}
+{"jsonrpc":"2.0","method":"turn/completed","params":{"threadId":"th_9f1c2a","turnId":"nturn_3","status":"failed","error":{"message":"model overloaded"}}}
+{"jsonrpc":"2.0","method":"thread/status/changed","params":{"threadId":"th_9f1c2a","status":"idle"}}

@@ -1,0 +1,8 @@
+{"ts":1761700200.5,"type":"control.requested","action":"steer","by":"lead:ls_20261029_abcd","source":"socket:pid=4321","text":"改用 pytest -q，别跑全量"}
+{"ts":1761700200.9,"type":"control.acked","action":"steer","accepted_as":"steer","effective":"next_sample","source":"socket:pid=4321"}
+{"ts":1761700300.0,"type":"control.requested","action":"interrupt","by":"user","source":"http:127.0.0.1:7878","text":"先停一下"}
+{"ts":1761700300.1,"type":"control.failed","action":"interrupt","error":"turn 已经结束","source":"http:127.0.0.1:7878"}
+{"ts":1761700400.0,"type":"signal","kind":"stalled","level":"remind","text":"120 秒没有新事件"}
+{"ts":1761700500.0,"type":"decision.created","id":"dec_20261029_0001","kind":"conflict","owner":"lead","title":"落地冲突：wire 与 origin 改动重叠","detail":"git apply 失败，worktree 保留"}
+{"ts":1761700600.0,"type":"decision.resolved","id":"dec_20261029_0001","option":"handoff_lead","by":"user","text":"交给负责人"}
+{"ts":1761700700.0,"type":"note.updated","key":"wire","path":".xay/out/notes.md","text":"假设：slugify 只处理 UTF-8。"}

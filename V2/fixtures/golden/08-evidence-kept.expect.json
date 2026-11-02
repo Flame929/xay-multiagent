@@ -1,0 +1,34 @@
+[
+  {
+    "path": "conversation.plan_version",
+    "equals": 3
+  },
+  {
+    "path": "tasks[0].id",
+    "equals": "tk_a"
+  },
+  {
+    "path": "tasks[0].status",
+    "equals": "needs_you"
+  },
+  {
+    "path": "tasks[1].id",
+    "equals": "tk_b"
+  },
+  {
+    "path": "tasks[1].status",
+    "equals": "needs_you"
+  },
+  {
+    "path": "tasks[2].id",
+    "equals": "tk_c"
+  },
+  {
+    "path": "tasks[2].status",
+    "equals": "needs_you"
+  },
+  {
+    "path": "decisions",
+    "equals": []
+  }
+]

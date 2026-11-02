@@ -1,0 +1,22 @@
+[
+  {
+    "path": "conversation.plan_version",
+    "equals": 1
+  },
+  {
+    "path": "tasks[0].progress.step",
+    "equals": 2
+  },
+  {
+    "path": "tasks[0].progress.of",
+    "equals": 4
+  },
+  {
+    "path": "tasks[0].progress.text",
+    "equals": "写测试"
+  },
+  {
+    "path": "people.em_codex01.progress.step",
+    "equals": 2
+  }
+]

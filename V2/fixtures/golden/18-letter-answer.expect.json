@@ -1,0 +1,50 @@
+[
+  {
+    "path": "letters[0].id",
+    "equals": "lt_req"
+  },
+  {
+    "path": "letters[0].from",
+    "equals": "em_codex01"
+  },
+  {
+    "path": "letters[0].to",
+    "equals": "fe"
+  },
+  {
+    "path": "letters[0].kind",
+    "equals": "request"
+  },
+  {
+    "path": "letters[0].delivered",
+    "equals": true
+  },
+  {
+    "path": "letters[0].status",
+    "equals": "closed"
+  },
+  {
+    "path": "letters[0].verdict",
+    "equals": "accept"
+  },
+  {
+    "path": "letters[1].id",
+    "equals": "lt_ans"
+  },
+  {
+    "path": "letters[1].kind",
+    "equals": "reply"
+  },
+  {
+    "path": "letters[1].reply_to",
+    "equals": "lt_req"
+  },
+  {
+    "path": "people.em_codex01.state",
+    "equals": "idle"
+  },
+  {
+    "path": "depts[0].counts.open_requests",
+    "equals": 0
+  }
+]

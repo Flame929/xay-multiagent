@@ -1,0 +1,8 @@
+{"ts":1793300260,"by":"lead:cv_demo06","type":"conv.begun","subject":"cv_demo06","ws":"ws_demo01","conv":"cv_demo06","data":{"title":"员工发号","lead_kind":"claude","aliases":["claude:demo-06"],"cwd":"/work/demo-shop"}}
+{"ts":1793300270,"by":"lead:cv_demo06","type":"employee.hired","subject":"em_codex01","ws":"ws_demo01","conv":"cv_demo06","data":{"agent":"codex"}}
+{"ts":1793300280,"by":"lead:cv_demo06","type":"employee.fired","subject":"em_codex01","ws":"ws_demo01","conv":"cv_demo06","data":{"reason":"换人"}}
+{"ts":1793300290,"by":"lead:cv_demo06","type":"employee.hired","subject":"em_codex02","ws":"ws_demo01","conv":"cv_demo06","data":{"agent":"codex"}}
+{"ts":1793300300,"by":"lead:cv_demo06","type":"employee.hired","subject":"em_deepseek01","ws":"ws_demo01","conv":"cv_demo06","data":{"agent":"dsh"}}
+{"ts":1793300310,"by":"lead:cv_demo06","type":"employee.hired","subject":"em_gemini01","ws":"ws_demo01","conv":"cv_demo06","data":{"agent":"agy"}}
+{"ts":1793300320,"by":"lead:cv_demo06","type":"employee.fired","subject":"em_gemini01","ws":"ws_demo01","conv":"cv_demo06","data":{"reason":"换人"}}
+{"ts":1793300330,"by":"lead:cv_demo06","type":"employee.hired","subject":"em_gemini02","ws":"ws_demo01","conv":"cv_demo06","data":{"agent":"agy"}}

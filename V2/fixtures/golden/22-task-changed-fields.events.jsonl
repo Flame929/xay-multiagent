@@ -1,0 +1,4 @@
+{"ts":1793301650,"by":"lead:cv_demo22","type":"conv.begun","subject":"cv_demo22","ws":"ws_demo01","conv":"cv_demo22","data":{"title":"只改给出的字段","lead_kind":"claude","aliases":["claude:demo-22"],"cwd":"/work/demo-shop"}}
+{"ts":1793301660,"by":"lead:cv_demo22","type":"employee.hired","subject":"em_codex01","ws":"ws_demo01","conv":"cv_demo22","data":{"agent":"codex"}}
+{"ts":1793301670,"by":"lead:cv_demo22","type":"task.added","subject":"tk_a","ws":"ws_demo01","conv":"cv_demo22","data":{"key":"a","title":"做轮播","deps":[],"writes":["web/a/**"],"card":"原卡片","mode":"write","reason":"先做","dept":"fe","owner":"em_codex01","steps":["搭结构","接图片"],"budget":{"tokens":100000,"minutes":30,"turns":2}}}
+{"ts":1793301680,"by":"lead:cv_demo22","type":"task.changed","subject":"tk_a","ws":"ws_demo01","conv":"cv_demo22","data":{"fields":{"writes":["web/b/**","web/c/**"]},"reason":"写入范围改成 b 和 c"}}

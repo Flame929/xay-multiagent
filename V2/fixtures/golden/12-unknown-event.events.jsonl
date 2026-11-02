@@ -1,0 +1,5 @@
+{"ts":1793300970,"by":"lead:cv_demo12","type":"conv.begun","subject":"cv_demo12","ws":"ws_demo01","conv":"cv_demo12","data":{"title":"未知事件","lead_kind":"claude","aliases":["claude:demo-12"],"cwd":"/work/demo-shop"}}
+{"ts":1793300980,"by":"lead:cv_demo12","type":"task.added","subject":"tk_a","ws":"ws_demo01","conv":"cv_demo12","data":{"key":"a","title":"做轮播","deps":[],"writes":["web/a/**"],"card":"商品图轮播","mode":"write","reason":"首页要上新品"}}
+{"ts":1793300990,"by":"lead:cv_demo12","type":"task.future_metric","subject":"tk_a","ws":"ws_demo01","conv":"cv_demo12","data":{"whatever":true}}
+{"ts":1793301000,"by":"lead:cv_demo12","type":"task.future_note","subject":"tk_a","ws":"ws_demo01","conv":"cv_demo12","data":{"text":"未来版本才有的事件"}}
+{"ts":1793301010,"by":"lead:cv_demo12","type":"task.changed","subject":"tk_a","ws":"ws_demo01","conv":"cv_demo12","data":{"fields":{"title":"做商品图轮播（改过）"},"reason":"未知事件之后照常改"}}

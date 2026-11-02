@@ -1,0 +1,5 @@
+{"ts":1793301550,"by":"lead:cv_demo20","type":"conv.begun","subject":"cv_demo20","ws":"ws_demo01","conv":"cv_demo20","data":{"title":"待答复的信","lead_kind":"claude","aliases":["claude:demo-20"],"cwd":"/work/demo-shop"}}
+{"ts":1793301560,"by":"lead:cv_demo20","type":"dept.opened","subject":"fe","ws":"ws_demo01","conv":"cv_demo20","data":{"name":"前端部","mission":"负责页面和交互","owns":["web/**"],"head":"rules"}}
+{"ts":1793301570,"by":"lead:cv_demo20","type":"employee.hired","subject":"em_codex01","ws":"ws_demo01","conv":"cv_demo20","data":{"agent":"codex"}}
+{"ts":1793301580,"by":"lead:cv_demo20","type":"employee.joined","subject":"em_codex01","ws":"ws_demo01","conv":"cv_demo20","data":{"dept":"fe"}}
+{"ts":1793301590,"by":"employee:em_codex01","type":"letter.sent","subject":"lt_pending","ws":"ws_demo01","conv":"cv_demo20","data":{"from":"em_codex01","to":"fe","kind":"request","subject":"要一张空状态图","body":"首页缺一张空状态图，能补吗？"}}

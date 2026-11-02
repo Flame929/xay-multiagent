@@ -1,0 +1,30 @@
+[
+  {
+    "path": "conversation.plan_version",
+    "equals": 2
+  },
+  {
+    "path": "tasks[0].status",
+    "equals": "done"
+  },
+  {
+    "path": "tasks[0].result",
+    "equals": "轮播做好了"
+  },
+  {
+    "path": "tasks[1].status",
+    "equals": "queued"
+  },
+  {
+    "path": "people.em_codex01.state",
+    "equals": "queued"
+  },
+  {
+    "path": "people.em_codex01.queue[0]",
+    "equals": "tk_b"
+  },
+  {
+    "path": "tasks[0].progress.step",
+    "equals": 1
+  }
+]

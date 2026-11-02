@@ -1,0 +1,50 @@
+[
+  {
+    "path": "conversation.plan_version",
+    "equals": 1
+  },
+  {
+    "path": "tasks[0].status",
+    "equals": "needs_you"
+  },
+  {
+    "path": "people.em_codex01.state",
+    "equals": "blocked"
+  },
+  {
+    "path": "decisions[0].id",
+    "equals": "dc_001"
+  },
+  {
+    "path": "decisions[0].kind",
+    "equals": "mismatch"
+  },
+  {
+    "path": "decisions[0].task",
+    "equals": "tk_a"
+  },
+  {
+    "path": "decisions[0].em",
+    "equals": "em_codex01"
+  },
+  {
+    "path": "decisions[0].owner",
+    "equals": "lead"
+  },
+  {
+    "path": "decisions[0].options[0].id",
+    "equals": "merge"
+  },
+  {
+    "path": "decisions[0].options[1].id",
+    "equals": "rework"
+  },
+  {
+    "path": "decisions[0].options[2].id",
+    "equals": "discard"
+  },
+  {
+    "path": "decisions[0].options[2].danger",
+    "equals": true
+  }
+]

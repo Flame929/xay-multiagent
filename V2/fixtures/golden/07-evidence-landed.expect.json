@@ -1,0 +1,42 @@
+[
+  {
+    "path": "conversation.plan_version",
+    "equals": 2
+  },
+  {
+    "path": "tasks[0].id",
+    "equals": "tk_write"
+  },
+  {
+    "path": "tasks[0].status",
+    "equals": "reported"
+  },
+  {
+    "path": "tasks[0].result",
+    "equals": "轮播做好了，手机端能滑"
+  },
+  {
+    "path": "tasks[1].id",
+    "equals": "tk_read"
+  },
+  {
+    "path": "tasks[1].status",
+    "equals": "reported"
+  },
+  {
+    "path": "tasks[1].result",
+    "equals": "文案都核对过，没有要改的"
+  },
+  {
+    "path": "people.em_codex01.state",
+    "equals": "idle"
+  },
+  {
+    "path": "plan.version",
+    "equals": 2
+  },
+  {
+    "path": "plan.history[1].by",
+    "equals": "gm"
+  }
+]

@@ -1,0 +1,363 @@
+#!/usr/bin/env python3
+"""xay-dag：按依赖关系并行执行多 AI 任务计划，并写入实时看板状态。
+
+用法：xay-dag plan.json [--dry-run] [--max-parallel N] [--watch]
+计划可写 workdir、title、max_parallel、max_per_agent 和 tasks。
+每个任务必须有 id、agent、prompt；可选 title、deps、effort、model、readonly、isolate、cd、resume、source、full、long、timeout。
+agent 可写 auto，并可配 prefer: ["agy", "codex", "dsh"]。
+接着干（不开新会话）：
+  "continue": "<任务 id>"  在那个任务的 AI 会话里接着做（同一个 agent，自动加进 deps）；适合分批串行、返工、按审查意见修改
+  "worker": "<名字>"       用负责人对话里的具名 AI（等同 xay-run --as）；同名任务之间必须有先后依赖
+"""
+import json, os, re, socket, subprocess, sys, time, signal
+from datetime import datetime
+
+HERE = os.path.dirname(os.path.realpath(__file__))
+XAY_RUN = os.path.join(HERE, "xay-run")
+if HERE not in sys.path:
+    sys.path.insert(0, HERE)
+PH = re.compile(r"\{\{(result|session|files|dir):([A-Za-z0-9_.-]+)\}\}")
+
+def die(msg):
+    print(f"xay-dag：{msg}", file=sys.stderr)
+    sys.exit(2)
+
+def notify(body, subtitle, mission=""):
+    # 交给 xay-notify：有通知小应用时显示四象限图标，点击打开该任务的看板页面
+    subprocess.run([os.path.join(HERE, "xay-notify"), str(subtitle), str(body), mission], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+def shutil_which(name):
+    for p in os.environ.get("PATH", "").split(os.pathsep):
+        f = os.path.join(p, name)
+        if os.path.isfile(f) and os.access(f, os.X_OK):
+            return f
+    return None
+
+def first_title(text):
+    for line in str(text).splitlines():
+        if line.strip():
+            return line.strip()[:30]
+    return "任务"
+
+def main():
+    argv = sys.argv[1:]
+    if not argv or argv[0] in ("-h", "--help"):
+        print(__doc__)
+        return 0
+    plan_path = os.path.abspath(argv[0])
+    dry = "--dry-run" in argv
+    watch = "--watch" in argv
+    session_id = argv[argv.index("--session") + 1] if "--session" in argv else os.environ.get("XAY_LEAD_SESSION", "")
+    try:  # ui-v5-api §1：负责人对话识别（显式 --session 优先）
+        from xay_cli import detect_lead
+        lead = detect_lead(session_id or None)
+    except Exception:
+        lead = {"lead_session": session_id, "lead_kind": "unknown", "lead_host": ""}
+    try:
+        with open(plan_path, encoding="utf-8") as f:
+            plan = json.load(f)
+    except (OSError, json.JSONDecodeError) as e:
+        die(f"计划文件无法读取：{e}")
+    base = os.path.abspath(os.path.join(os.path.dirname(plan_path), plan.get("workdir", "."))) if "workdir" in plan else os.getcwd()
+    max_par = int(plan.get("max_parallel", 4))
+    if "--max-parallel" in argv:
+        max_par = int(argv[argv.index("--max-parallel") + 1])
+    per_agent = {"codex": 2, "dsh": 3, "agy": 2, "auto": 2, **plan.get("max_per_agent", {})}
+    from xay_quota import collect as collect_quota, choose_route
+    tasks = {}
+    for t in plan.get("tasks", []):
+        for key in ("id", "agent", "prompt"):
+            if key not in t:
+                die(f"任务缺少字段 {key}：{t}")
+        if t["agent"] not in ("codex", "dsh", "agy", "auto"):
+            die(f"任务 {t['id']} 的 agent 不支持：{t['agent']}")
+        if t["id"] in tasks:
+            die(f"任务 id 重复：{t['id']}")
+        t = dict(t)
+        t["requested_agent"] = t["agent"]
+        t.setdefault("deps", [])
+        t.setdefault("title", first_title(t["prompt"]))
+        t.setdefault("name", t["id"])
+        if t["agent"] == "auto":
+            prefer = [{"codex": "codex-sub", "dsh": "dsh", "agy": "agy"}.get(str(v), str(v)) for v in (t.get("prefer") or [])]
+            item = choose_route(collect_quota(), prefer=prefer or None)
+            t["_selected_line"] = item.get("line") if item else None
+            t["_selected_agent"] = item.get("agent") if item else None
+            if item:
+                t["agent"] = item["agent"]
+                if item["agent"] == "codex":
+                    t.setdefault("source", "relay" if item["line"] == "codex-relay" else "sub")
+        tasks[t["id"]] = t
+    for t in tasks.values():
+        ref = t.get("continue")
+        if ref:
+            if ref not in tasks:
+                die(f"任务 {t['id']} 要接着做的任务 {ref} 不存在")
+            if tasks[ref]["agent"] != t["agent"]:
+                die(f"任务 {t['id']} 只能接着同一个 AI 的任务（{ref} 是 {tasks[ref]['agent']}）")
+            if ref not in t["deps"]:
+                t["deps"] = list(t["deps"]) + [ref]
+    for t in tasks.values():
+        for d in t["deps"]:
+            if d not in tasks:
+                die(f"任务 {t['id']} 依赖了不存在的任务 {d}")
+
+    def reaches(a, b, seen=None):
+        seen = seen if seen is not None else set()
+        for d in tasks[a]["deps"]:
+            if d == b or (d not in seen and not seen.add(d) and reaches(d, b, seen)):
+                return True
+        return False
+    by_worker = {}
+    for t in tasks.values():
+        if t.get("worker"):
+            by_worker.setdefault(t["worker"], []).append(t["id"])
+    for name, ids in by_worker.items():
+        if len({tasks[i]["agent"] for i in ids}) > 1:
+            die(f"具名 AI「{name}」被分给了不同的 agent")
+        for a in ids:
+            for b in ids:
+                if a < b and not reaches(a, b) and not reaches(b, a):
+                    die(f"任务 {a} 和 {b} 都交给「{name}」，但没有先后依赖（同一个 AI 一次只能做一件事）")
+        for _, ref in PH.findall(t["prompt"] + t.get("cd", "")):
+            if ref not in t["deps"]:
+                die(f"任务 {t['id']} 引用了 {ref}，但没有把它写进 deps")
+    layers, done_ids = [], set()
+    while len(done_ids) < len(tasks):
+        layer = [i for i, t in tasks.items() if i not in done_ids and all(d in done_ids for d in t["deps"])]
+        if not layer:
+            die("存在循环依赖")
+        layers.append(layer)
+        done_ids.update(layer)
+    print("执行计划：" + "  →  ".join("[" + ", ".join(f"{i}({tasks[i]['agent']})" for i in l) + "]" for l in layers))
+    if dry:
+        return 0
+
+    title = plan.get("title") or (tasks[layers[0][0]]["title"] if layers and layers[0] else "任务")
+    stamp_base = datetime.now().strftime("%Y%m%d-%H%M%S")
+    stamp = stamp_base
+    os.makedirs(os.path.join(base, ".xay", "dag"), exist_ok=True)
+    n = 1
+    while True:
+        out_dir = os.path.join(base, ".xay", "dag", stamp)
+        try:
+            os.mkdir(out_dir)
+            break
+        except FileExistsError:
+            n += 1
+            stamp = f"{stamp_base}-{n}"
+    started_epoch = int(time.time())
+    with open(os.path.join(out_dir, "plan.json"), "w", encoding="utf-8") as f:
+        json.dump(plan, f, ensure_ascii=False, indent=2)
+    xay_home = os.path.expanduser(os.environ.get("XAY_HOME", "~/.xay"))
+    os.makedirs(xay_home, exist_ok=True)
+    with open(os.path.join(xay_home, "registry.jsonl"), "a", encoding="utf-8") as f:
+        json.dump({"kind": "dag", "dag_dir": os.path.abspath(out_dir), "base": base, "title": title,
+                   "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "session": session_id, **lead}, f, ensure_ascii=False)
+        f.write("\n")
+    if watch:
+        watch_script = os.path.join(HERE, "xay_watch.py")
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        occupied = sock.connect_ex(("127.0.0.1", 7878)) == 0
+        sock.close()
+        if occupied:
+            print("看板：http://127.0.0.1:7878")
+        elif os.path.exists(watch_script):
+            with open(os.path.join(out_dir, "watch.log"), "ab") as log:
+                subprocess.Popen([sys.executable, watch_script], cwd=HERE, stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
+            print("看板：http://127.0.0.1:7878")
+
+    state = {i: "pending" for i in tasks}
+    task_started = {i: None for i in tasks}
+    task_ended = {i: None for i in tasks}
+    meta, workdir_of, active = {}, {}, {}
+    stopping = False
+
+    def write_state(ended=None):
+        data = {"dag": stamp, "dag_dir": os.path.abspath(out_dir), "base": base, "title": title, "pid": os.getpid(),
+                "started": started_epoch, "ended": ended, "tasks": [], "layers": layers, **lead}
+        for i, t in tasks.items():
+            data["tasks"].append({"id": i, "agent": t.get("_selected_agent") or t["agent"], "requested_agent": t.get("requested_agent", t["agent"]), "selected_line": t.get("_selected_line"), "name": t.get("name", i), "title": t["title"],
+                "deps": t.get("deps", []), "effort": t.get("effort", "medium"), "state": state[i],
+                "started": task_started[i], "ended": task_ended[i], "workdir": workdir_of.get(i),
+                "run_dir": meta.get(i, {}).get("run_dir"), "prompt": t["prompt"][:2000]})
+        tmp = os.path.join(out_dir, "state.json.tmp")
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=1)
+        os.replace(tmp, os.path.join(out_dir, "state.json"))
+
+    def fill(text, tid):
+        def rep(m):
+            kind, ref = m.group(1), m.group(2)
+            mt = meta.get(ref, {})
+            if kind == "dir":
+                if mt.get("land") in ("applied", "empty"):
+                    return mt.get("origin") or base
+                return mt.get("workdir") or workdir_of.get(ref) or base
+            if kind == "session":
+                return mt.get("session_id", "")
+            if kind == "files":
+                return " ".join(mt.get("changed_files", [])) or "无"
+            rd = mt.get("run_dir", "")
+            try:
+                with open(os.path.join(rd, "result.md"), encoding="utf-8", errors="replace") as f:
+                    r = f.read().strip()
+            except OSError:
+                r = ""
+            return r[:3000] + ("…（已截断）" if len(r) > 3000 else "")
+        return PH.sub(rep, text)
+
+    def launch(tid):
+        t = tasks[tid]
+        d = os.path.abspath(os.path.join(base, fill(t["cd"], tid))) if t.get("cd") else base
+        workdir_of[tid] = d
+        cmd = [XAY_RUN, t["agent"], "-n", t.get("name", tid), "-t", t["title"], "-C", d]
+        if session_id:
+            cmd += ["--session", session_id]
+        for key, flag in (("effort", "-e"), ("model", "--model"), ("resume", "-r"), ("source", "--source"), ("timeout", "--timeout")):
+            if t.get(key) is not None:
+                cmd += [flag, str(t[key])]
+        for key in ("readonly", "full", "long", "raw"):
+            if t.get(key):
+                cmd.append("--" + key)
+        if t.get("worker"):
+            cmd += ["--as", str(t["worker"])]
+        if t.get("continue") and not t.get("resume"):
+            prev = {}
+            try:
+                with open(os.path.join(out_dir, f"{t['continue']}.meta.json"), encoding="utf-8") as f:
+                    prev = json.load(f)
+            except (OSError, ValueError):
+                pass
+            sid = prev.get("session_id") or prev.get("native_session_id")
+            if sid:
+                cmd += ["-r", str(sid)]
+            else:
+                print(f"[{tid}] {t['continue']} 没留下会话，只能开新会话", flush=True)
+        if t.get("cd"):
+            cmd += ["--isolate", "off"]
+        elif "isolate" in t:
+            cmd += ["--isolate", "on" if t["isolate"] else "off"]
+        if t["agent"] == "agy":
+            for kind, ref in PH.findall(t["prompt"]):
+                other = workdir_of.get(ref)
+                if kind == "dir" and other and other != d:
+                    cmd += ["--add-dir", other]
+        cmd.append(fill(t["prompt"], tid))
+        meta_file = os.path.join(out_dir, f"{tid}.meta.json")
+        env = {**os.environ, "XAY_META_OUT": meta_file, "XAY_DAG_ID": os.path.abspath(out_dir), "XAY_TASK_ID": tid}
+        log = open(os.path.join(out_dir, f"{tid}.log"), "w", encoding="utf-8")
+        proc = subprocess.Popen(cmd, stdout=log, stderr=subprocess.STDOUT, env=env)
+        active[tid] = (proc, log, meta_file)
+
+    def finish_task(tid, forced=None):
+        proc, log, meta_file = active.pop(tid)
+        rc = proc.poll()
+        log.close()
+        m = {}
+        if os.path.exists(meta_file):
+            try:
+                with open(meta_file, encoding="utf-8", errors="replace") as f:
+                    m = json.load(f)
+            except json.JSONDecodeError:
+                m = {}
+        meta[tid] = m
+        if forced:
+            state[tid] = forced
+        elif m.get("status"):
+            state[tid] = m["status"]
+        else:
+            state[tid] = "done" if rc == 0 else "failed"
+        task_ended[tid] = int(time.time())
+        if m.get("workdir"):
+            workdir_of[tid] = m["workdir"]
+        write_state()
+        print(f"  {datetime.now():%H:%M:%S} 完成 {tid}（{tasks[tid]['agent']}）：{state[tid]}", file=sys.stderr, flush=True)
+
+    def summary_text():
+        total = int(time.time() - started_epoch)
+        serial = sum(meta.get(i, {}).get("duration_s", 0) for i in tasks)
+        lines = [f"# xay-dag 汇总 {stamp}", "", f"任务：{title}", f"总耗时 {total}s（若串行约 {serial}s）", "",
+                 "| 任务 | AI | 状态 | 用时 | 强度 | 改动文件 | 工作目录 | 会话ID |", "|---|---|---|---|---|---|---|---|"]
+        def short(p):
+            if not p: return "-"
+            return "." if p == base else os.path.relpath(p, os.path.dirname(base))
+        for i, t in tasks.items():
+            m = meta.get(i, {})
+            lines.append(f"| {i} | {t['agent']} | {state[i]} | {m.get('duration_s', '-')}s | {m.get('effort', '-') } | {' '.join(m.get('changed_files', [])) or '-'} | {short(workdir_of.get(i))} | {m.get('session_id', '-')} |")
+        lines.append("")
+        for i in tasks:
+            m = meta.get(i, {}); res = ""
+            if m.get("run_dir"):
+                try:
+                    with open(os.path.join(m["run_dir"], "result.md"), encoding="utf-8", errors="replace") as f: res = f.read().strip()
+                except OSError: pass
+            lines += [f"## {i}", "\n".join(res.splitlines()[:6]) if res else (m.get("error") or "（无汇报）"), ""]
+        return "\n".join(lines)
+
+    def write_summary():
+        text = summary_text()
+        with open(os.path.join(out_dir, "summary.md"), "w", encoding="utf-8") as f: f.write(text)
+        with open(os.path.join(out_dir, "summary.json"), "w", encoding="utf-8") as f:
+            json.dump({"state": state, "meta": meta, "workdirs": workdir_of}, f, ensure_ascii=False, indent=1)
+        return text
+
+    def on_term(signum, frame):
+        nonlocal stopping
+        stopping = True
+
+    signal.signal(signal.SIGTERM, on_term)
+    signal.signal(signal.SIGINT, on_term)
+    write_state()
+    while True:
+        if stopping:
+            for proc, _, _ in active.values():
+                try: proc.terminate()
+                except OSError: pass
+            deadline = time.time() + 10
+            while active and time.time() < deadline:
+                for tid, (proc, _, _) in list(active.items()):
+                    if proc.poll() is not None: finish_task(tid, "stopped")
+                time.sleep(0.1)
+            for tid in list(active):
+                proc, _, _ = active[tid]
+                try: proc.kill()
+                except OSError: pass
+                proc.wait()
+                finish_task(tid, "stopped")
+            for tid in tasks:
+                if state[tid] == "pending":
+                    state[tid] = "skipped"; task_ended[tid] = int(time.time())
+            ended = int(time.time()); write_state(ended); write_summary(); notify("已停止", title, os.path.abspath(out_dir))
+            return 143
+        for tid in list(active):
+            if active[tid][0].poll() is not None:
+                finish_task(tid)
+        for tid, t in tasks.items():
+            if state[tid] == "pending" and any(state[d] in ("failed", "timeout", "stopped", "skipped") for d in t["deps"]):
+                state[tid] = "skipped"; task_ended[tid] = int(time.time()); write_state()
+        running = list(active)
+        for tid, t in tasks.items():
+            if state[tid] != "pending" or not all(state[d] == "done" for d in t["deps"]): continue
+            if len(running) >= max_par or sum(1 for x in running if tasks[x]["agent"] == t["agent"]) >= per_agent.get(t["agent"], 2): continue
+            if t.get("requested_agent") == "auto" and not t.get("_selected_agent"):
+                state[tid] = "failed"; task_ended[tid] = int(time.time())
+                meta[tid] = {"status": "failed", "fail_reason": "usage_limit_exceeded", "error": "没有可用线路"}
+                write_state()
+                print(f"  {datetime.now():%H:%M:%S} 跳过 {tid}：没有可用线路", file=sys.stderr, flush=True)
+                continue
+            state[tid] = "running"; task_started[tid] = int(time.time()); write_state(); launch(tid); running.append(tid)
+            print(f"  {datetime.now():%H:%M:%S} 开始 {tid}（{t['agent']}）", file=sys.stderr, flush=True)
+        if not active and all(s in ("done", "failed", "timeout", "stopped", "skipped") for s in state.values()):
+            break
+        time.sleep(0.2)
+    ended = int(time.time()); write_state(ended); text = write_summary()
+    print(text); print(f"汇总文件：{out_dir}/summary.md")
+    done_count = sum(1 for s in state.values() if s == "done")
+    failed_count = sum(1 for s in state.values() if s in ("failed", "timeout"))
+    if failed_count: notify(f"有 {failed_count} 个失败（{done_count}/{len(tasks)} 完成）", title, os.path.abspath(out_dir))
+    else: notify(f"全部完成（{done_count}/{len(tasks)}）", title, os.path.abspath(out_dir))
+    return 0 if all(s == "done" for s in state.values()) else 1
+
+if __name__ == "__main__":
+    sys.exit(main())

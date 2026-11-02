@@ -1,0 +1,62 @@
+[
+  {
+    "path": "conversation.plan_version",
+    "equals": 3
+  },
+  {
+    "path": "tasks[0].id",
+    "equals": "tk_home"
+  },
+  {
+    "path": "tasks[0].status",
+    "equals": "planned"
+  },
+  {
+    "path": "tasks[1].id",
+    "equals": "tk_old"
+  },
+  {
+    "path": "tasks[1].title",
+    "equals": "做旧版首页"
+  },
+  {
+    "path": "tasks[1].status",
+    "equals": "canceled"
+  },
+  {
+    "path": "plan.version",
+    "equals": 3
+  },
+  {
+    "path": "plan.history[2].version",
+    "equals": 3
+  },
+  {
+    "path": "plan.history[2].reason",
+    "equals": "旧版首页不做了"
+  },
+  {
+    "path": "plan.history[2].changes[0].task",
+    "equals": "tk_old"
+  },
+  {
+    "path": "plan.history[2].changes[0].title",
+    "equals": "做旧版首页"
+  },
+  {
+    "path": "plan.history[2].by",
+    "equals": "gm"
+  },
+  {
+    "path": "plan.history[2].changes[0].op",
+    "equals": "remove"
+  },
+  {
+    "path": "plan.history[2].changes[0].before.status",
+    "equals": "planned"
+  },
+  {
+    "path": "plan.history[2].changes[0].before.title",
+    "equals": null
+  }
+]

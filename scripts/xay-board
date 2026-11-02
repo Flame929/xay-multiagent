@@ -1,0 +1,17 @@
+#!/bin/bash
+# xay-board：查看多 AI 任务看板
+# 用法：xay-board [工作目录]          列出所有任务的最新状态
+#       xay-board [工作目录] --running  只看还在运行的任务
+dir="${1:-$PWD}"; [ "$1" = "--running" ] && dir="$PWD"
+board="$dir/.xay/board.jsonl"
+[ -f "$board" ] || { echo "还没有任务记录：$board"; exit 0; }
+filter='.'
+for a in "$@"; do [ "$a" = "--running" ] && filter='select(.status=="running")'; done
+
+printf '%-19s %-6s %-22s %-8s %6s  %-40s %s\n' 时间 AI 任务 状态 用时 会话ID 改动文件
+jq -s -r "group_by(.run) | map(sort_by(.event==\"end\") | last) | sort_by(.time) | .[] | $filter |
+  [ .time, .agent, (.name|.[0:20]), .status, ((.duration_s // \"-\")|tostring),
+    ((.session_id // \"-\")|.[0:40]), ((.changed_files // [])|join(\" \")) ] | @tsv" "$board" |
+  while IFS=$'\t' read -r t a n s d sid ch; do
+    printf '%-19s %-6s %-22s %-8s %6s  %-40s %s\n' "$t" "$a" "$n" "$s" "$d" "$sid" "$ch"
+  done

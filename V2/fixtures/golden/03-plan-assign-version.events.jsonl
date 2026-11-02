@@ -1,0 +1,6 @@
+{"ts":1793300100,"by":"lead:cv_demo03","type":"conv.begun","subject":"cv_demo03","ws":"ws_demo01","conv":"cv_demo03","data":{"title":"改派轮播","lead_kind":"claude","aliases":["claude:demo-03"],"cwd":"/work/demo-shop"}}
+{"ts":1793300110,"by":"lead:cv_demo03","type":"employee.hired","subject":"em_codex01","ws":"ws_demo01","conv":"cv_demo03","data":{"agent":"codex"}}
+{"ts":1793300120,"by":"lead:cv_demo03","type":"employee.hired","subject":"em_codex02","ws":"ws_demo01","conv":"cv_demo03","data":{"agent":"codex"}}
+{"ts":1793300130,"by":"lead:cv_demo03","type":"task.added","subject":"tk_carousel","ws":"ws_demo01","conv":"cv_demo03","data":{"key":"carousel","title":"做商品图轮播","owner":"em_codex01","deps":[],"writes":["web/**"],"card":"商品图轮播","mode":"write","reason":"首页要上新品"}}
+{"ts":1793300140,"by":"office","type":"task.assigned","subject":"tk_carousel","ws":"ws_demo01","conv":"cv_demo03","data":{"owner":"em_codex02","reason":"Codex 1 在忙，先给 Codex 2"}}
+{"ts":1793300150,"by":"lead:cv_demo03","type":"task.assigned","subject":"tk_carousel","ws":"ws_demo01","conv":"cv_demo03","data":{"owner":"em_codex01","reason":"还是让 Codex 1 做"}}

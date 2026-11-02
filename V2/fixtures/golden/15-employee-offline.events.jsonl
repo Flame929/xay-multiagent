@@ -1,0 +1,5 @@
+{"ts":1793301200,"by":"lead:cv_demo15","type":"conv.begun","subject":"cv_demo15","ws":"ws_demo01","conv":"cv_demo15","data":{"title":"员工离线","lead_kind":"claude","aliases":["claude:demo-15"],"cwd":"/work/demo-shop"}}
+{"ts":1793301210,"by":"lead:cv_demo15","type":"employee.hired","subject":"em_codex01","ws":"ws_demo01","conv":"cv_demo15","data":{"agent":"codex"}}
+{"ts":1793301220,"by":"office","type":"employee.online","subject":"em_codex01","ws":"ws_demo01","conv":"cv_demo15","data":{"pid":4242}}
+{"ts":1793301230,"by":"station:em_codex01","type":"station.heartbeat","subject":"em_codex01","ws":"ws_demo01","conv":"cv_demo15","data":{"pid":4242}}
+{"ts":1793301240,"by":"office","type":"employee.offline","subject":"em_codex01","ws":"ws_demo01","conv":"cv_demo15","data":{"reason":"idle"}}

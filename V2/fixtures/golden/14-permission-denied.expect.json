@@ -1,0 +1,44 @@
+[
+  {
+    "path": "$error",
+    "equals": "PermissionError",
+    "line": 6
+  },
+  {
+    "path": "$error",
+    "equals": "PermissionError",
+    "line": 10
+  },
+  {
+    "path": "seq",
+    "equals": 9
+  },
+  {
+    "path": "conversation.plan_version",
+    "equals": 2
+  },
+  {
+    "path": "tasks[0].id",
+    "equals": "tk_a"
+  },
+  {
+    "path": "tasks[0].status",
+    "equals": "working"
+  },
+  {
+    "path": "tasks[0].progress.step",
+    "equals": 2
+  },
+  {
+    "path": "tasks[1].id",
+    "equals": "tk_b"
+  },
+  {
+    "path": "tasks[1].status",
+    "equals": "planned"
+  },
+  {
+    "path": "people.em_codex01.progress.step",
+    "equals": 2
+  }
+]

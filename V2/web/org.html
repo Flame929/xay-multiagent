@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>xay 组织架构 · 公司</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230F1115'/%3E%3Ccircle cx='10' cy='16' r='3' fill='%2310A37F'/%3E%3Ccircle cx='22' cy='16' r='3' fill='%234D6BFE'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/web/org.css">
+<link rel="stylesheet" href="/web/desk-fx.css">
+<link rel="stylesheet" href="/web/task-canvas.css">
+</head>
+<body>
+
+<!-- 顶部导航条 -->
+<header id="top-bar">
+  <div class="brand-group">
+    <!-- 左上角切换（office-spec.md 二.9）：看板给懂的人看；公司页、任务画布给不懂的人看，是两套对应的体系 -->
+    <nav class="view-switch" aria-label="切换看法">
+      <a href="/" id="back-link" class="vs-btn" title="看板：每名员工一列，看他的命令行">看板</a>
+      <span class="vs-btn active" aria-current="page" title="公司页：谁在哪个组、做到哪">公司页</span>
+      <button type="button" class="vs-btn" id="canvas-btn" title="任务画布：整个大任务画成几条线">任务画布</button>
+    </nav>
+    <div class="conv-title" id="bar-title">AI 公司组织架构</div>
+  </div>
+  <div class="status-bar" id="bar-stats">
+    <span class="stat-pill" title="中任务：主 AI 把大任务分成的几组（部门 / 组），每组一个监工"><span class="dot" style="background:var(--accent);"></span> <b id="stat-depts">0</b> 中任务</span>
+    <span class="stat-pill"><span class="dot ok"></span> <b id="stat-workers">0</b> 员工在岗</span>
+    <span class="stat-pill stat-hide-sm" id="stat-req-box"><span class="dot warn"></span> <b id="stat-requests">0</b> 待答需求</span>
+  </div>
+  <!-- 额度条：四条线路各一个小格（名字 + 剩余% + 颜色；鼠标停留看重置时间），V2/web/lib/quota-view.js -->
+  <div class="quota-strip" id="quota-strip" role="group" aria-label="额度" hidden></div>
+  <div class="top-actions">
+    <!-- 总闸：红色"全部停下" / "恢复"（V2/web/lib/kill-switch.js） -->
+    <span id="kill-switch-mount"></span>
+    <button class="btn-action" id="theme-btn" title="切换明暗主题">🌓</button>
+    <button class="btn-action" id="panel-toggle-btn" title="展开/收起侧边栏">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M2 3.75C2 2.784 2.784 2 3.75 2h8.5c.966 0 1.75.784 1.75 1.75v8.5A1.75 1.75 0 0 1 12.25 14h-8.5A1.75 1.75 0 0 1 2 12.25v-8.5zm8.5-.25v9h1.75a.25.25 0 0 0 .25-.25v-8.5a.25.25 0 0 0-.25-.25h-1.75z"/></svg>
+      <span class="stat-hide-sm">记录与规划</span>
+    </button>
+  </div>
+</header>
+
+<!-- 顶部"需要你"横条 -->
+<section id="decisions-bar" aria-label="待决事项"></section>
+
+<!-- 读不到数据错误覆盖层 -->
+<div id="error-overlay"></div>
+
+<!-- 页面主体双栏结构 -->
+<div id="main-wrap">
+  <!-- 左侧员工详情栏第 3 版（references/plans/ui-v2-employee-panel.md）：和右侧栏同宽同风格；只摆数字和事实 -->
+  <aside id="emp-panel" class="collapsed" aria-label="员工详情">
+    <div class="emp-head-bar">
+      <button class="btn-action" id="emp-close-btn" title="关闭（Esc）" aria-label="关闭员工详情">×</button>
+      <span class="emp-title" id="emp-title">员工详情</span>
+    </div>
+    <div class="emp-scroll" id="emp-scroll">
+      <div class="emp-bento">
+        <!-- 名片：整身像做淡背景 + 名字 + 部门 + 状态词 -->
+        <section class="emp-tile emp-id" id="emp-id" aria-label="名片">
+          <div class="emp-art" aria-hidden="true"></div>
+          <div class="emp-id-body" id="emp-id-body"></div>
+        </section>
+        <section class="emp-tile emp-now" id="emp-now" aria-label="现在"></section>
+        <section class="emp-tile emp-quota half" id="emp-quota" aria-label="额度"></section>
+        <section class="emp-tile emp-mem half" id="emp-mem" aria-label="记忆"></section>
+        <section class="emp-tile emp-work" id="emp-work" aria-label="活"></section>
+        <details class="emp-tile emp-notes" id="emp-notes" hidden></details>
+      </div>
+    </div>
+  </aside>
+
+  <div id="office-viewport">
+    <div id="office-canvas">
+      <svg id="arc-canvas"></svg>
+
+      <!-- 负责人工位 -->
+      <section id="gm-zone" aria-label="负责人办公室"></section>
+
+      <!-- 各部门办公区 -->
+      <section id="dept-grid" aria-label="部门办公区"></section>
+
+      <!-- 未分配员工区 -->
+      <section id="unassigned-section" aria-label="待分配工位"></section>
+    </div>
+  </div>
+
+  <!-- 右侧任务拆解、信件与计划版本面板 -->
+  <aside id="side-panel">
+    <div class="panel-tabs">
+      <button class="tab-btn active" data-tab="bus">
+        <span>信件</span>
+        <span class="stat-pill" style="padding:1px 6px;font-size:11px;" id="bus-count">0</span>
+      </button>
+      <button class="tab-btn" data-tab="plan">
+        <span>任务拆解</span>
+        <span class="stat-pill" style="padding:1px 6px;font-size:11px;" id="plan-count">0</span>
+      </button>
+      <button class="tab-btn" data-tab="history">
+        <span>计划版本</span>
+        <span class="stat-pill" style="padding:1px 6px;font-size:11px;" id="history-count">0</span>
+      </button>
+      <button class="btn-action" id="panel-close-btn" style="padding:0 12px;font-size:18px;color:var(--label-3);line-height:1;" title="关闭面板">×</button>
+    </div>
+    <div class="tab-content active" id="tab-bus">
+      <div id="bus-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+    </div>
+    <div class="tab-content" id="tab-plan">
+      <div id="plan-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+    </div>
+    <div class="tab-content" id="tab-history">
+      <div id="history-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+    </div>
+  </aside>
+</div>
+
+<!-- 角色框架支持 -->
+<script src="/xay-chars/core.js"></script>
+<script src="/xay-chars/codex.js"></script>
+<script src="/xay-chars/dsh.js"></script>
+<script src="/xay-chars/agy.js"></script>
+<script src="/xay-chars/claude.js"></script>
+<script src="/xay-chars/rules.js"></script>
+
+<script src="/web/lib/cli-view.js"></script>
+<!-- 原生 JS 模块主入口 -->
+<script type="module" src="/web/lib/app.js"></script>
+<script type="module" src="/web/lib/kill-switch.js"></script>
+<!-- 工位小彩蛋（屏幕内容、说话气泡、路过的猫），只往已画好的工位上叠一层 -->
+<script src="/web/lib/desk-fx.js"></script>
+</body>
+</html>

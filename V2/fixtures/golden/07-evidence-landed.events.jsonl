@@ -1,0 +1,12 @@
+{"ts":1793300340,"by":"lead:cv_demo07","type":"conv.begun","subject":"cv_demo07","ws":"ws_demo01","conv":"cv_demo07","data":{"title":"证据：做出改动","lead_kind":"claude","aliases":["claude:demo-07"],"cwd":"/work/demo-shop"}}
+{"ts":1793300350,"by":"lead:cv_demo07","type":"employee.hired","subject":"em_codex01","ws":"ws_demo01","conv":"cv_demo07","data":{"agent":"codex"}}
+{"ts":1793300360,"by":"lead:cv_demo07","type":"task.added","subject":"tk_write","ws":"ws_demo01","conv":"cv_demo07","data":{"key":"write","title":"做轮播","owner":"em_codex01","deps":[],"writes":["web/**"],"card":"商品图轮播","mode":"write","reason":"首页要上新品"}}
+{"ts":1793300370,"by":"lead:cv_demo07","type":"task.added","subject":"tk_read","ws":"ws_demo01","conv":"cv_demo07","data":{"key":"read","title":"核对文案","owner":"em_codex01","deps":[],"writes":[],"card":"核对首页文案","mode":"readonly","reason":"上线前核对"}}
+{"ts":1793300380,"by":"station:em_codex01","type":"turn.started","subject":"tn_001","ws":"ws_demo01","conv":"cv_demo07","data":{"task":"tk_write","em":"em_codex01","kind":"first"}}
+{"ts":1793300390,"by":"station:em_codex01","type":"turn.ended","subject":"tn_001","ws":"ws_demo01","conv":"cv_demo07","data":{"em":"em_codex01","status":"completed","evidence":{"cli_status":"completed","claim":"done","changed_files":["web/carousel.js"],"diff_stat":{"files":1,"add":20,"del":3},"verify":[{"cmd":"node --check web/carousel.js","ok":true}]}}}
+{"ts":1793300400,"by":"employee:em_codex01","type":"task.reported","subject":"tk_write","ws":"ws_demo01","conv":"cv_demo07","data":{"claim":"done","summary":"轮播做好了，手机端能滑"}}
+{"ts":1793300410,"by":"station:em_codex01","type":"task.landed","subject":"tk_write","ws":"ws_demo01","conv":"cv_demo07","data":{"files":["web/carousel.js"],"add":20,"del":3}}
+{"ts":1793300420,"by":"station:em_codex01","type":"turn.started","subject":"tn_002","ws":"ws_demo01","conv":"cv_demo07","data":{"task":"tk_read","em":"em_codex01","kind":"first"}}
+{"ts":1793300430,"by":"station:em_codex01","type":"turn.ended","subject":"tn_002","ws":"ws_demo01","conv":"cv_demo07","data":{"em":"em_codex01","status":"completed","evidence":{"cli_status":"completed","claim":"done","changed_files":[],"diff_stat":{"files":0,"add":0,"del":0}}}}
+{"ts":1793300440,"by":"employee:em_codex01","type":"task.reported","subject":"tk_read","ws":"ws_demo01","conv":"cv_demo07","data":{"claim":"done","summary":"文案都核对过，没有要改的"}}
+{"ts":1793300450,"by":"station:em_codex01","type":"task.landed","subject":"tk_read","ws":"ws_demo01","conv":"cv_demo07","data":{"files":[],"add":0,"del":0}}

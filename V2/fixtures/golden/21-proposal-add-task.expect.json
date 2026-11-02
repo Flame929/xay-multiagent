@@ -1,0 +1,86 @@
+[
+  {
+    "path": "conversation.plan_version",
+    "equals": 2
+  },
+  {
+    "path": "tasks[0].id",
+    "equals": "tk_carousel"
+  },
+  {
+    "path": "tasks[0].status",
+    "equals": "planned"
+  },
+  {
+    "path": "tasks[1].id",
+    "equals": "tk_empty"
+  },
+  {
+    "path": "tasks[1].title",
+    "equals": "补一张空状态图"
+  },
+  {
+    "path": "tasks[1].dept",
+    "equals": "fe"
+  },
+  {
+    "path": "tasks[1].deps[0]",
+    "equals": "tk_carousel"
+  },
+  {
+    "path": "tasks[1].writes[0]",
+    "equals": "web/empty/**"
+  },
+  {
+    "path": "tasks[1].status",
+    "equals": "planned"
+  },
+  {
+    "path": "plan.version",
+    "equals": 2
+  },
+  {
+    "path": "plan.history[1].version",
+    "equals": 2
+  },
+  {
+    "path": "plan.history[1].by",
+    "equals": "em_codex01"
+  },
+  {
+    "path": "plan.history[1].reason",
+    "equals": "首页还缺空状态（申请 pp_010 通过）"
+  },
+  {
+    "path": "plan.history[1].changes[0].op",
+    "equals": "add"
+  },
+  {
+    "path": "plan.history[1].changes[0].task",
+    "equals": "tk_empty"
+  },
+  {
+    "path": "plan.history[1].changes[0].title",
+    "equals": "补一张空状态图"
+  },
+  {
+    "path": "plan.history[1].changes[0].after.title",
+    "equals": "补一张空状态图"
+  },
+  {
+    "path": "plan.history[1].changes[0].after.dept",
+    "equals": "fe"
+  },
+  {
+    "path": "plan.history[1].changes[0].after.deps[0]",
+    "equals": "tk_carousel"
+  },
+  {
+    "path": "proposals",
+    "equals": []
+  },
+  {
+    "path": "plan.history[1].changes[0].after.writes",
+    "equals": null
+  }
+]

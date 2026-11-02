@@ -1,0 +1,405 @@
+#!/bin/bash
+# xay-run：把一个任务派给 codex / dsh / agy，在独立工作区运行并把改动搬回
+#
+# 用法：xay-run <codex|dsh|agy> [选项] "任务内容"
+#   -n, --name <名字>      任务名（默认 task）
+#   -t, --title <大白话名> 任务的大白话标题（默认取任务正文第一行，最多 30 字）
+#   -C, --cd <目录>        原项目目录（默认当前目录）
+#   -r, --resume <会话ID>  续接之前的会话（返工、追问）
+#   -e, --effort <档位>    思考强度：off|minimal|low|medium|high|xhigh|max（默认 $XAY_EFFORT 或 medium）
+#   --model <模型>         codex：任意；dsh：只允许 deepseek-v4.1-flash；agy：只允许 gemini-3.8-*
+#   --readonly             只读：审查、调研、出方案，不改文件
+#   --isolate auto|on|off  自动使用独立 git worktree（默认 $XAY_ISOLATE 或 auto）
+#   --source sub|relay     仅 codex：sub=ChatGPT 订阅，relay=中转站（默认 $XAY_CODEX_SOURCE 或 sub）
+#   --full                 仅 agy：允许执行终端命令
+#   --long                 仅 agy：长任务，要求把进度写进 .xay/notes/
+#   --add-dir <目录>       仅 agy：把额外目录加入它的工作区（可重复）
+#   --timeout <秒>         超时，默认 1800
+#   --raw                  不附加执行准则、背景提示和汇报格式
+#
+# 产物：<原项目>/.xay/runs/<时间>-<agent>-<名字>/；全局登记写入 $XAY_HOME/registry.jsonl
+# xay-run 的整个脚本包在 main() 里；退出时只通过 EXIT 清理一次：释放名额，并按状态搬回或丢弃 worktree。
+
+main() {
+# 固定 UTF-8：调用方的语言环境可能不是 UTF-8，会导致中文标题和通知乱码
+export LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 PYTHONIOENCODING=utf-8
+export PATH="$HOME/.local/bin:$HOME/.npm-global/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
+SKILL_DIR="$(cd "$(dirname "$(readlink "$0" 2>/dev/null || echo "$0")")/.." 2>/dev/null && pwd)"
+[ -d "$SKILL_DIR/prompts" ] || SKILL_DIR="$HOME/.agents/skills/xay-multiagent-workflow"
+usage() { awk 'NR>1 && /^#/ {sub(/^# ?/, ""); print; next} NR>1 {exit}' "$0"; exit 2; }
+die() { echo "xay-run：$*" >&2; exit 2; }
+
+agent="$1"; shift 2>/dev/null
+case "$agent" in codex|dsh|agy) ;; -h|--help|"") usage ;; *) die "未知 agent：${agent}（可选 codex / dsh / agy）" ;; esac
+name="task"; title=""; dir="$PWD"; resume=""; readonly=0
+source="${XAY_CODEX_SOURCE:-sub}"; effort="${XAY_EFFORT:-medium}"; isolate="${XAY_ISOLATE:-auto}"
+full=0; long=0; timeout=1800; raw=0; prompt=""; model=""; add_dirs=()
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -n|--name) name="$2"; shift 2 ;;
+    -t|--title) title="$2"; shift 2 ;;
+    -C|--cd) dir="$2"; shift 2 ;;
+    -r|--resume) resume="$2"; shift 2 ;;
+    -e|--effort) effort="$2"; shift 2 ;;
+    --model) model="$2"; shift 2 ;;
+    --readonly) readonly=1; shift ;;
+    --isolate) isolate="$2"; shift 2 ;;
+    --source) source="$2"; shift 2 ;;
+    --full) full=1; shift ;;
+    --long) long=1; shift ;;
+    --add-dir) add_dirs+=("$2"); shift 2 ;;
+    --timeout) timeout="$2"; shift 2 ;;
+    --raw) raw=1; shift ;;
+    -h|--help) usage ;;
+    *) prompt="${prompt:+$prompt }$1"; shift ;;
+  esac
+done
+[ -z "$prompt" ] && die "缺少任务内容"
+dir=$(cd "$dir" 2>/dev/null && pwd -P) || die "工作目录不存在"
+command -v jq >/dev/null || die "需要 jq：brew install jq"
+case "$effort" in off|minimal|low|medium|high|xhigh|max) ;; *) die "effort 只能是 off|minimal|low|medium|high|xhigh|max" ;; esac
+case "$isolate" in auto|on|off) ;; *) die "isolate 只能是 auto、on 或 off" ;; esac
+if [ "$agent" = "agy" ] && [ -n "$model" ]; then
+  case "$model" in gemini-3.8-*) ;; *) die "agy 只允许使用 gemini-3.8-* 模型（收到：${model}）" ;; esac
+fi
+
+# 先记住用户原始任务，用它生成默认标题。
+# 按字符截断（cut -c 在 macOS 上按字节切，会把中文切坏）
+first_line=$(printf '%s\n' "$prompt" | awk 'NF {print; exit}' | python3 -c 'import sys; s=sys.stdin.read().strip(); print(s[:30] + ("…" if len(s) > 30 else ""))')
+[ -z "$title" ] && title="$first_line"
+[ -z "$title" ] && title="任务"
+slash=""
+case "$prompt" in /[a-z]*) slash="${prompt%%[[:space:]]*}"; prompt="${prompt#"$slash"}"; prompt="${prompt#"${prompt%%[![:space:]]*}"}" ;; esac
+safe_name=$(printf '%s' "$name" | tr -c 'A-Za-z0-9_.-' '_' | cut -c1-40)
+if [ $raw -eq 0 ]; then
+  head=""
+  [ -f "$SKILL_DIR/prompts/$agent.md" ] && head="$(cat "$SKILL_DIR/prompts/$agent.md")"
+  if [ "$agent" = "agy" ] && [ $long -eq 1 ] && [ $readonly -eq 0 ]; then
+    head="$head
+$(sed "s/NAME/$safe_name/" "$SKILL_DIR/prompts/agy-long.md")"
+  fi
+  [ -f "$dir/.xay/context.md" ] && head="$head
+- 项目背景与约定见 .xay/context.md，开始前先读它。"
+  [ $readonly -eq 1 ] && head="$head
+- 【只读任务】不要创建、修改或删除任何文件，只阅读和分析。"
+  prompt="$head
+
+# 任务
+$prompt
+
+---
+规则：不要 git commit / git push；不要读取或输出密钥、token。
+完成后用中文简短汇报（不超过 15 行，不复述过程）：
+结果：完成 / 部分完成 / 失败（一句话）
+改动文件：逐个列出相对路径（不要写成链接或绝对路径）；没有就写“无”
+验证：实际运行了什么、结果如何
+问题与需要负责人决定的事：没有就写“无”"
+fi
+[ -n "$slash" ] && prompt="$slash $prompt"
+
+origin="$dir"; repo_root=""; worktree=""; branch=""; base_commit=""; workdir="$dir"; repo_created=0
+isolated=0; resume_workdir=""; resume_meta=""
+xay_home="${XAY_HOME:-$HOME/.xay}"; mkdir -p "$xay_home"; xay_home=$(cd "$xay_home" && pwd -P)
+registry="$xay_home/registry.jsonl"
+# 续接时从最新登记开始找会话对应的 meta。
+if [ -n "$resume" ] && [ -f "$registry" ]; then
+  rev_lines=$(awk '{a[NR]=$0} END {for (i=NR; i>0; i--) print a[i]}' "$registry")
+  while IFS= read -r line; do
+    rd=$(printf '%s' "$line" | jq -r '.run_dir // empty' 2>/dev/null)
+    [ -z "$rd" ] || [ ! -f "$rd/meta.json" ] && continue
+    sid=$(jq -r '.session_id // empty' "$rd/meta.json" 2>/dev/null)
+    if [ "$sid" = "$resume" ]; then
+      resume_meta="$rd/meta.json"; break
+    fi
+  done <<EOF_REV
+$rev_lines
+EOF_REV
+fi
+if [ -n "$resume_meta" ]; then
+  old_origin=$(jq -r '.origin // .workdir // empty' "$resume_meta")
+  old_workdir=$(jq -r '.workdir // empty' "$resume_meta")
+  [ -n "$old_origin" ] && origin="$old_origin" && dir="$old_origin"
+  if [ -d "$old_workdir" ]; then
+    workdir="$old_workdir"; isolated=$(jq -r 'if .isolated then 1 else 0 end' "$resume_meta")
+    base_commit=$(jq -r '.base_commit // empty' "$resume_meta")
+    worktree=$(jq -r '.worktree // empty' "$resume_meta")
+    branch=$(jq -r '.branch // empty' "$resume_meta")
+  fi
+fi
+[ "$readonly" -eq 1 ] && isolate="off"
+if [ -z "$worktree" ] && [ "$isolate" != "off" ]; then
+  if git -C "$origin" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    repo_root=$(cd "$(git -C "$origin" rev-parse --show-toplevel)" && pwd -P)
+  else
+    git -C "$origin" init -q || die "无法初始化 git 仓库"
+    repo_created=1
+    git -C "$origin" config --local core.excludesfile /dev/null >/dev/null 2>&1 || true
+    repo_root=$(cd "$(git -C "$origin" rev-parse --show-toplevel)" && pwd -P)
+  fi
+  exclude="$repo_root/.git/info/exclude"; mkdir -p "$(dirname "$exclude")"
+  for pat in '.xay/' 'node_modules/' '.venv/' 'venv/' '__pycache__/' '.DS_Store' 'dist/' 'build/'; do
+    grep -qxF "$pat" "$exclude" 2>/dev/null || echo "$pat" >> "$exclude"
+  done
+  if ! git -C "$repo_root" rev-parse --verify HEAD >/dev/null 2>&1; then
+    git -C "$repo_root" add -A && git -C "$repo_root" -c user.name=xay -c user.email=xay@localhost commit -q -m "xay: 初始快照" || die "无法创建 git 初始快照"
+  fi
+  base_commit=$(git -C "$repo_root" stash create 2>/dev/null)
+  [ -z "$base_commit" ] && base_commit=$(git -C "$repo_root" rev-parse HEAD)
+  isolated=1
+else
+  if [ "$isolated" -eq 0 ] && git -C "$origin" rev-parse --show-toplevel >/dev/null 2>&1; then repo_root=$(cd "$(git -C "$origin" rev-parse --show-toplevel)" && pwd -P); fi
+fi
+
+safe_repo=$(basename "${repo_root:-$origin}")
+base_id="$(date +%Y%m%d-%H%M%S)-$agent-$safe_name"; run_id="$base_id"; n=1
+mkdir -p "$origin/.xay/runs" || die "无法创建 $origin/.xay/runs"
+until mkdir "$origin/.xay/runs/$run_id" 2>/dev/null; do n=$((n+1)); run_id="$base_id-$n"; done
+run_dir="$origin/.xay/runs/$run_id"
+if [ "$isolated" -eq 1 ] && [ -z "$worktree" ]; then
+  worktree="$xay_home/worktrees/${safe_repo}-${run_id}"
+  mkdir -p "$xay_home/worktrees"
+  branch="xay/$run_id"
+  untracked_file="$run_dir/.untracked-before"
+  git -C "$repo_root" ls-files --others --exclude-standard > "$untracked_file"
+  if ! git -C "$repo_root" worktree add -q -b "$branch" "$worktree" "$base_commit"; then
+    rm -rf "$run_dir"; die "创建 worktree 失败"
+  fi
+  while IFS= read -r rel; do
+    case "$rel" in .xay/*|"") continue ;; esac
+    [ -f "$repo_root/$rel" ] || continue
+    mkdir -p "$worktree/$(dirname "$rel")"
+    cp -p "$repo_root/$rel" "$worktree/$rel"
+  done < "$untracked_file"
+  if [ -f "$origin/.xay/context.md" ]; then
+    mkdir -p "$worktree/.xay"; cp -p "$origin/.xay/context.md" "$worktree/.xay/context.md"
+  fi
+  rel_origin=$(python3 - "$origin" "$repo_root" <<'PY'
+import os, sys
+print(os.path.relpath(sys.argv[1], sys.argv[2]))
+PY
+)
+  [ "$rel_origin" = "." ] && workdir="$worktree" || workdir="$worktree/$rel_origin"
+elif [ "$isolated" -eq 1 ] && [ -n "$worktree" ] && [ ! -d "$worktree" ]; then
+  mkdir -p "$(dirname "$worktree")"
+  if git -C "$repo_root" show-ref --verify --quiet "refs/heads/$branch"; then
+    git -C "$repo_root" worktree add -q "$worktree" "$branch" || die "续接 worktree 失败"
+  else
+    git -C "$repo_root" worktree add -q -b "$branch" "$worktree" "${base_commit:-HEAD}" || die "重建 worktree 失败"
+  fi
+  rel_origin=$(python3 - "$origin" "$repo_root" <<'PY'
+import os, sys
+print(os.path.relpath(sys.argv[1], sys.argv[2]))
+PY
+)
+  [ "$rel_origin" = "." ] && workdir="$worktree" || workdir="$worktree/$rel_origin"
+fi
+printf '%s\n' "$prompt" > "$run_dir/prompt.md"
+started=$(date +%s); dag="${XAY_DAG_ID:-}"; task="${XAY_TASK_ID:-}"
+if [ -n "$resume_meta" ] && [ -z "$title" ]; then title=$(jq -r '.title // empty' "$resume_meta"); fi
+jq -nc --arg run "$run_id" --arg a "$agent" --arg n "$name" --arg title "$title" --arg rd "$(cd "$run_dir" && pwd)" \
+  --arg origin "$origin" --arg wd "$workdir" --arg dag "$dag" --arg task "$task" --argjson iso "$isolated" \
+  --arg base "$base_commit" --arg resume "$resume" --arg time "$(date '+%F %T')" \
+  '{kind:"run",run_dir:$rd,workdir:$wd,origin:$origin,agent:$a,name:$n,title:$title,dag:$dag,task:$task,time:$time,isolated:($iso==1),base_commit:$base,resume:$resume}' >> "$registry"
+write_start() {
+  jq -n --arg run "$run_id" --arg a "$agent" --arg n "$name" --arg title "$title" --arg e "$effort" --arg m "${model:-默认}" \
+    --argjson ro "$readonly" --argjson started "$started" --argjson timeout "$timeout" --arg origin "$origin" --arg wd "$workdir" \
+    --arg rd "$run_dir" --arg dag "$dag" --arg task "$task" --argjson pid "$$" --argjson iso "$isolated" \
+    --arg base "$base_commit" --arg resume "$resume" --arg wt "$worktree" --arg branch "$branch" \
+    '{run:$run,agent:$a,name:$n,title:$title,effort:$e,model:$m,readonly:($ro==1),started:$started,timeout:$timeout,origin:$origin,workdir:$wd,run_dir:$rd,dag:$dag,task:$task,pid:$pid,isolated:($iso==1),base_commit:$base,resume:$resume,worktree:$wt,branch:$branch}' \
+    > "$run_dir/start.json.tmp" && mv -f "$run_dir/start.json.tmp" "$run_dir/start.json"
+}
+write_start
+
+# 连同子进程一起结束：AI 跑的命令（测试、脚本等）不会变成孤儿进程
+kill_tree() { local c; for c in $(pgrep -P "$1" 2>/dev/null); do kill_tree "$c"; done; kill -TERM "$1" 2>/dev/null; }
+slot=""; cli_pid=""; stop_requested=0; finalized=0; cleanup_done=0; rc=1; status="failed"; result=""; session=""; used_source=""; used_model=""
+release_slot() {
+  [ -n "$slot" ] && [ "$(cat "$slot/pid" 2>/dev/null)" = "$$" ] && rm -rf "$slot"
+}
+land_lock=""
+acquire_land_lock() {
+  local key lock
+  key=$(printf '%s' "$repo_root" | md5 2>/dev/null | cut -c1-12)
+  [ -z "$key" ] && key=$(printf '%s' "$repo_root" | shasum | cut -c1-12)
+  lock="$xay_home/locks/land-$key"; mkdir -p "$xay_home/locks"
+  while ! mkdir "$lock" 2>/dev/null; do
+    holder=$(cat "$lock/pid" 2>/dev/null)
+    if [ -n "$holder" ] && ! kill -0 "$holder" 2>/dev/null; then rm -rf "$lock"; continue; fi
+    sleep 1
+  done
+  echo "$$" > "$lock/pid"
+  land_lock="$lock"
+}
+release_land_lock() { [ -n "$land_lock" ] && [ "$(cat "$land_lock/pid" 2>/dev/null)" = "$$" ] && rm -rf "$land_lock"; land_lock=""; }
+remove_worktree() {
+  [ "$isolated" -eq 1 ] || return 0
+  [ -n "$repo_root" ] && [ -d "$worktree" ] && git -C "$repo_root" worktree remove --force "$worktree" >/dev/null 2>&1 || true
+  [ -n "$repo_root" ] && [ -n "$branch" ] && git -C "$repo_root" branch -D "$branch" >/dev/null 2>&1 || true
+}
+land_changes() {
+  land=""
+  notice=""
+  if [ "$isolated" -eq 0 ]; then land=""; return; fi
+  acquire_land_lock
+  if [ "$status" != "done" ]; then
+    land="discarded"; notice="任务未完成，已丢弃独立工作区"; remove_worktree; release_land_lock; return
+  fi
+  git -C "$worktree" add -A -- . ':!.xay' >/dev/null 2>&1 || true
+  # 原项目已有的未跟踪文件如果没有变化，不把它们重复加入补丁。
+  if [ -f "$run_dir/.untracked-before" ]; then
+    while IFS= read -r rel; do
+      [ -f "$worktree/$rel" ] || continue
+      old=$(shasum -a 256 "$origin/$rel" 2>/dev/null | awk '{print $1}')
+      now=$(shasum -a 256 "$worktree/$rel" 2>/dev/null | awk '{print $1}')
+      [ -n "$old" ] && [ "$old" = "$now" ] && git -C "$worktree" reset -q -- "$rel" || true
+    done < "$run_dir/.untracked-before"
+  fi
+  patch="$run_dir/land.patch"
+  git -C "$worktree" diff --cached --binary "${base_commit:-HEAD}" > "$patch"
+  if [ ! -s "$patch" ]; then
+    land="empty"; remove_worktree; release_land_lock; return
+  fi
+  if git -C "$repo_root" apply --whitespace=nowarn "$patch" >/dev/null 2>&1 || git -C "$repo_root" apply --3way "$patch" >/dev/null 2>&1; then
+    land="applied"; remove_worktree
+  else
+    land="conflict"; notice="改动和别的任务冲突，需要负责人手动合并：$worktree"
+  fi
+  release_land_lock
+}
+notify_done() {
+  [ -n "$dag" ] && return 0   # DAG 里的子任务不单独通知，整个 DAG 结束时由 xay-dag 发一条
+  "$SKILL_DIR/scripts/xay-notify" "$title" "$1" "$run_dir" || true
+}
+finalize_run() {
+  [ "$finalized" -eq 1 ] && return 0
+  finalized=1
+  ended=$(date +%s)
+  if [ "$stop_requested" -eq 1 ]; then status="stopped"; rc=143; result="已被手动停止"; fi
+  printf '%s\n' "$result" > "$run_dir/result.md"
+  changed=""; deleted=""
+  if git -C "$workdir" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    changed=$(git -C "$workdir" status --porcelain --untracked-files=all 2>/dev/null | sed -E 's/^.. //' | sort -u)
+    if [ -f "$run_dir/.untracked-before" ]; then
+      while IFS= read -r rel; do
+        [ -f "$origin/$rel" ] && [ -f "$workdir/$rel" ] || continue
+        old=$(shasum -a 256 "$origin/$rel" 2>/dev/null | awk '{print $1}')
+        now=$(shasum -a 256 "$workdir/$rel" 2>/dev/null | awk '{print $1}')
+        if [ -n "$old" ] && [ "$old" = "$now" ]; then changed=$(printf '%s\n' "$changed" | grep -vxF -- "$rel" || true); fi
+      done < "$run_dir/.untracked-before"
+    fi
+    deleted=$(git -C "$workdir" diff --name-only --diff-filter=D 2>/dev/null)
+  else
+    changed=$(cd "$workdir" && find . -type f -newer "$run_dir/.marker" -not -path './.xay/*' 2>/dev/null | sed 's|^./||' | sort)
+  fi
+  land=""; notice=""
+  land_changes
+  [ -z "$notice" ] && [ "$repo_created" -eq 1 ] && notice="已自动为项目建立 git 仓库"
+  jq -n --arg id "$run_id" --arg a "$agent" --arg n "$name" --arg title "$title" --arg st "$status" --arg s "$session" \
+    --arg src "$used_source" --arg m "$used_model" --arg e "$effort" --argjson rc "$rc" --argjson dur "$((ended-started))" \
+    --arg ch "$changed" --arg del "$deleted" --arg origin "$origin" --arg dir "$workdir" --arg rd "$run_dir" --arg dag "$dag" --arg task "$task" \
+    --argjson started "$started" --argjson iso "$isolated" --arg base "$base_commit" --arg resume "$resume" --arg land "$land" --arg notice "$notice" \
+    --arg wt "$worktree" --arg branch "$branch" \
+    '{run:$id,agent:$a,name:$n,title:$title,status:$st,session_id:$s,model:$m,effort:$e,codex_source:$src,exit:$rc,duration_s:$dur,origin:$origin,workdir:$dir,run_dir:$rd,dag:$dag,task:$task,started:$started,changed_files:($ch|split("\n")|map(select(.!=""))),deleted_files:($del|split("\n")|map(select(.!=""))),isolated:($iso==1),base_commit:$base,resume:$resume,worktree:$wt,branch:$branch,land:$land,notice:$notice}' \
+    > "$run_dir/meta.json"
+  jq -c --arg t "$(date '+%F %T')" '. + {event:"end",time:$t}' "$run_dir/meta.json" >> "$origin/.xay/board.jsonl"
+  [ -n "${XAY_META_OUT:-}" ] && cp "$run_dir/meta.json" "$XAY_META_OUT"
+  if [ "$status" = "done" ]; then notify_done "已完成"; elif [ "$status" = "stopped" ]; then notify_done "已停止"; else notify_done "任务失败"; fi
+}
+cleanup() {
+  [ "$cleanup_done" -eq 1 ] && return 0
+  cleanup_done=1
+  [ -n "$cli_pid" ] && kill_tree "$cli_pid" || true
+  [ "$finalized" -eq 1 ] || finalize_run
+  release_slot
+}
+trap 'stop_requested=1; [ -n "$cli_pid" ] && kill_tree "$cli_pid" || true' INT TERM HUP
+trap cleanup EXIT
+
+slot_var="XAY_SLOTS_$(printf '%s' "$agent" | tr '[:lower:]' '[:upper:]')"; max_slots="${!slot_var:-}"
+[ -z "$max_slots" ] && case "$agent" in codex) max_slots=3 ;; dsh) max_slots=4 ;; *) max_slots=3 ;; esac
+mkdir -p "$xay_home/slots"
+while [ -z "$slot" ] && [ "$stop_requested" -eq 0 ]; do
+  for i in $(seq 1 "$max_slots"); do
+    f="$xay_home/slots/$agent-$i"
+    if mkdir "$f" 2>/dev/null; then echo $$ > "$f/pid"; slot="$f"; break; fi
+    holder=$(cat "$f/pid" 2>/dev/null)
+    if [ -n "$holder" ] && ! kill -0 "$holder" 2>/dev/null; then
+      rm -rf "$f"
+      if mkdir "$f" 2>/dev/null; then echo $$ > "$f/pid"; slot="$f"; break; fi
+    fi
+  done
+  if [ -z "$slot" ] && [ "$stop_requested" -eq 0 ]; then
+    [ -f "$run_dir/queued" ] || { touch "$run_dir/queued"; echo "${agent} 的并发名额（${max_slots}）已满，排队中…" >&2; }
+    sleep 5
+  fi
+done
+if [ "$stop_requested" -eq 1 ]; then exit 143; fi
+[ -f "$run_dir/queued" ] && { rm -f "$run_dir/queued"; started=$(date +%s); write_start; }
+printf '%s\n' "start" > "$run_dir/.marker"
+jq -nc --arg id "$run_id" --arg a "$agent" --arg n "$name" --arg title "$title" --arg t "$(date '+%F %T')" \
+  --argjson ro "$readonly" --arg r "$resume" --arg e "$effort" \
+  '{event:"start",run:$id,agent:$a,name:$n,title:$title,time:$t,readonly:($ro==1),resume:$r,effort:$e,status:"running"}' >> "$origin/.xay/board.jsonl"
+
+run_with_timeout() {
+  if [ -n "${XAY_TEST_CMD:-}" ]; then
+    : > "$run_dir/events.raw"
+    ( cd "$workdir" && exec bash -c "$XAY_TEST_CMD" ) >"$run_dir/stderr.log" 2>&1 &
+  else
+    ( cd "$workdir" && exec "$@" ) </dev/null >"$run_dir/events.raw" 2>"$run_dir/stderr.log" &
+  fi
+  cli_pid=$!
+  ( sleep "$timeout"; if kill -0 "$cli_pid" 2>/dev/null; then touch "$run_dir/.timeout"; kill_tree "$cli_pid"; fi ) >/dev/null 2>&1 &
+  watchdog=$!; wait "$cli_pid"; local r=$?; cli_pid=""; kill "$watchdog" 2>/dev/null; wait "$watchdog" 2>/dev/null; return "$r"
+}
+if [ -n "${XAY_TEST_CMD:-}" ]; then
+  run_with_timeout; rc=$?; result="测试命令完成"
+elif [ "$agent" = "codex" ]; then
+  c_effort="$effort"; [ "$effort" = "off" ] && c_effort="minimal"
+  codex_once() {
+    local src="$1" provider_args=()
+    if [ "$src" = "sub" ]; then provider_args=(-c 'model_provider="openai"'); else provider_args=(-c "model_provider=\"${XAY_CODEX_RELAY_PROVIDER:-custom}\""); fi
+    args=(--json --skip-git-repo-check "${provider_args[@]}" -c "model_reasoning_effort=\"$c_effort\"")
+    [ -n "$model" ] && args+=(-c "model=\"$model\""); [ "$readonly" -eq 1 ] && args+=(-c 'sandbox_mode="read-only"')
+    [ -n "$resume" ] && run_with_timeout codex exec resume "${args[@]}" "$resume" "$prompt" || run_with_timeout codex exec "${args[@]}" -C "$workdir" "$prompt"
+  }
+  used_source="$source"; codex_once "$source"; rc=$?
+  sub_errors=$(jq -r 'select(.type=="turn.failed" or .type=="error")|(.error.message // .message // "")' "$run_dir/events.raw" 2>/dev/null; cat "$run_dir/stderr.log")
+  if [ "$source" = "sub" ] && printf '%s' "$sub_errors" | grep -q -i -E "at capacity|rate.?limit|usage limit|quota|429|too many requests"; then
+    mv "$run_dir/events.raw" "$run_dir/events.sub-failed.raw"; used_source="relay(自动降级)"; codex_once relay; rc=$?
+  fi
+  used_model="${model:-默认}"; session=$(jq -r 'select(.type=="thread.started")|.thread_id' "$run_dir/events.raw" 2>/dev/null | tail -1); [ -z "$session" ] && session="$resume"
+  result=$(jq -rs '[.[]|select(.type=="item.completed")|.item|select(.type=="agent_message")|.text]|last // ""' "$run_dir/events.raw" 2>/dev/null)
+  err=$(jq -r 'select(.type=="turn.failed")|.error.message' "$run_dir/events.raw" 2>/dev/null | tail -1); [ -n "$err" ] && rc=1 && result="${result:+$result\n\n}错误：$err"
+elif [ "$agent" = "dsh" ]; then
+  case "$model" in ""|deepseek-v4.1-flash) ;; *) die "dsh 只允许使用 deepseek-v4.1-flash（收到：$model）" ;; esac
+  used_model="deepseek-v4.1-flash"; patch="$run_dir/effort.patch.yml"
+  printf -- "- id: agent-default-model\n  name: '@deepseek-ai/dsh-agent-default-model'\n  config:\n    provider: %s\n    model: %s\n    reasoningEffort: %s\n" "${XAY_DSH_PROVIDER:-opencode-xay}" "$used_model" "$effort" > "$patch"
+  dsh_cmd=(dsh --profile headless); command -v dsh-run >/dev/null && dsh_cmd=(dsh-run)
+  args=(--patch "$patch" --json); [ -n "$resume" ] && args+=(--session-id "$resume"); run_with_timeout "${dsh_cmd[@]}" "${args[@]}" "$prompt"; rc=$?
+  session=$(jq -r 'select(.type=="session")|.sessionId' "$run_dir/events.raw" 2>/dev/null | tail -1); result=$(jq -rs '[.[]|select(.type=="final")|.text]|last // ""' "$run_dir/events.raw" 2>/dev/null)
+  [ -z "$result" ] && result=$(tail -5 "$run_dir/stderr.log")
+elif [ "$agent" = "agy" ]; then
+  case "$effort" in off|minimal|low) tier=low; a_effort=low ;; medium) tier=medium; a_effort=medium ;; *) tier=high; a_effort="$effort" ;; esac
+  used_model="${model:-gemini-3.8-flash-$tier}"; args=(-p "$prompt" --output-format stream-json --print-timeout "${timeout}s" --model "$used_model" --effort "$a_effort")
+  [ "$readonly" -eq 1 ] && args+=(--mode plan) || { [ "$full" -eq 1 ] && args+=(--dangerously-skip-permissions) || args+=(--mode accept-edits); }; [ -n "$resume" ] && args+=(--conversation "$resume")
+  for d in "${add_dirs[@]}"; do args+=(--add-dir "$d"); done
+  run_with_timeout agy "${args[@]}"; rc=$?; session=$(jq -r 'select(.event=="result")|.result.conversation_id // empty' "$run_dir/events.raw" 2>/dev/null | tail -1); [ -z "$session" ] && session="$resume"
+  result=$(jq -r 'select(.event=="result")|.result.response // empty' "$run_dir/events.raw" 2>/dev/null); st=$(jq -r 'select(.event=="result")|.result.status // empty' "$run_dir/events.raw" 2>/dev/null | tail -1); [ -n "$st" ] && [ "$st" != "SUCCESS" ] && rc=1
+  [ -z "$result" ] && result=$(grep -v "logging before" "$run_dir/stderr.log" | tail -3)
+fi
+if [ "$stop_requested" -eq 1 ]; then
+  status="stopped"; rc=143; result="已被手动停止"
+elif [ -f "$run_dir/.timeout" ]; then
+  status="timeout"
+else
+  status="done"; [ "$rc" -ne 0 ] && status="failed"
+fi
+finalize_run
+echo "【${agent}｜${name}】状态：${status}｜用时 $((ended-started))s｜模型 ${used_model}｜强度 $effort${used_source:+｜来源 $used_source}"
+echo "会话ID：${session:-无}（续接：xay-run $agent -r ${session:-<ID>} \"...\"）"
+echo "改动文件：$(printf '%s' "$changed" | tr '\n' ' ')${deleted:+ 删除：$(printf '%s' "$deleted" | tr '\n' ' ')}"
+echo "日志：$run_dir"; echo "----- 汇报 -----"; printf '%s\n' "$result"
+exit "$rc"
+}
+main "$@"
+exit $?

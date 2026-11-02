@@ -1,0 +1,58 @@
+[
+  {
+    "path": "conversation.plan_version",
+    "equals": 2
+  },
+  {
+    "path": "tasks[0].owner",
+    "equals": "em_codex01"
+  },
+  {
+    "path": "tasks[0].assigned_reason",
+    "equals": "还是让 Codex 1 做"
+  },
+  {
+    "path": "plan.version",
+    "equals": 2
+  },
+  {
+    "path": "plan.history[0].changes[0].op",
+    "equals": "add"
+  },
+  {
+    "path": "plan.history[1].version",
+    "equals": 2
+  },
+  {
+    "path": "plan.history[1].by",
+    "equals": "gm"
+  },
+  {
+    "path": "plan.history[1].reason",
+    "equals": "还是让 Codex 1 做"
+  },
+  {
+    "path": "plan.history[1].changes[0].op",
+    "equals": "assign"
+  },
+  {
+    "path": "plan.history[1].changes[0].title",
+    "equals": "做商品图轮播"
+  },
+  {
+    "path": "plan.history[1].changes[0].before.owner",
+    "equals": "em_codex02"
+  },
+  {
+    "path": "plan.history[1].changes[0].after.owner",
+    "equals": "em_codex01"
+  },
+  {
+    "path": "plan.history[1].changes[0].before.title",
+    "equals": null
+  },
+  {
+    "path": "plan.history[1].changes[0].after.title",
+    "equals": null
+  }
+]

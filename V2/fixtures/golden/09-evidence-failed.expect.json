@@ -1,0 +1,22 @@
+[
+  {
+    "path": "conversation.plan_version",
+    "equals": 3
+  },
+  {
+    "path": "tasks[0].status",
+    "equals": "needs_you"
+  },
+  {
+    "path": "tasks[1].status",
+    "equals": "failed"
+  },
+  {
+    "path": "tasks[2].status",
+    "equals": "needs_you"
+  },
+  {
+    "path": "decisions",
+    "equals": []
+  }
+]

@@ -1,0 +1,6 @@
+{"ts":1793300000,"by":"lead:cv_demo01","type":"conv.begun","subject":"cv_demo01","ws":"ws_demo01","conv":"cv_demo01","data":{"title":"商品图轮播","lead_kind":"claude","aliases":["claude:demo-01"],"cwd":"/work/demo-shop"}}
+{"ts":1793300010,"by":"lead:cv_demo01","type":"dept.opened","subject":"fe","ws":"ws_demo01","conv":"cv_demo01","data":{"name":"前端部","mission":"负责页面和交互","owns":["web/**"],"head":"rules"}}
+{"ts":1793300020,"by":"lead:cv_demo01","type":"employee.hired","subject":"em_codex01","ws":"ws_demo01","conv":"cv_demo01","data":{"agent":"codex","note":"负责前端"}}
+{"ts":1793300030,"by":"lead:cv_demo01","type":"employee.joined","subject":"em_codex01","ws":"ws_demo01","conv":"cv_demo01","data":{"dept":"fe"}}
+{"ts":1793300040,"by":"lead:cv_demo01","type":"task.added","subject":"tk_carousel","ws":"ws_demo01","conv":"cv_demo01","data":{"key":"carousel","title":"做商品图轮播","dept":"fe","owner":"em_codex01","deps":[],"writes":["web/carousel/**"],"steps":["搭结构","接图片","自测"],"card":"先做三张图的轮播，手机端能滑","budget":{"tokens":200000,"minutes":60,"turns":3},"mode":"write","reason":"首页要上新品"}}
+{"ts":1793300050,"by":"lead:cv_demo01","type":"task.changed","subject":"tk_carousel","ws":"ws_demo01","conv":"cv_demo01","data":{"fields":{"title":"做商品图轮播（手机优先）"},"reason":"先把手机端做好"}}

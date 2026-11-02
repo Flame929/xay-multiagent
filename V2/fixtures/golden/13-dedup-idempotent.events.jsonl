@@ -1,0 +1,7 @@
+{"ts":1793301020,"by":"lead:cv_demo13","type":"conv.begun","subject":"cv_demo13","ws":"ws_demo01","conv":"cv_demo13","data":{"title":"重复写入只记一次","lead_kind":"claude","aliases":["claude:demo-13"],"cwd":"/work/demo-shop"}}
+{"ts":1793301030,"by":"lead:cv_demo13","type":"employee.hired","subject":"em_codex01","ws":"ws_demo01","conv":"cv_demo13","data":{"agent":"codex"}}
+{"ts":1793301040,"by":"lead:cv_demo13","type":"task.added","subject":"tk_a","ws":"ws_demo01","conv":"cv_demo13","data":{"key":"a","title":"做轮播","owner":"em_codex01","deps":[],"writes":["web/a/**"],"card":"商品图轮播","mode":"write","reason":"首页要上新品"}}
+{"ts":1793301050,"by":"station:em_codex01","type":"turn.started","subject":"tn_a","ws":"ws_demo01","conv":"cv_demo13","data":{"task":"tk_a","em":"em_codex01","kind":"first"}}
+{"ts":1793301060,"by":"station:em_codex01","type":"task.progress","subject":"tk_a","ws":"ws_demo01","conv":"cv_demo13","data":{"step":1,"of":4,"text":"读代码","source":"outbox"},"dedup":"outbox:em_codex01:1"}
+{"ts":1793301070,"by":"station:em_codex01","type":"task.progress","subject":"tk_a","ws":"ws_demo01","conv":"cv_demo13","data":{"step":2,"of":4,"text":"写测试","source":"outbox"},"dedup":"outbox:em_codex01:2"}
+{"ts":1793301080,"by":"station:em_codex01","type":"task.progress","subject":"tk_a","ws":"ws_demo01","conv":"cv_demo13","data":{"step":1,"of":4,"text":"读代码","source":"outbox"},"dedup":"outbox:em_codex01:1"}

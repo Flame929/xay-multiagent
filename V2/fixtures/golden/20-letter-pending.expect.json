@@ -1,0 +1,22 @@
+[
+  {
+    "path": "letters[0].id",
+    "equals": "lt_pending"
+  },
+  {
+    "path": "letters[0].delivered",
+    "equals": false
+  },
+  {
+    "path": "letters[0].status",
+    "equals": "open"
+  },
+  {
+    "path": "people.em_codex01.state",
+    "equals": "blocked"
+  },
+  {
+    "path": "depts[0].counts.open_requests",
+    "equals": 1
+  }
+]

@@ -1,0 +1,106 @@
+/* desk-fx.css - 工位小彩蛋：屏幕场景动画、桌面小物、说话气泡、路过的猫、偷看屏幕 */
+
+/* ---- 屏幕场景 ---- */
+.fx-screen { cursor: zoom-in; }
+.fx-ln { transform-box: fill-box; transform-origin: left center; animation: fxType 4.2s ease-out infinite both; }
+.fx-caret, .fx-blink { animation: fxBlink 1s steps(1) infinite; }
+.fx-row { opacity: 0; animation: fxRow 4.2s ease-out infinite both; }
+.fx-bar { transform-box: fill-box; transform-origin: bottom; animation: fxBar 2.8s ease-in-out infinite alternate; }
+.fx-cloud { animation: fxDrift 9s ease-in-out infinite alternate; }
+.fx-pop { transform-box: fill-box; transform-origin: center; animation: fxPop 3.2s ease-in-out infinite; }
+.fx-dm { animation: fxDanmaku 4.6s linear infinite both; }
+.fx-seek { transform-box: fill-box; transform-origin: left; animation: fxSeek 14s linear infinite; }
+.fx-fish { animation: fxSwim 6s linear infinite both; }
+.fx-fish-slow { animation-duration: 9s; }
+.fx-bub { transform-box: fill-box; animation: fxBubble 2.6s ease-in infinite both; }
+.fx-rays { animation: fxSpin 8s linear infinite; }
+.fx-flip { animation: fxFlip 3.2s ease-in-out infinite; }
+.fx-drop { animation: fxDrop 2.4s steps(9) infinite; }
+.fx-dot { transform-box: fill-box; animation: fxHop 1s ease-in-out infinite; }
+.fx-spin { animation: fxSpin 1s linear infinite; }
+.fx-dvd-x { animation: fxDvdX 3.7s linear infinite alternate; }
+.fx-dvd-y { animation: fxDvdY 2.3s linear infinite alternate; }
+.fx-hue { animation: fxHue 6s linear infinite; }
+.fx-merit { animation: fxMerit 1.1s ease-out infinite both; }
+.fx-sq-l { animation: fxSqL 2.4s ease-in-out infinite alternate; }
+.fx-sq-r { animation: fxSqR 2.4s ease-in-out infinite alternate; }
+.fx-gs-in { animation: fxGsIn 6s ease-out infinite both; }   /* 原神启动：白屏里标志慢慢浮现 */
+
+/* ---- 桌面小物 ---- */
+.fx-steam { animation: fxSteam 2.2s ease-out infinite both; }
+.fx-leaf { transform-box: fill-box; transform-origin: bottom center; animation: fxSway 3.4s ease-in-out infinite alternate; }
+.fx-tail { transform-box: fill-box; transform-origin: right bottom; animation: fxSway 0.7s ease-in-out infinite alternate; }
+
+.fx-prop { filter: drop-shadow(0 1px 1px rgba(0,0,0,.25)); }
+.fx-cat-bob { animation: fxHop .45s ease-in-out infinite; }
+
+/* ---- 说话气泡 ---- */
+.fx-say {
+  position: absolute; z-index: 58;
+  width: max-content; max-width: 140px; padding: 5px 9px;
+  font-size: 11.5px; line-height: 1.35; font-weight: 600; color: var(--label-1); text-align: left;
+  background: var(--bg-layer-2); border: 1.5px solid var(--c, var(--accent)); border-radius: 12px;
+  box-shadow: 0 6px 16px -8px rgba(15,17,21,.45);
+  animation: fxSayIn .32s cubic-bezier(.3,1.5,.5,1) both; pointer-events: none;
+}
+.fx-say::after {
+  content: ""; position: absolute; bottom: -6px; right: 26px; width: 9px; height: 9px;
+  background: var(--bg-layer-2); border-right: 1.5px solid var(--c, var(--accent)); border-bottom: 1.5px solid var(--c, var(--accent));
+  transform: rotate(45deg);
+}
+.fx-say-left::after { right: auto; left: 22px; }
+.fx-say-below::after { bottom: auto; top: -6px; transform: rotate(225deg); }   /* 监工的气泡在监工席下面，尖角朝上 */
+.fx-say-report { background: color-mix(in srgb, var(--c) 10%, var(--bg-layer-2)); }
+.fx-say-report::before { content: "📣 "; }
+.fx-say-happy::before { content: "🎉 "; }
+.fx-say-sad::before { content: "💦 "; }
+.fx-say-boss { z-index: 59; border-color: var(--err); --c: var(--err); }
+.fx-say-boss::before { content: "📢 "; }
+.fx-say-sweat::before { content: "😅 "; }
+.fx-say-out { animation: fxSayOut .26s ease-in both; }
+.station-card.fx-hush .station-thought-bubble { opacity: 0; transition: opacity .2s; }
+
+/* ---- 偷看屏幕 ---- */
+.fx-peek {
+  position: fixed; z-index: 90; width: 248px; padding: 8px; pointer-events: none;
+  background: #16181d; border: 2px solid #2b2f37; border-radius: 12px;
+  box-shadow: 0 18px 40px -12px rgba(0,0,0,.55); animation: fxSayIn .2s ease-out both;
+}
+.fx-peek-title { display: flex; justify-content: space-between; gap: 8px; font-size: 11px; color: #aab2bd; margin: 0 2px 6px; }
+.fx-peek-title span { color: #7dd3fc; }
+.fx-peek svg, .fx-peek-gif { display: block; border: 0; border-radius: 6px; }
+.fx-peek-gif { object-fit: cover; background: #000; pointer-events: none; }   /* 点动图也算点小屏 */
+.fx-peek-open { pointer-events: auto; cursor: zoom-in; }
+.fx-peek-open:hover { border-color: #4b5563; }
+.fx-peek-cli { width: 232px; height: 160px; overflow: hidden; border-radius: 6px; background: #0b0d10; }
+
+@keyframes fxType { 0% { transform: scaleX(0); } 12%, 82% { transform: scaleX(1); } 100% { transform: scaleX(1); opacity: 0; } }
+@keyframes fxBlink { 50% { opacity: 0; } }
+@keyframes fxRow { 0% { opacity: 0; } 8%, 85% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes fxBar { from { transform: scaleY(.45); } to { transform: scaleY(1); } }
+@keyframes fxDrift { from { transform: translateX(-6px); } to { transform: translateX(8px); } }
+@keyframes fxPop { 0%, 100% { transform: scale(1); } 8% { transform: scale(1.14); } 16% { transform: scale(.97); } 24% { transform: scale(1); } }
+@keyframes fxDanmaku { from { transform: translateX(0); } to { transform: translateX(-180px); } }
+@keyframes fxSeek { from { transform: scaleX(.05); } to { transform: scaleX(1); } }
+@keyframes fxSwim { from { transform: translateX(-14px); } to { transform: translateX(130px); } }
+@keyframes fxBubble { 0% { transform: translateY(0); opacity: 0; } 15% { opacity: 1; } 100% { transform: translateY(-60px); opacity: 0; } }
+@keyframes fxSpin { to { transform: rotate(360deg); } }
+@keyframes fxFlip { 0%, 30% { transform: scaleX(1); } 40% { transform: scaleX(.05); } 50%, 100% { transform: scaleX(1); } }
+@keyframes fxDrop { from { transform: translateY(0); } to { transform: translateY(46px); } }
+@keyframes fxHop { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-3px); } }
+@keyframes fxDvdX { from { transform: translateX(0); } to { transform: translateX(72px); } }
+@keyframes fxDvdY { from { transform: translateY(0); } to { transform: translateY(58px); } }
+@keyframes fxHue { to { filter: hue-rotate(360deg); } }
+@keyframes fxMerit { 0% { opacity: 0; transform: translateY(6px); } 25% { opacity: 1; } 100% { opacity: 0; transform: translateY(-10px); } }
+@keyframes fxSqL { from { transform: translateX(0); } to { transform: translateX(30px); opacity: .3; } }
+@keyframes fxSqR { from { transform: translateX(0); } to { transform: translateX(-30px); opacity: .3; } }
+@keyframes fxGsIn { 0%, 4% { opacity: 0; } 16%, 94% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes fxSteam { 0% { opacity: 0; transform: translateY(2px); } 30% { opacity: .9; } 100% { opacity: 0; transform: translateY(-5px); } }
+@keyframes fxSway { from { transform: rotate(-6deg); } to { transform: rotate(6deg); } }
+@keyframes fxSayIn { from { opacity: 0; transform: translateY(6px) scale(.85); } to { opacity: 1; transform: none; } }
+@keyframes fxSayOut { to { opacity: 0; transform: translateY(-4px) scale(.95); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .fx-screen *, .fx-layer *, .fx-say, .fx-peek, .fx-peek * { animation: none !important; }
+  .fx-row { opacity: 1; }
+}

@@ -1,0 +1,9 @@
+#!/bin/sh
+python3 -c '
+import sys
+if sys.version_info < (3, 11):
+    sys.stderr.write("xay 需要 Python 3.11 或更新的版本，你现在是 %d.%d，请先升级（macOS：brew install python@3.11）\n" % (sys.version_info[0], sys.version_info[1]))
+    sys.exit(2)
+' || exit 2
+HERE=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+PYTHONPATH="$HERE${PYTHONPATH:+:$PYTHONPATH}" exec python3 -m xay.cli "$@"

@@ -1,0 +1,176 @@
+[
+  {
+    "path": "ws.id",
+    "equals": "ws_demo01"
+  },
+  {
+    "path": "conversation.id",
+    "equals": "cv_demo01"
+  },
+  {
+    "path": "conversation.title",
+    "equals": "商品图轮播"
+  },
+  {
+    "path": "conversation.lead_kind",
+    "equals": "claude"
+  },
+  {
+    "path": "conversation.plan_version",
+    "equals": 2
+  },
+  {
+    "path": "gm.agent",
+    "equals": "claude"
+  },
+  {
+    "path": "depts[0].id",
+    "equals": "fe"
+  },
+  {
+    "path": "depts[0].mission",
+    "equals": "负责页面和交互"
+  },
+  {
+    "path": "depts[0].head",
+    "equals": "rules"
+  },
+  {
+    "path": "depts[0].members[0]",
+    "equals": "em_codex01"
+  },
+  {
+    "path": "depts[0].counts.members",
+    "equals": 1
+  },
+  {
+    "path": "people.em_codex01.label",
+    "equals": "Codex 1"
+  },
+  {
+    "path": "people.em_codex01.agent",
+    "equals": "codex"
+  },
+  {
+    "path": "people.em_codex01.dept",
+    "equals": "fe"
+  },
+  {
+    "path": "people.em_codex01.state",
+    "equals": "idle"
+  },
+  {
+    "path": "tasks[0].id",
+    "equals": "tk_carousel"
+  },
+  {
+    "path": "tasks[0].key",
+    "equals": "carousel"
+  },
+  {
+    "path": "tasks[0].title",
+    "equals": "做商品图轮播（手机优先）"
+  },
+  {
+    "path": "tasks[0].owner",
+    "equals": "em_codex01"
+  },
+  {
+    "path": "tasks[0].dept",
+    "equals": "fe"
+  },
+  {
+    "path": "tasks[0].status",
+    "equals": "planned"
+  },
+  {
+    "path": "tasks[0].deps",
+    "equals": []
+  },
+  {
+    "path": "tasks[0].writes",
+    "equals": [
+      "web/carousel/**"
+    ]
+  },
+  {
+    "path": "plan.version",
+    "equals": 2
+  },
+  {
+    "path": "plan.history[0].version",
+    "equals": 1
+  },
+  {
+    "path": "plan.history[1].version",
+    "equals": 2
+  },
+  {
+    "path": "plan.history[1].reason",
+    "equals": "先把手机端做好"
+  },
+  {
+    "path": "plan.history[1].changes[0].task",
+    "equals": "tk_carousel"
+  },
+  {
+    "path": "plan.history[1].changes[0].title",
+    "equals": "做商品图轮播（手机优先）"
+  },
+  {
+    "path": "plan.history[0].by",
+    "equals": "gm"
+  },
+  {
+    "path": "plan.history[0].reason",
+    "equals": "首页要上新品"
+  },
+  {
+    "path": "plan.history[0].changes[0].op",
+    "equals": "add"
+  },
+  {
+    "path": "plan.history[0].changes[0].title",
+    "equals": "做商品图轮播"
+  },
+  {
+    "path": "plan.history[0].changes[0].after.title",
+    "equals": "做商品图轮播"
+  },
+  {
+    "path": "plan.history[0].changes[0].after.owner",
+    "equals": "em_codex01"
+  },
+  {
+    "path": "plan.history[0].changes[0].after.dept",
+    "equals": "fe"
+  },
+  {
+    "path": "plan.history[0].changes[0].after.deps",
+    "equals": []
+  },
+  {
+    "path": "plan.history[1].by",
+    "equals": "gm"
+  },
+  {
+    "path": "plan.history[1].changes[0].op",
+    "equals": "change"
+  },
+  {
+    "path": "plan.history[1].changes[0].before.title",
+    "equals": "做商品图轮播"
+  },
+  {
+    "path": "plan.history[1].changes[0].after.title",
+    "equals": "做商品图轮播（手机优先）"
+  },
+  {
+    "path": "plan.history[0].changes[0].after.writes",
+    "equals": null
+  },
+  {
+    "path": "plan.history[1].changes[0].before.writes",
+    "equals": null
+  }
+]

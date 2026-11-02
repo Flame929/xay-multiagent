@@ -1,0 +1,30 @@
+[
+  {
+    "path": "conversation.plan_version",
+    "equals": 2
+  },
+  {
+    "path": "tasks[0].id",
+    "equals": "tk_rework"
+  },
+  {
+    "path": "tasks[0].status",
+    "equals": "queued"
+  },
+  {
+    "path": "tasks[1].id",
+    "equals": "tk_discard"
+  },
+  {
+    "path": "tasks[1].status",
+    "equals": "canceled"
+  },
+  {
+    "path": "decisions",
+    "equals": []
+  },
+  {
+    "path": "plan.version",
+    "equals": 2
+  }
+]

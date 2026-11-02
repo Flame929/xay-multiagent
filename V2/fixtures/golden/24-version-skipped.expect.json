@@ -1,0 +1,34 @@
+[
+  {
+    "path": "conversation.plan_version",
+    "equals": 2
+  },
+  {
+    "path": "tasks[0].id",
+    "equals": "tk_a"
+  },
+  {
+    "path": "tasks[0].title",
+    "equals": "照常生效"
+  },
+  {
+    "path": "tasks[0].status",
+    "equals": "planned"
+  },
+  {
+    "path": "plan.version",
+    "equals": 2
+  },
+  {
+    "path": "plan.history[1].version",
+    "equals": 2
+  },
+  {
+    "path": "plan.history[1].reason",
+    "equals": "高版本之后照常改"
+  },
+  {
+    "path": "plan.history[1].changes[0].after.title",
+    "equals": "照常生效"
+  }
+]

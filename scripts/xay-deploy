@@ -1,0 +1,72 @@
+#!/bin/bash
+# xay-deploy：把开发仓库的 main 分支发布到正在使用的安装副本（整个仓库一起发，V2/ 也在里面）。
+#
+# 用法：scripts/xay-deploy [--skip-tests] [--restart-board]
+#   --skip-tests      不跑测试（只在刚跑过全部测试时用）
+#   --restart-board   发布后重启看板：M5 起看板由 V2 管家提供——先停掉还占着 7878 的旧看板，
+#                     再用安装副本里的 V2 重启管家（7879 公司页 + 7878 看板）。工位是独立进程，照常干活。
+#                     设 XAY_V1=1 时改为老做法：只重启 7878 上的旧看板（退回旧版用）。
+# 测试：旧的 tests/ 和 V2/tests/ 都要通过才发布。
+# 安装副本位置默认 ~/.agents/skills/xay-multiagent-workflow，可用 XAY_INSTALL_DIR 覆盖。
+set -euo pipefail
+export LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 PYTHONIOENCODING=utf-8
+die() { echo "xay-deploy：$*" >&2; exit 2; }
+
+src=$(cd "$(dirname "$(readlink "$0" 2>/dev/null || echo "$0")")/.." && git rev-parse --show-toplevel)
+dst="${XAY_INSTALL_DIR:-$HOME/.agents/skills/xay-multiagent-workflow}"
+skip_tests=0; restart=0
+for arg in "$@"; do
+  case "$arg" in
+    --skip-tests) skip_tests=1 ;;
+    --restart-board) restart=1 ;;
+    -h|--help) awk 'NR>1 && /^#/ {sub(/^# ?/, ""); print; next} NR>1 {exit}' "$0"; exit 0 ;;
+    *) die "不认识的参数：$arg" ;;
+  esac
+done
+
+[ -d "$dst/.git" ] || die "安装副本不是 git 仓库：$dst"
+[ "$(cd "$src" && pwd -P)" != "$(cd "$dst" && pwd -P)" ] || die "这里就是安装副本，请在开发仓库里运行"
+[ "$(git -C "$src" rev-parse --abbrev-ref HEAD)" = main ] || die "开发仓库不在 main 分支，先把改动合并到 main"
+[ -z "$(git -C "$src" status --porcelain)" ] || die "开发仓库还有没提交的改动，先提交"
+[ -z "$(git -C "$dst" status --porcelain)" ] || die "安装副本被直接改过（git status 不干净），先确认这些改动去留：$dst"
+
+if [ "$skip_tests" -eq 0 ]; then
+  echo "跑测试中（旧系统）…"
+  (cd "$src" && XAY_NOTIFY=0 python3 -m unittest discover -s tests >/tmp/xay-deploy-test.log 2>&1) || { tail -30 /tmp/xay-deploy-test.log; die "旧系统的测试没通过，未发布"; }
+  tail -3 /tmp/xay-deploy-test.log
+  echo "跑测试中（V2）…"
+  (cd "$src" && XAY_NOTIFY=0 python3 -m unittest discover -s V2/tests >/tmp/xay-deploy-test-v2.log 2>&1) || { tail -30 /tmp/xay-deploy-test-v2.log; die "V2 的测试没通过，未发布"; }
+  tail -3 /tmp/xay-deploy-test-v2.log
+fi
+
+before=$(git -C "$dst" rev-parse --short HEAD)
+git -C "$dst" fetch -q "$src" main
+git -C "$dst" checkout -q main
+git -C "$dst" merge -q --ff-only FETCH_HEAD || die "安装副本有开发仓库里没有的提交，不能直接快进；先把它们合进开发仓库"
+after=$(git -C "$dst" rev-parse --short HEAD)
+echo "已发布：$before → $after"
+git -C "$dst" log --oneline -n 20 "$before..$after"
+[ -x "$dst/V2/bin/xay2" ] || die "安装副本里没有 V2/bin/xay2，发布不完整：$dst"
+
+if [ "$restart" -eq 1 ]; then
+  if [ "${XAY_V1:-0}" = "1" ]; then
+    # 退回旧版：管家以后都不占 7878（board.off），7878 还给旧看板
+    mkdir -p "${XAY2_HOME:-$HOME/.xay/v2}" && touch "${XAY2_HOME:-$HOME/.xay/v2}/board.off"
+    if "$dst/V2/bin/xay2" office status >/dev/null 2>&1; then
+      "$dst/V2/bin/xay2" office stop
+      "$dst/V2/bin/xay2" office start
+    fi
+    pkill -f "xay_watch.py( --port 7878)?$" 2>/dev/null || true
+    sleep 1
+    (nohup python3 "$dst/scripts/xay_watch.py" --port 7878 >/tmp/xay-watch-7878.log 2>&1 &)
+    echo "已退回旧看板：http://127.0.0.1:7878（V2 公司页仍在 http://127.0.0.1:7879/org）"
+  else
+    # 切到 V2：旧看板让出 7878，管家重启后同时开 7879 和 7878（以前退回过就先去掉 board.off）
+    rm -f "${XAY2_HOME:-$HOME/.xay/v2}/board.off"
+    pkill -f "xay_watch.py( --port 7878)?$" 2>/dev/null || true
+    sleep 1
+    "$dst/V2/bin/xay2" office stop
+    "$dst/V2/bin/xay2" office start
+    echo "看板（V2）：http://127.0.0.1:7878/   公司页：http://127.0.0.1:7879/org"
+  fi
+fi
