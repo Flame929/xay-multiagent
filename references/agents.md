@@ -70,7 +70,7 @@
 - **斜杠命令**：`/boost`（加 `--full`，放在 worktree 里）、`/goal`、`/browser` 能在非交互模式下用；`/teamwork-preview`、`/plan` 需要交互，只能请用户亲自运行。详见 `antigravity-guide/agy-cheatsheet.md`。
 - **工作区**：agy 只能读写自己工作目录里的文件，要读别的目录用 `--add-dir <目录>`（`xay-dag` 会自动给引用了 `{{dir:ID}}` 的 agy 任务加上）。
 - **权限**：非交互模式下，需要授权的操作会被自动拒绝，`denied_actions` 里会列出来（`xay-run` 会提示）。只读任务就写“不要运行命令”；需要跑命令时加 `--full`，或者在 settings.json 里放行具体命令。
-- **合规**：个人套餐被第三方调用有封号风险（用户已接受）；不得改设备指纹、提取 token。多账号用 `xay agy-switch` 经 Antigravity Tools 切换（用户自担风险）。
+- **合规**：个人套餐被第三方调用有封号风险（用户已接受）；不得改设备指纹、提取 token。多账号用 `xay agy-switch` 切换（xay 自己写 agy 的登录，Antigravity Tools 兜底；用户自担风险）。
 - **输出 JSON**：`conversation_id`、`status`（`response` 为空时也会是 SUCCESS）、`response`、`denied_actions`、`usage`。
 
 ## 5. 写任务卡的要点（各 AI 通用）

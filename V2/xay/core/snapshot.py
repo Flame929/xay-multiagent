@@ -34,7 +34,8 @@ def _legacy_task(r):
     return {'id': rid, 'key': None, 'title': r.get('title') or '', 'owner': r.get('em'), 'dept': r.get('dept'),
             'status': legacy_status(r), 'deps': [], 'writes': [], 'progress': {}, 'result': r.get('result_head') or '',
             'assigned_reason': '', 'legacy': True, 'part': None,
-            'check': {'state': 'none', 'round': 0, 'text': '', 'by': ''}, 'planned': []}
+            'check': {'state': 'none', 'round': 0, 'text': '', 'by': ''}, 'planned': [],
+            'agent': r.get('agent'), 'kept_reason': None}
 
 
 def _recent(conn, s, conv):
@@ -483,6 +484,143 @@ def build_parts(s, conv, tasks=None, depts=None):
     return out_parts
 
 
+AGENT_LABELS = {'codex': 'Codex', 'dsh': 'DeepSeek', 'agy': 'Gemini', 'claude': 'Claude'}
+AGENT_ORDER = ('codex', 'dsh', 'agy')
+
+
+def agent_label(agent):
+    if not agent:
+        return ''
+    return AGENT_LABELS.get(agent) or agent.capitalize()
+
+
+def _task_score(t):
+    status = t.get('status')
+    if status in ('done', 'reported', 'landed', 'accepted'):
+        return 1.0
+    if status == 'working':
+        prog = t.get('progress') or {}
+        step = prog.get('step')
+        of = prog.get('of')
+        if isinstance(step, (int, float)) and isinstance(of, (int, float)) and of > 0:
+            return min(0.9, float(step) / float(of))
+        return 0.1
+    if status == 'kept' or (status == 'needs_you' and bool(t.get('kept_reason'))):
+        return 0.9
+    return 0.0
+
+
+def _task_agent(t, employees):
+    agent = t.get('agent')
+    if not agent and t.get('owner') and employees:
+        agent = employees.get(t['owner'], {}).get('agent')
+    return agent or 'unknown'
+
+
+def calc_progress(s, conv, tasks=None, parts=None):
+    """§8 总进度条计算（快照 progress 字段）：
+    - 口径：本对话未撤回的活每件 1 份；做完 = 1；正在做 = min(0.9, step/of)（无步数 0.1）；排队/未开始/没做成 = 0；kept = 0.9。
+    - 总进度 = 合计 ÷ 件数。
+    - by_agent: 各 AI 攒的份额占全部的百分比，加起来严格等于总 pct（最后一段补差）。
+    - by_part: 各小任务独立进度百分比。
+    """
+    if s is None:
+        s = {}
+    employees = s.get('employees', {})
+    if tasks is None:
+        tasks = []
+        part_key_ids = {p['key']: p['id'] for p in (s.get('parts') or {}).values()
+                        if p.get('conv') == conv and p.get('key') and p.get('key') != p.get('id')}
+        for t in s.get('tasks', {}).values():
+            if conv is not None and t.get('conv') != conv:
+                continue
+            item = {k: t.get(k) for k in ('id', 'key', 'title', 'owner', 'dept', 'status', 'deps', 'writes',
+                                          'progress', 'result', 'plain', 'assigned_reason', 'part', 'check',
+                                          'agent', 'kept_reason')}
+            item['planned'] = [st.get('text', '') if isinstance(st, dict) else str(st) for st in (t.get('planned_steps') or [])]
+            if item.get('part') in part_key_ids:
+                item['part'] = part_key_ids[item['part']]
+            tasks.append(item)
+        legacy_runs = s.get('legacy_runs', {}).values()
+        for r in sorted((r for r in legacy_runs if conv is None or r.get('conv') == conv),
+                        key=lambda x: (x.get('started') or 0, x.get('ts') or 0)):
+            tasks.append(_legacy_task(r))
+
+    valid_tasks = [t for t in tasks if t.get('status') != 'canceled']
+    all_cnt = len(valid_tasks)
+    done_cnt = sum(1 for t in valid_tasks if t.get('status') in ('done', 'reported', 'landed', 'accepted'))
+    working_cnt = sum(1 for t in valid_tasks if t.get('status') == 'working')
+    text = f"{all_cnt} 件活做完 {done_cnt} 件，{working_cnt} 件在做"
+
+    if parts is None:
+        raw_parts = build_parts(s, conv, tasks=tasks)
+    else:
+        raw_parts = parts
+
+    by_part = []
+    for p in raw_parts:
+        p_tasks = p.get('_tasks')
+        if p_tasks is None:
+            pid = p.get('id', '')
+            if pid == 'all':
+                p_tasks = valid_tasks
+            elif pid == '':
+                p_tasks = [t for t in valid_tasks if not t.get('part')]
+            else:
+                p_tasks = [t for t in valid_tasks if t.get('part') == pid]
+        part_valid = [t for t in p_tasks if t.get('status') != 'canceled']
+        if not part_valid:
+            p_pct = 0
+        else:
+            p_score = sum(_task_score(t) for t in part_valid)
+            p_pct = max(0, min(100, int(round(100.0 * p_score / len(part_valid)))))
+        by_part.append({'id': p.get('id', ''), 'title': p.get('title', ''), 'pct': p_pct})
+
+    if all_cnt == 0:
+        return {
+            'pct': 0,
+            'done': 0,
+            'all': 0,
+            'working': 0,
+            'by_agent': [],
+            'by_part': by_part,
+            'text': text,
+        }
+
+    total_score = 0.0
+    agent_scores = {}
+    for t in valid_tasks:
+        sc = _task_score(t)
+        total_score += sc
+        ag = _task_agent(t, employees)
+        agent_scores[ag] = agent_scores.get(ag, 0.0) + sc
+
+    pct = max(0, min(100, int(round(100.0 * total_score / all_cnt))))
+
+    def _ag_key(ag):
+        return (0, AGENT_ORDER.index(ag)) if ag in AGENT_ORDER else (1, ag)
+
+    active_agents = sorted([ag for ag, sc in agent_scores.items() if sc > 0], key=_ag_key)
+    by_agent = []
+    # 按累计份额取整再相减：每段都不为负，最后一段的累计正好等于 pct
+    cum_score, cum_pct = 0.0, 0
+    for i, ag in enumerate(active_agents):
+        cum_score += agent_scores[ag]
+        nxt = pct if i == len(active_agents) - 1 else max(0, min(pct, int(round(100.0 * cum_score / all_cnt))))
+        by_agent.append({'agent': ag, 'label': agent_label(ag), 'pct': max(0, nxt - cum_pct)})
+        cum_pct = max(cum_pct, nxt)
+
+    return {
+        'pct': pct,
+        'done': done_cnt,
+        'all': all_cnt,
+        'working': working_cnt,
+        'by_agent': by_agent,
+        'by_part': by_part,
+        'text': text,
+    }
+
+
 def _build(conn, s, *, ws=None, conv=None, now=None):
     now=time.time() if now is None else now
     budget_of=_budget_fn(s, now)
@@ -522,7 +660,7 @@ def _build(conn, s, *, ws=None, conv=None, now=None):
     part_key_ids={p['key']:p['id'] for p in (s.get('parts') or {}).values() if p.get('conv')==conv and p.get('key') and p.get('key')!=p.get('id')}
     for t in s['tasks'].values():
         if t.get('conv')!=conv: continue
-        item = {k:t.get(k) for k in ('id','key','title','owner','dept','status','deps','writes','progress','result','plain','assigned_reason','part','check')}
+        item = {k:t.get(k) for k in ('id','key','title','owner','dept','status','deps','writes','progress','result','plain','assigned_reason','part','check','agent','kept_reason')}
         item['planned'] = [s.get('text', '') if isinstance(s, dict) else str(s) for s in (t.get('planned_steps') or [])]
         if item.get('part') in part_key_ids: item['part']=part_key_ids[item['part']]   # 写的是小任务简称：换成编号，页面才对得上
         tasks.append(item)
@@ -538,7 +676,8 @@ def _build(conn, s, *, ws=None, conv=None, now=None):
         depts.append({'id':d['id'],'name':d['name'],'mission':d['mission'],'head':d['head'],'members':members,'counts':{'members':len(members),'working':sum(people[m]['state']=='working' for m in members),'open_requests':sum(1 for l in letters if l.get('to')==d['id'] and l.get('kind')=='request' and l.get('status')=='open')},'part':part_key_ids.get(d.get('part'),d.get('part'))})
     raw_parts = build_parts(s, conv, tasks=tasks, depts=depts)
     parts = [{k: v for k, v in p.items() if not k.startswith('_')} for p in raw_parts]
+    progress = calc_progress(s, conv, tasks=tasks, parts=raw_parts)
     proposals=[p for p in s['proposals'].values() if p.get('conv')==conv and p.get('status')=='open']
     top=s.get('seq',0)
     recent=_recent(conn, s, conv)
-    return {'v':1,'seq':top,'now':now,'ws':w,'conversation':{'id':c.get('id'),'title':c.get('title',''),'lead_kind':c.get('lead_kind','unknown'),'plan_version':c.get('plan_version',0)},'gm':{'agent':c.get('lead_kind','unknown'),'state':'working' if any(t.get('status')=='working' for t in tasks) else 'idle','recent':_gm_recent(conn, s, conv)},'people':people,'depts':depts,'tasks':tasks,'parts':parts,'plan':{'version':c.get('plan_version',0),'history':_history(s, conv)},'letters':letters+legacy_letters,'decisions':decisions,'proposals':proposals,'signals':s.get('signals',[])[-20:],'former':former,'halt':copy.deepcopy(s.get('halt')),'quota':_quota(conn, s, now),'recent':recent}
+    return {'v':1,'seq':top,'now':now,'ws':w,'conversation':{'id':c.get('id'),'title':c.get('title',''),'lead_kind':c.get('lead_kind','unknown'),'plan_version':c.get('plan_version',0)},'gm':{'agent':c.get('lead_kind','unknown'),'state':'working' if any(t.get('status')=='working' for t in tasks) else 'idle','recent':_gm_recent(conn, s, conv)},'people':people,'depts':depts,'tasks':tasks,'parts':parts,'progress':progress,'plan':{'version':c.get('plan_version',0),'history':_history(s, conv)},'letters':letters+legacy_letters,'decisions':decisions,'proposals':proposals,'signals':s.get('signals',[])[-20:],'former':former,'halt':copy.deepcopy(s.get('halt')),'quota':_quota(conn, s, now),'recent':recent}

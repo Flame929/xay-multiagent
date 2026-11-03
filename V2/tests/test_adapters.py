@@ -283,7 +283,7 @@ class ProvidersTests(AdapterCase):
         self.assertEqual(providers.get("agy").max_concurrent, 2)
         self.assertIsNone(providers.get("agy").daily_call_cap)   # 2026-10-31 起默认不限次数
         with self.assertRaises(providers.UnknownAgent):
-            providers.get("claude")
+            providers.get("no-such-ai")   # claude 在 2026-11-03 起是通用员工预设
 
     def test_codex_lines(self):
         self.assertEqual(providers.codex_provider_for_line("codex-sub"), "openai")
@@ -1250,7 +1250,7 @@ class FakeAdapterTests(AdapterCase):
         self.assertIsInstance(make_adapter("dsh"), DshAdapter)
         self.assertIsInstance(make_adapter("agy"), AgyAdapter)
         with self.assertRaises(ValueError):
-            make_adapter("claude")
+            make_adapter("no-such-ai")   # claude 在 2026-11-03 起是通用员工预设，不再是"不认识"
 
 
 if __name__ == "__main__":

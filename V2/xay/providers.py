@@ -109,6 +109,8 @@ class Provider:
     # 两件活之间的绝对上限（token 数）：和 compact_at 的百分比谁先到算谁（token-optimizer 调研：AI 变笨跟着
     # "装了多少"走，不跟着百分比走）。None = 只看百分比。
     compact_at_tokens: Optional[int] = None
+    available: bool = True
+    status_text: Optional[str] = None
 
 
 PROVIDERS: Mapping[str, Provider] = {
@@ -164,11 +166,205 @@ PROVIDERS: Mapping[str, Provider] = {
 }
 
 
+# ---------------------------------------------------------------------------
+# 通用员工声明（arch-v11 §4）
+# ---------------------------------------------------------------------------
+
+_SECRET_VALUE_RE = re.compile(
+    r"(?i)(sk-[A-Za-z0-9_\-]{8,}|gh[pousr]_[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16}|bearer\s+\S+|api[_-]?key\s*[:=]|password|token\s*[:=]|secret\s*[:=])"
+)
+_ENV_VAR_NAME_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+
+BUILTIN_GENERIC_AGENTS: Mapping[str, dict] = {
+    "claude": {
+        "label": "Claude",
+        "exe": "claude",
+        "args": [
+            "-p", "{prompt}",
+            "--output-format", "stream-json",
+            "--verbose",
+            "--permission-mode", "bypassPermissions",
+        ],
+        "resume_args": [
+            "-p", "{prompt}",
+            "--output-format", "stream-json",
+            "--verbose",
+            "--permission-mode", "bypassPermissions",
+            "--resume", "{session}",
+        ],
+        "readonly_args": ["--permission-mode", "plan"],
+        "output": "jsonl",
+        "session_field": "session_id",
+        "text_field": "result",
+        "usage_field": "usage",
+        "model": "",
+        "env": {
+            "CLAUDE_CONFIG_DIR": "$XAY2_HOME/claude-employee",
+            "ANTHROPIC_API_KEY": "ANTHROPIC_API_KEY",
+        },
+        "required_env": "ANTHROPIC_API_KEY",
+        "auth_env": "ANTHROPIC_API_KEY",
+        "max_concurrent": 2,
+    },
+    "opencode": {
+        "label": "OpenCode",
+        "exe": "opencode",
+        "args": ["run", "--format", "json", "{prompt}"],
+        "resume_args": ["run", "--format", "json", "--session", "{session}", "{prompt}"],
+        "output": "jsonl",
+        "session_field": "session_id",
+        "text_field": "text",
+        "usage_field": "usage.total_tokens",
+        "model": "auto",
+        "env": {},
+        "max_concurrent": 2,
+        "readonly_args": ["--read-only"],
+    },
+    "devin": {
+        "label": "Devin",
+        "exe": "devin",
+        "args": ["run", "--non-interactive", "{prompt}"],
+        "resume_args": ["run", "--non-interactive", "--session", "{session}", "{prompt}"],  # 待实测
+        "output": "text",
+        "model": "default",
+        "env": {},
+        "max_concurrent": 2,
+        "readonly_args": ["--readonly"],  # 待实测
+    },
+    "zcode": {
+        "label": "ZCode",
+        "exe": "zcode",
+        "args": ["run", "--batch", "{prompt}"],  # 待实测
+        "resume_args": ["run", "--batch", "--session", "{session}", "{prompt}"],  # 待实测
+        "output": "jsonl",
+        "session_field": "session_id",
+        "text_field": "content",
+        "usage_field": "tokens",
+        "model": "default",
+        "env": {},
+        "max_concurrent": 2,
+        "readonly_args": ["--dry-run"],  # 待实测
+    },
+}
+
+
+def validate_agent_spec(name: str, spec: dict) -> None:
+    """校验通用员工声明：env 只许写变量名映射或安全目录路径，不许写密钥值。"""
+    if not isinstance(spec, dict):
+        raise ValueError("通用员工声明必须是一个字典")
+    env = spec.get("env")
+    if env is not None:
+        if not isinstance(env, dict):
+            raise ValueError("env 字段必须是字典")
+        for k, v in env.items():
+            if not isinstance(v, str):
+                raise ValueError("env 的值必须是环境变量名映射：%s=%r" % (k, v))
+            # 检查是否包含敏感 token 特征或 sk- 开头
+            if _SECRET_VALUE_RE.search(v) or v.startswith("sk-") or ("token" in v.lower() and len(v) > 20):
+                raise ValueError("声明里不许写密钥值：%s=%r" % (k, v))
+            # 允许环境变量名映射，或以 $XAY2_HOME/ 开头的安全目录路径
+            if not _ENV_VAR_NAME_RE.match(v) and not v.startswith("$XAY2_HOME/"):
+                raise ValueError("声明里不许写密钥值，只许写环境变量名映射：%s=%r" % (k, v))
+    raw_str = json.dumps(spec)
+    if _SECRET_VALUE_RE.search(raw_str):
+        raise ValueError("声明内容包含疑似密钥值")
+
+
+def v2_home() -> Path:
+    env = os.environ.get("XAY2_HOME")
+    return Path(env).expanduser() if env else Path.home() / ".xay" / "v2"
+
+
+def load_generic_agents(home: Optional[Path] = None) -> Dict[str, dict]:
+    """读取预设 + $XAY2_HOME/agents.json 里的通用员工声明。"""
+    res = {k: dict(v) for k, v in BUILTIN_GENERIC_AGENTS.items()}
+    target_home = home or v2_home()
+    agents_file = target_home / "agents.json"
+    if agents_file.is_file():
+        try:
+            content = agents_file.read_text(encoding="utf-8")
+            data = json.loads(content)
+        except (OSError, json.JSONDecodeError):
+            return res
+        if isinstance(data, dict):
+            agents_map = data.get("agents")
+            if isinstance(agents_map, dict):
+                for k, v in agents_map.items():
+                    if isinstance(v, dict):
+                        validate_agent_spec(k, v)
+                        res[k] = v
+    return res
+
+
+def get_agent_spec(agent: str) -> Optional[dict]:
+    """获取通用员工的声明字典。"""
+    return load_generic_agents().get(agent)
+
+
+def agent_kinds() -> Tuple[str, ...]:
+    """返回 codex、dsh、agy 加上声明了的通用员工。"""
+    generics = load_generic_agents()
+    kinds = list(AGENTS)
+    for k in generics:
+        if k not in kinds:
+            kinds.append(k)
+    return tuple(kinds)
+
+
 def get(agent: str) -> Provider:
     try:
         return PROVIDERS[agent]
     except KeyError:
-        raise UnknownAgent("不认识的 AI：%r（只有 %s）" % (agent, ", ".join(AGENTS)))
+        generics = load_generic_agents()
+        if agent in generics:
+            spec = generics[agent]
+            validate_agent_spec(agent, spec)
+            max_concurrent = spec.get("max_concurrent", 2)
+            try:
+                max_concurrent = int(max_concurrent)
+            except (TypeError, ValueError):
+                max_concurrent = 2
+
+            req_env = spec.get("required_env") or spec.get("auth_env")
+            available = True
+            status_text = None
+            if req_env:
+                if not os.environ.get(req_env):
+                    available = False
+                    status_text = f"{spec.get('label') or agent} 员工：预留，未配置 API 登录"
+
+            return Provider(
+                agent=agent,
+                binary=str(spec.get("exe") or agent),
+                env_bin=(f"XAY_{agent.upper().replace('-', '_')}_BIN",),
+                default_effort="medium",
+                window_source="constant",
+                window_fallback=int(spec.get("context_window") or 200_000),
+                window_estimated=True,
+                compact_at=0.60,
+                compact_after_turns=None,
+                midtask_at=None,
+                native_compaction=False,
+                auto_compact_at=None,
+                steer="none",
+                interrupt="kill",
+                idle_offline_minutes=0,
+                max_concurrent=max_concurrent,
+                daily_call_cap=None,
+                tested_version="",
+                available=available,
+                status_text=status_text,
+            )
+        raise UnknownAgent("不认识的 AI：%r（只有 %s）" % (agent, ", ".join(agent_kinds())))
+
+
+def is_available(agent: str) -> bool:
+    """查询指定 AI 是否可用（已配置必须的 API 登录）。"""
+    try:
+        p = get(agent)
+        return bool(p.available)
+    except UnknownAgent:
+        return False
 
 
 # ---------------------------------------------------------------------------
@@ -201,6 +397,9 @@ def default_model(agent: str, effort: Optional[str] = None) -> Optional[str]:
     if agent == AGY:
         tier = _AGY_EFFORT_TIER.get(str(effort or get(AGY).default_effort).lower(), "medium")
         return AGY_MODELS_BY_EFFORT[tier]
+    generics = load_generic_agents()
+    if agent in generics:
+        return generics[agent].get("model")
     raise UnknownAgent(agent)
 
 

@@ -7,8 +7,10 @@
 import argparse, json, os, re, subprocess, sys, time
 from pathlib import Path
 
+from . import providers
+
 DEPT_RE = re.compile(r'^[a-z][a-z0-9_-]{0,15}$')
-AGENTS = ('codex', 'dsh', 'agy')
+AGENTS = providers.agent_kinds()
 AGENT_NAMES = {'codex': 'Codex', 'dsh': 'DeepSeek', 'agy': 'Gemini'}
 STATUS_TEXT = {'planned': '计划中', 'ready': '可以开始', 'queued': '排队中', 'working': '在做', 'needs_you': '等你决定',
                'reported': '待验收', 'done': '已完成', 'failed': '没做成', 'canceled': '已取消'}
@@ -69,7 +71,13 @@ def _parser():
     p = sp.add_parser('stop'); p.add_argument('target', nargs='?'); p.add_argument('--all', action='store_true')
     p = sp.add_parser('resume'); p.add_argument('target', nargs='?')
     p = sp.add_parser('wait'); p.add_argument('--since', type=int, default=0); p.add_argument('--timeout', type=float, default=240)
+    p = sp.add_parser('notify'); p.add_argument('--hook', action='store_true', help='按 Claude Code 钩子格式输出通知')
+    p = sp.add_parser('hook'); ss = p.add_subparsers(dest='sub', required=True)
+    ss.add_parser('install')
+    ss.add_parser('uninstall')
+    ss.add_parser('status')
     p = sp.add_parser('brief'); p.add_argument('--json', action='store_true'); p.add_argument('--latest', action='store_true')
+    p = sp.add_parser('handoff'); p.add_argument('--to', choices=['codex', 'dsh', 'agy', 'claude'], help='移交给哪位新负责人'); p.add_argument('--conv', help='指定对话编号')
     p = sp.add_parser('snapshot'); p.add_argument('--json', action='store_true'); p.add_argument('--latest', action='store_true')
     p = sp.add_parser('events'); p.add_argument('--since', type=int, default=0); p.add_argument('--follow', action='store_true')
     p = sp.add_parser('agy-accounts'); p.add_argument('--json', action='store_true')
@@ -77,6 +85,8 @@ def _parser():
     p = sp.add_parser('backup'); p.add_argument('--keep', type=int, default=7)
     sp.add_parser('rebuild')
     sp.add_parser('doctor')
+    sp.add_parser('up')
+    sp.add_parser('board')
     return parser
 
 
@@ -85,6 +95,10 @@ def main(argv=None):
     executor = os.environ.get('XAY_ROLE') == 'executor'
     if argv and argv[0] == 'doctor':
         return _doctor(argv[1:])
+    if argv and argv[0] == 'up':
+        if executor:
+            _err('执行者不能使用 up 命令'); return 2
+        return _up(argv[1:])
     if argv and argv[0] == 'station':
         if executor:
             _err('执行者不能开工位'); return 2
@@ -129,9 +143,21 @@ def _subject_of(body, subject):
 
 
 def _executor(a):
-    allowed = a.cmd in ('progress', 'done', 'notes', 'ask', 'tell', 'reply', 'verdict') or (a.cmd == 'plan' and a.sub == 'propose')
+    allowed = a.cmd in ('progress', 'done', 'notes', 'ask', 'tell', 'reply', 'verdict', 'board') or (a.cmd == 'plan' and a.sub in ('propose', 'add'))
     if not allowed:
-        raise CliError('执行者只能用：progress / done / notes / ask / tell / reply / verdict / plan propose（只写发件箱）')
+        raise CliError('执行者只能用：progress / done / notes / ask / tell / reply / verdict / board / plan propose / plan add（只写发件箱）')
+    if a.cmd == 'board':
+        board_file = os.environ.get('XAY2_BOARD_FILE')
+        path = Path(board_file) if board_file else _outbox_path().parent / 'board.md'
+        if not path.is_file():
+            print('目前还没有任务板')
+            return 0
+        try:
+            content = path.read_text(encoding='utf-8')
+            print(content.rstrip())
+            return 0
+        except OSError as exc:
+            raise CliError('无法读取任务板：%s' % exc)
     # 一个原生进程跨好几件活（Codex app-server）时，进程启动时的 XAY2_TASK 会过期：
     # 工位每一轮开工前把当前任务写进 XAY2_TASK_FILE，这里优先读它（读不到再用 XAY2_TASK）
     task = ''
@@ -174,6 +200,9 @@ def _executor(a):
         kind = 'verdict'
         ok = (a.verdict.lower() == 'pass')
         data = {'ok': ok, 'text': a.text or ''}
+    elif a.cmd == 'plan' and a.sub == 'add':
+        kind, data = 'task', _executor_task(a)
+        if em: data['from'] = em
     else:
         kind, data = 'proposal', _executor_proposal(a)
         if em: data['from'] = em
@@ -198,6 +227,30 @@ def _progress_data(a):
     if of < 1 or step < 0 or step > of:
         raise CliError('进度的步数不对：第 %d 步 / 共 %d 步' % (step, of))
     return {'step': step, 'of': of, 'text': a.text}
+
+
+def _executor_task(a):
+    writes = _split(a.writes)
+    if not a.readonly and not writes:
+        raise CliError('执行者派活要改文件必须指定 --writes，只读活请加 --readonly')
+    card = _read_card(a.card)
+    data = {
+        'title': a.title,
+        'writes': writes,
+        'mode': 'readonly' if a.readonly else 'write',
+        'readonly': bool(a.readonly),
+    }
+    if a.agent and a.agent != 'auto':
+        data['agent'] = a.agent
+    if a.to:
+        data['to'] = a.to
+    if card is not None:
+        data['card'] = card
+    if a.reason:
+        data['reason'] = a.reason
+    if a.step:
+        data['steps'] = list(a.step)
+    return data
 
 
 def _executor_proposal(a):
@@ -517,22 +570,26 @@ def _check_part_deadlock(ctx, target_pt, task_id=None, force=False):
                 raise CliError(f"这样会让『{q_title}』里的小任务一直等着，建议放进还没做完的中任务")
 
 
-def _doctor(argv=None):
-    """一键环境体检：只读检查核心依赖、端口、AI CLI 及数据目录。"""
+def _diagnose():
+    """执行核心体检，返回 (all_passed, checks, available_ai)。
+    checks: list of (tag, text)，tag 包含 'pass', 'fail', 'info'。
+    available_ai: list of str，当前环境中可用且已安装的 AI 种类。
+    """
     import shutil
     import socket
     from .office import paths
 
     all_passed = True
+    checks = []
 
     # 1. Python 版本（必需项：>= 3.11）
     py_ver = sys.version_info
     py_str = f"{py_ver[0]}.{py_ver[1]}.{py_ver[2]}"
     if py_ver >= (3, 11):
-        print(f"[✓] Python 版本：{py_str}（满足 3.11+ 要求）")
+        checks.append(('pass', f"[✓] Python 版本：{py_str}（满足 3.11+ 要求）"))
     else:
         all_passed = False
-        print(f"[✗] Python 版本：{py_str}（xay 需要 Python 3.11 或更新的版本，请先升级）")
+        checks.append(('fail', f"[✗] Python 版本：{py_str}（xay 需要 Python 3.11 或更新的版本，请先升级）"))
 
     # 2. SQLite 支持（必需项）
     sqlite_ok = False
@@ -546,18 +603,18 @@ def _doctor(argv=None):
     except Exception as exc:
         sqlite_err = str(exc)
     if sqlite_ok:
-        print("[✓] SQLite3：支持正常")
+        checks.append(('pass', "[✓] SQLite3：支持正常"))
     else:
         all_passed = False
-        print(f"[✗] SQLite3：不可用（{sqlite_err}）")
+        checks.append(('fail', f"[✗] SQLite3：不可用（{sqlite_err}）"))
 
     # 3. git 能用（必需项）
     git_path = shutil.which("git")
     if git_path:
-        print(f"[✓] git：已安装（{git_path}）")
+        checks.append(('pass', f"[✓] git：已安装（{git_path}）"))
     else:
         all_passed = False
-        print("[✗] git：未找到（请先安装 git 并加入 PATH）")
+        checks.append(('fail', "[✗] git：未找到（请先安装 git 并加入 PATH）"))
 
     # 4. 管家在不在跑（非错误项）
     keeper_info = None
@@ -569,9 +626,9 @@ def _doctor(argv=None):
 
     if keeper_info:
         pid, port, uptime = keeper_info
-        print(f"[✓] 管家状态：正在运行（进程 {pid}，端口 {port}）")
+        checks.append(('pass', f"[✓] 管家状态：正在运行（进程 {pid}，端口 {port}）"))
     else:
-        print("[-] 管家状态：未在运行（需要时可使用 xay2 office start 启动）")
+        checks.append(('info', "[-] 管家状态：未在运行（需要时可使用 xay2 office start 启动）"))
 
     # 5. 端口 7878 / 7879 占用检查（必需项）
     def _is_port_occupied(port):
@@ -589,21 +646,21 @@ def _doctor(argv=None):
 
     occ_7879 = _is_port_occupied(7879)
     if not occ_7879:
-        print("[✓] 端口 7879（公司页）：空闲可用")
+        checks.append(('pass', "[✓] 端口 7879（公司页）：空闲可用"))
     elif keeper_info is not None and keeper_info[1] == 7879:
-        print("[✓] 端口 7879（公司页）：正常（管家正在使用）")
+        checks.append(('pass', "[✓] 端口 7879（公司页）：正常（管家正在使用）"))
     else:
         all_passed = False
-        print("[✗] 端口 7879（公司页）：被别的程序占用了（启动管家前请先释放）")
+        checks.append(('fail', "[✗] 端口 7879（公司页）：被别的程序占用了（启动管家前请先释放）"))
 
     occ_7878 = _is_port_occupied(7878)
     if not occ_7878:
-        print("[✓] 端口 7878（看板）：空闲可用")
+        checks.append(('pass', "[✓] 端口 7878（看板）：空闲可用"))
     elif keeper_info is not None:
-        print("[✓] 端口 7878（看板）：正常（管家正在使用）")
+        checks.append(('pass', "[✓] 端口 7878（看板）：正常（管家正在使用）"))
     else:
         all_passed = False
-        print("[✗] 端口 7878（看板）：被别的程序占用了（启动看板前请先释放）")
+        checks.append(('fail', "[✗] 端口 7878（看板）：被别的程序占用了（启动看板前请先释放）"))
 
     # 6. $XAY2_HOME 能不能写（必需项）
     home_dir = paths.v2_home()
@@ -612,20 +669,67 @@ def _doctor(argv=None):
         target = target.parent
     writable = target.exists() and os.access(target, os.W_OK | os.X_OK)
     if writable:
-        print(f"[✓] 数据目录（$XAY2_HOME）：{home_dir}（可读写）")
+        checks.append(('pass', f"[✓] 数据目录（$XAY2_HOME）：{home_dir}（可读写）"))
     else:
         all_passed = False
-        print(f"[✗] 数据目录（$XAY2_HOME）：{home_dir}（无写权限，请检查目录权限）")
+        checks.append(('fail', f"[✗] 数据目录（$XAY2_HOME）：{home_dir}（无写权限，请检查目录权限）"))
 
-    # 7. AI 命令行工具检查（非必需项，未装不视为错误）
+    # 7. 基础 AI 命令行工具检查（非必需项，未装不视为错误）
     ai_tools = ("codex", "dsh", "agy", "antigravity-tools")
     for tool in ai_tools:
         found = shutil.which(tool)
         if found:
-            print(f"[✓] {tool}：已安装（{found}）")
+            checks.append(('pass', f"[✓] {tool}：已安装（{found}）"))
         else:
-            print(f"[-] {tool}：没装：这家 AI 的活派不出去，装好后再来")
+            checks.append(('info', f"[-] {tool}：没装：这家 AI 的活派不出去，装好后再来"))
 
+    # 8. 通用员工检查（providers.agent_kinds()）
+    try:
+        from . import providers
+        kinds = providers.agent_kinds()
+    except Exception:
+        kinds = ("codex", "dsh", "agy")
+
+    for kind in kinds:
+        if kind in ("codex", "dsh", "agy"):
+            continue
+        try:
+            p = providers.get(kind)
+            exe = p.binary
+        except Exception:
+            exe = kind
+        found = shutil.which(exe)
+        if found:
+            checks.append(('pass', f"[✓] {kind}：已安装（{found}）"))
+        else:
+            checks.append(('info', f"[-] {kind}：没装：这家 AI 的活派不出去，装好后再来"))
+
+    # 统计能用的 AI 种类
+    available_ai = []
+    for tool in ("codex", "dsh", "agy"):
+        if shutil.which(tool):
+            available_ai.append(tool)
+    for kind in kinds:
+        if kind in ("codex", "dsh", "agy"):
+            continue
+        try:
+            p = providers.get(kind)
+            exe = p.binary
+            avail = p.available
+        except Exception:
+            exe = kind
+            avail = True
+        if shutil.which(exe) and avail:
+            available_ai.append(kind)
+
+    return all_passed, checks, available_ai
+
+
+def _doctor(argv=None):
+    """一键环境体检：只读检查核心依赖、端口、AI CLI 及数据目录。"""
+    all_passed, checks, _ = _diagnose()
+    for tag, text in checks:
+        print(text)
     if all_passed:
         print("体检通过！所有必需项均已满足。")
         return 0
@@ -634,9 +738,54 @@ def _doctor(argv=None):
         return 1
 
 
+def _start_keeper():
+    """启动管家后台守护进程（提供给 up 命令使用，测试可 mock）。"""
+    from .office import daemon
+    return daemon.cmd_start(daemon.DEFAULT_PORT, foreground=False, board_port=daemon.BOARD_PORT)
+
+
+def _up(argv=None):
+    """一键开工：体检未通过项 + 可用 AI + 启动管家 + 打印看板和公司页地址与下一步。"""
+    from .office import daemon
+
+    all_passed, checks, available_ai = _diagnose()
+
+    # 1. 体检只打印没通过的项
+    for tag, text in checks:
+        if tag == 'fail':
+            print(text)
+
+    # 2. 打印一行 '能用的 AI：…'
+    ai_str = '、'.join(available_ai) if available_ai else '无'
+    print(f"能用的 AI：{ai_str}")
+
+    # 3. 如果必需项没通过，报错退出
+    if not all_passed:
+        print("体检未通过：存在未满足的必需项，请先修复后再试。")
+        return 1
+
+    # 4. 管家没开就开
+    info = daemon.running_info()
+    if not info:
+        rc = _start_keeper()
+        if rc != 0:
+            return rc
+        info = daemon.running_info()
+
+    # 5. 打印看板和公司页地址、下一步命令
+    port = info[1] if info else daemon.DEFAULT_PORT
+    board_port = daemon.BOARD_PORT
+    print(f"看板：http://127.0.0.1:{board_port}/")
+    print(f"公司页：http://127.0.0.1:{port}/org")
+    print('下一步命令：xay2 begin --title "你的大任务标题"')
+    return 0
+
+
 def _lead(a):
     if a.cmd == 'doctor':
         return _doctor([])
+    if a.cmd == 'up':
+        return _up([])
     from .core import open_db, load_state, rebuild
     if a.cmd == 'plan' and a.sub == 'template':
         return _plan_template(a)
@@ -644,6 +793,9 @@ def _lead(a):
         return _agy_accounts_cmd(a)
     if a.cmd == 'agy-switch':
         return _agy_switch_cmd(a)
+    if a.cmd == 'hook':
+        from .lead_notify import hook_cmd
+        return hook_cmd(a.sub)
     if a.cmd == 'backup':
         from .core.backup import backup_daily
         from .office.paths import v2_home
@@ -656,6 +808,11 @@ def _lead(a):
             return _begin(conn, a, load_state(conn))
         if a.cmd == 'rebuild':
             rebuild(conn); print('已重建'); return 0
+        if a.cmd == 'notify':
+            if not getattr(a, 'hook', False):
+                raise CliError('用法：xay2 notify --hook')
+            from .lead_notify import notify_hook
+            return notify_hook(conn)
         if a.cmd in EXECUTOR_ONLY:
             raise CliError('%s 是执行者在自己桌子里用的命令（由工位设置 XAY_ROLE=executor）；负责人请看 xay2 brief / wait' % a.cmd)
         state = load_state(conn)
@@ -714,8 +871,16 @@ def _dept(ctx, a):
 
 def _hire(ctx, a, agent=None, quiet=False):
     agent = agent or a.agent
-    if agent not in AGENTS:
-        raise CliError('只能招 codex / dsh / agy：%s' % agent)
+    valid_kinds = providers.agent_kinds()
+    if agent not in valid_kinds:
+        raise CliError('只能招 %s：%s' % (' / '.join(valid_kinds), agent))
+    if not providers.is_available(agent):
+        try:
+            spec = providers.load_generic_agents().get(agent) or {}
+            label = spec.get('label') or agent.capitalize()
+        except Exception:
+            label = agent.capitalize()
+        raise CliError(f'{label} 员工还没配置 API 登录，先在本机配好再派')
     em = _new_id('em_')
     data = {'agent': agent}
     if getattr(a, 'label', None): data['label'] = a.label
@@ -758,12 +923,20 @@ def _plan_add(ctx, a):
     if a.dept and a.dept not in ctx.depts():
         raise CliError('找不到部门：%s' % a.dept)
     agent = a.agent if a.agent != 'auto' else None
-    if agent and agent not in AGENTS:
-        raise CliError('--agent 只能是 codex / dsh / agy / auto：%s' % a.agent)
+    valid_kinds = providers.agent_kinds()
+    if agent and agent not in valid_kinds:
+        raise CliError('--agent 只能是 %s / auto：%s' % (' / '.join(valid_kinds), a.agent))
+    if agent and not providers.is_available(agent):
+        try:
+            spec = providers.load_generic_agents().get(agent) or {}
+            label = spec.get('label') or agent.capitalize()
+        except Exception:
+            label = agent.capitalize()
+        raise CliError(f'{label} 员工还没配置 API 登录，先在本机配好再派')
     if a.new and a.to:
         raise CliError('--to 和 --new 只能选一个')
     if a.new and not agent:
-        raise CliError('招新人要说明用哪个 AI：--new --agent codex|dsh|agy')
+        raise CliError('招新人要说明用哪个 AI：--new --agent %s' % '|'.join(valid_kinds))
     if agent and a.to:
         raise CliError('--to 已经指定了人，不用再写 --agent')
     owner = None
@@ -855,7 +1028,7 @@ def _check_label(chk):
     return '自动检查'
 
 
-def _format_task_item(t, emp_lookup=None):
+def _format_task_item(t, emp_lookup=None, current_task=None):
     emp_lookup = emp_lookup or {}
     tk_id = t.get('id') or t.get('key') or 'tk_'
     key = t.get('key')
@@ -879,10 +1052,12 @@ def _format_task_item(t, emp_lookup=None):
         prog_text = f"（共 {len(steps)} 步）"
     else:
         prog_text = ""
-    return f"{ref}：{title} · {who} · {st_text}{prog_text}"
+    is_curr = current_task and (tk_id == current_task or key == current_task or t.get('id') == current_task)
+    curr_text = " · （你在做的是这件）" if is_curr else ""
+    return f"{ref}：{title} · {who} · {st_text}{prog_text}{curr_text}"
 
 
-def _render_plan_tree(parts, depts, tasks, emp_lookup=None, title=None):
+def _render_plan_tree(parts, depts, tasks, emp_lookup=None, title=None, current_task=None, max_lines=60):
     emp_lookup = emp_lookup or {}
     lines = []
     if title:
@@ -985,27 +1160,41 @@ def _render_plan_tree(parts, depts, tasks, emp_lookup=None, title=None):
                 lines.append(f"  部门：{dname}")
                 for t in dtasks:
                     tasks_in_depts.add(t.get('id') or t.get('key') or id(t))
-                    lines.append(f"    - {_format_task_item(t, emp_lookup)}")
+                    lines.append(f"    - {_format_task_item(t, emp_lookup, current_task=current_task)}")
             loose_in_p = [t for t in p_tasks if (t.get('id') or t.get('key') or id(t)) not in tasks_in_depts]
             for t in loose_in_p:
-                lines.append(f"  - {_format_task_item(t, emp_lookup)}")
+                lines.append(f"  - {_format_task_item(t, emp_lookup, current_task=current_task)}")
         else:
             for t in p_tasks:
-                lines.append(f"  - {_format_task_item(t, emp_lookup)}")
+                lines.append(f"  - {_format_task_item(t, emp_lookup, current_task=current_task)}")
 
     if loose_tasks:
         lines.append("零散的小任务（自动检查）")
         for t in loose_tasks:
-            lines.append(f"  - {_format_task_item(t, emp_lookup)}")
+            lines.append(f"  - {_format_task_item(t, emp_lookup, current_task=current_task)}")
 
-    if len(lines) > 60:
+    if len(lines) > max_lines:
         total_tasks = len(tasks)
-        shown_lines = lines[:59]
+        shown_lines = lines[:max_lines - 1]
         shown_tasks = sum(1 for ln in shown_lines if ln.strip().startswith('- '))
         rem = max(1, total_tasks - shown_tasks)
         shown_lines.append(f"…还有 {rem} 件")
         return shown_lines
     return lines
+
+
+def render_board(state, conv, current_task=None, max_lines=40):
+    """渲染当前对话的计划树（≤max_lines 行），标出你在做的是哪件。"""
+    tasks = [t for t in (state.get('tasks') or {}).values() if t.get('conv') == conv and not t.get('legacy')]
+    parts = [p for p in (state.get('parts') or {}).values() if p.get('conv') == conv]
+    depts = [d for d in (state.get('depts') or {}).values() if d.get('conv') == conv and not d.get('closed')]
+    emp_lookup = {k: e.get('label', k) for k, e in (state.get('employees') or {}).items()}
+    conv_title = (state.get('convs') or {}).get(conv, {}).get('title') or conv or ''
+    lines = _render_plan_tree(parts, depts, tasks, emp_lookup=emp_lookup, title=conv_title,
+                              current_task=current_task, max_lines=max_lines)
+    if not lines or (len(lines) == 1 and lines[0].startswith('大任务：')):
+        return f"大任务：{conv_title}\n还没有计划" if conv_title else "还没有计划"
+    return '\n'.join(lines)
 
 
 def _plan_apply_parts(ctx, a, raw):
@@ -1825,7 +2014,9 @@ def _brief(ctx, a):
     former = {person.get('key') for person in out.get('former', [])}
     people = {key: person for key, person in all_people.items()
               if key in involved and key not in former}
-    lines = ['对话：%s（%s，计划第 %d 版）' % (_clip(conv['title'], 40), conv['id'], conv['plan_version'])]
+    prog = out.get('progress') or {}
+    pct = prog.get('pct', 0)
+    lines = ['对话：%s（%s，计划第 %d 版） 总进度 %d%%' % (_clip(conv['title'], 40), conv['id'], conv['plan_version'], pct)]
     halt = out.get('halt')
     if halt:
         how = '用户在页面上点"恢复"' if halt.get('by') == 'user' else 'xay2 resume 或再排一件活'
@@ -1964,6 +2155,7 @@ def _wakes(e, state):
     if typ == 'signal.raised': return d.get('level') == 'warn'
     if typ == 'proposal.made': return d.get('to') == 'gm'
     if typ == 'letter.sent': return _to_gm(e, state)
+    if typ == 'task.added' and (d.get('by_task') or d.get('by_em')): return True
     return False
 
 
@@ -2065,6 +2257,14 @@ def _wait_line(ctx, s, g):
         tail = ('——' + _clip(body, 40)) if subject and body and body != subject else ''
         ask = '，等你回复：xay2 reply %s "…"' % sub if d.get('kind') == 'request' else ''
         return '%s 来信%s：%s%s（%s%s）' % (sender, via, head, tail, sub, ask)
+    if typ == 'task.added' and (d.get('by_task') or d.get('by_em')):
+        from .core.humanize import AI_NAMES
+        who = ctx.label(d.get('by_em')) or '员工'
+        to = ctx.label(d.get('owner')) if d.get('owner') else (AI_NAMES.get(d.get('agent'), (d.get('agent') or '').capitalize()) if d.get('agent') else '')
+        to_str = f"给 {to}" if to else ""
+        reason_str = f"（{d.get('reason')}）" if d.get('reason') else ""
+        title = _clip(d.get('title') or '任务', 40)
+        return f"{who} 派了「{title}」{to_str}{reason_str}".strip()
     line = '提醒：%s' % _clip(d.get('text'), 80)
     if len(g['events']) > 1:
         line += '（10 分钟内同样的提醒共 %d 条）' % len(g['events'])
@@ -2088,6 +2288,8 @@ def _mark_seen(ctx, groups):
 
 def _wait(ctx, a):
     from .core import since
+    if a.timeout > 3600:
+        raise CliError('--timeout 最多 3600 秒')
     end = time.time() + max(0.0, a.timeout)
     scan = a.since
     while True:
@@ -2114,10 +2316,160 @@ def _wait(ctx, a):
     return 3
 
 
+def _handoff(ctx, a):
+    """≤60 行大白话交接单（arch-v11 §3）：大任务标题、总进度、每个小任务和每件活的状态与负责的人、
+    没处理的"需要你" / 申请 / 信、最近 10 件事、当前游标、新负责人接手要跑的第一条命令。
+    写了 --to 就记一条新事件 conversation.lead_changed {from, to}（by=lead）。"""
+    from .core import events as core_events
+    from .core.humanize import AI_NAMES
+
+    # 1. 如果传了 --to，写入 conversation.lead_changed 事件
+    if getattr(a, 'to', None):
+        c = ctx.state.get('convs', {}).get(ctx.conv, {})
+        curr_lead = c.get('lead_kind') or 'unknown'
+        core_events.append(ctx.conn, 'conversation.lead_changed', ctx.by,
+                           {'from': curr_lead, 'to': a.to},
+                           ws=ctx.ws, conv=ctx.conv, subject=ctx.conv)
+        ctx.refresh()
+
+    snap = _snapshot_for(ctx)
+    conv = snap.get('conversation') or {}
+    prog = snap.get('progress') or {}
+    pct = prog.get('pct', 0)
+    prog_text = prog.get('text', '')
+
+    lines = []
+    lines.append('【负责人交接单】')
+    lines.append('大任务：%s（%s）' % (conv.get('title') or '未命名任务', ctx.conv))
+    lines.append('总进度：%d%%（%s）' % (pct, prog_text))
+
+    lead_kind = conv.get('lead_kind') or 'unknown'
+    lead_name = AI_NAMES.get(lead_kind, lead_kind.capitalize())
+    if getattr(a, 'to', None):
+        lines.append('负责人：已移交给 %s' % AI_NAMES.get(a.to, a.to.capitalize()))
+    else:
+        lines.append('当前负责人：%s' % lead_name)
+
+    # 没处理的"需要你" / 申请 / 信
+    decisions = [d for d in snap.get('decisions', []) if not d.get('resolved')]
+    proposals = [p for p in snap.get('proposals', []) if p.get('status') == 'open']
+    letters = [l for l in snap.get('letters', []) if l.get('kind') == 'request' and l.get('status') == 'open']
+
+    lines.append('')
+    lines.append('待处理事项：')
+    pending = []
+    for d in decisions:
+        pending.append('需要你决定：%s' % _clip(d.get('title', ''), 30))
+    for p in proposals:
+        pending.append('改计划申请：%s' % _clip(p.get('reason', '') or p.get('id', ''), 30))
+    for l in letters:
+        pending.append('待回复信件：%s' % _clip(l.get('subject', '') or l.get('id', ''), 30))
+
+    if pending:
+        for it in pending[:5]:
+            lines.append('  · ' + it)
+        if len(pending) > 5:
+            lines.append('  · …还有 %d 件待处理' % (len(pending) - 5))
+    else:
+        lines.append('  · 无待处理的“需要你”、申请或信件')
+
+    # 每个小任务和每件活的状态与负责的人
+    lines.append('')
+    lines.append('任务与分工：')
+    parts = snap.get('parts', [])
+    tasks = snap.get('tasks', [])
+    people = snap.get('people', {})
+
+    def _task_desc(t):
+        st = t.get('status')
+        owner_em = t.get('owner')
+        owner_label = people.get(owner_em, {}).get('label') or owner_em or '未分配'
+        if st in ('done', 'reported', 'landed', 'accepted'):
+            st_text = '做完了'
+        elif st == 'working':
+            p = t.get('progress') or {}
+            if p.get('of'):
+                st_text = '在做，第 %s/%s 步' % (p.get('step'), p.get('of'))
+            else:
+                st_text = '在做'
+        elif st == 'kept' or (st == 'needs_you' and t.get('kept_reason')):
+            st_text = '改动保留'
+        elif st == 'failed':
+            st_text = '没做成'
+        elif st in ('queued', 'waiting'):
+            st_text = '排队中'
+        elif st == 'ready':
+            st_text = '就绪'
+        else:
+            st_text = '已排期'
+        return '「%s」：%s（%s）' % (_clip(t.get('title', ''), 25), st_text, owner_label)
+
+    if parts:
+        tasks_by_part = {}
+        for t in tasks:
+            tasks_by_part.setdefault(t.get('part'), []).append(t)
+        task_line_count = 0
+        for p in parts:
+            if task_line_count >= 15:
+                lines.append('  …（更多任务略）')
+                break
+            p_pct = 0
+            for bp in prog.get('by_part', []):
+                if bp.get('id') == p.get('id'):
+                    p_pct = bp.get('pct', 0)
+                    break
+            cnt = p.get('count') or {}
+            lines.append('  [%s] %s（做完 %s/%s，进度 %d%%）' % (
+                p.get('id') or '零散', _clip(p.get('title', ''), 20),
+                cnt.get('done', 0), cnt.get('all', 0), p_pct
+            ))
+            task_line_count += 1
+            p_tasks = tasks_by_part.get(p.get('id')) or []
+            for t in p_tasks[:3]:
+                if task_line_count >= 15:
+                    lines.append('    …（更多任务略）')
+                    break
+                lines.append('    · ' + _task_desc(t))
+                task_line_count += 1
+            if len(p_tasks) > 3 and task_line_count < 15:
+                lines.append('    …还有 %d 件活' % (len(p_tasks) - 3))
+                task_line_count += 1
+    else:
+        for t in tasks[:12]:
+            lines.append('  · ' + _task_desc(t))
+        if len(tasks) > 12:
+            lines.append('  …还有 %d 件活' % (len(tasks) - 12))
+
+    # 最近 10 件事
+    lines.append('')
+    lines.append('最近动向：')
+    recent = snap.get('recent', [])
+    last_10 = recent[-10:] if len(recent) >= 10 else recent
+    if last_10:
+        for item in last_10:
+            lines.append('  · ' + _clip(item.get('text', ''), 50))
+    else:
+        lines.append('  · 暂无动态')
+
+    # 当前游标与接手命令
+    cursor = snap.get('seq', 0)
+    lines.append('')
+    lines.append('当前游标：%d' % cursor)
+    lines.append('新负责人接手命令：')
+    lines.append('  xay2 wait --conv %s --since %d' % (ctx.conv, cursor))
+
+    if len(lines) > 60:
+        lines = lines[:59] + ['…（交接单已按 60 行上限截断）']
+
+    print('\n'.join(lines))
+    return 0
+
+
 COMMANDS = {
     'dept': _dept, 'hire': _hire, 'plan': _plan, 'answer': _answer, 'ask': _ask_tell, 'tell': _ask_tell, 'reply': _reply,
     'accept': _accept, 'check': _check, 'steer': _control, 'compact': _compact, 'interrupt': _control, 'stop': _control, 'resume': _control,
-    'snapshot': _snapshot, 'brief': _brief, 'events': _events, 'wait': _wait, 'notes-set': _notes_set,
+    'snapshot': _snapshot, 'brief': _brief, 'handoff': _handoff, 'events': _events, 'wait': _wait, 'notes-set': _notes_set,
+    'board': _plan_show,
 }
 
 

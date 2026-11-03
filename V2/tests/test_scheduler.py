@@ -125,10 +125,10 @@ class PlanningTests(SchedulerCase):
         s.tick()
         self.assertEqual(load_state(self.conn)["tasks"][t4]["owner"], em1)
         self.assertIn("交给空闲的 Codex 1", self.events("task.assigned")[-1]["data"]["reason"])
-        # 没说给谁、也没说用哪种 AI：留给负责人
+        # 没说给谁、也没说用哪种 AI：新规则由管家自动挑选 AI 并分配
         t5 = self.add("活五")
         s.tick()
-        self.assertEqual(self.status(t5), "ready")
+        self.assertEqual(self.status(t5), "queued")
 
     def test_employee_without_dept_is_placed(self):
         """不再自动归部门：不再开"项目组"、不再写 employee.joined 硬塞进部门。"""

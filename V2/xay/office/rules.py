@@ -32,6 +32,7 @@ import time
 from pathlib import Path
 
 from xay import quota_live
+from xay import providers
 from xay.core import events as core_events
 from xay.core.ids import new_id
 from xay.core.reducers import KEPT_KINDS, MEMORY_TURNS
@@ -471,7 +472,7 @@ class Rules:
                         "writes": [],
                         "reason": "审查「%s」" % orig_title,
                     }
-                    if reviewer in ("codex", "dsh", "agy"):
+                    if reviewer in providers.agent_kinds():
                         data["agent"] = reviewer
                     else:
                         data["owner"] = reviewer
@@ -780,7 +781,10 @@ class Rules:
         self.agy_capped = bool(cap) and used >= cap
         self._quota_now = quota_live.lines_now(self.conn, now)
         out = {}
-        for agent in ("codex", "dsh", "agy"):
+        for agent in providers.agent_kinds():
+            if not providers.is_available(agent):
+                out[agent] = "未配置 API 登录"
+                continue
             why = quota_live.agent_out(self._quota_now, agent, now)
             if why:
                 out[agent] = why

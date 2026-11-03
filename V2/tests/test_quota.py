@@ -124,6 +124,7 @@ class StationPrecheckTests(unittest.TestCase):
         station.home = Path("/tmp")
         station._label = mock.MagicMock(return_value="Gemini 1")
         station.adapter = mock.MagicMock()
+        station._real_agy.return_value = False    # 假工位：不去看这台机器真实的 agy 登录
 
         # 模拟当前账号已耗尽，候选账号充足
         mock_switch.return_value = {"ok": True, "switched": True, "text": "换到 账号2"}

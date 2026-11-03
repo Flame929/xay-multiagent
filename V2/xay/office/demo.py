@@ -18,6 +18,7 @@ from pathlib import Path
 
 from xay.core import db as core_db
 from xay.core import events as core_events
+from xay.core import snapshot as core_snapshot
 
 from . import paths
 
@@ -61,6 +62,63 @@ def compress_gaps(timestamps, min_gap=DEFAULT_MIN_GAP, max_gap=DEFAULT_MAX_GAP, 
             delays.append(min(max(gap * scale, min_gap), max_gap))
         prev = ts if ts is not None else prev
     return delays
+
+
+AGENT_LABELS = {"codex": "Codex", "dsh": "DeepSeek", "agy": "Gemini", "claude": "Claude"}
+
+
+def demo_progress(snap):
+    """示例模式用的总进度（设计 arch-v11 §8 的口径）：只在快照还没带 progress 时补上，
+    好让 ?demo=1 能看到进度条；后台快照自己算出 progress 以后这里就不再动它。"""
+    people = snap.get("people") or {}
+    tasks = [t for t in (snap.get("tasks") or []) if isinstance(t, dict) and t.get("status") != "canceled"]
+    by_agent, by_part, total, done, working = {}, {}, 0.0, 0, 0
+    for t in tasks:
+        st = t.get("status")
+        if st in ("done", "reported"):
+            share, done = 1.0, done + 1
+        elif st == "working":
+            working += 1
+            pr = t.get("progress") or {}
+            share = min(0.9, pr["step"] / pr["of"]) if pr.get("step") and pr.get("of") else 0.1
+        elif st == "kept":
+            share = 0.9
+        else:
+            share = 0.0
+        total += share
+        agent = (people.get(t.get("owner")) or {}).get("agent") or "other"
+        by_agent[agent] = by_agent.get(agent, 0.0) + share
+        part = t.get("part") or "all"
+        got, n = by_part.get(part, (0.0, 0))
+        by_part[part] = (got + share, n + 1)
+    n = len(tasks)
+    pct = round(total * 100 / n) if n else 0
+    segs = [{"agent": a, "label": AGENT_LABELS.get(a, a), "pct": round(v * 100 / n)} for a, v in by_agent.items() if v > 0]
+    if segs:
+        segs[-1]["pct"] += pct - sum(x["pct"] for x in segs)       # 四舍五入后最后一段补差
+    titles = {p.get("id"): p.get("title") or "" for p in (snap.get("parts") or []) if isinstance(p, dict)}
+    parts = [{"id": k, "title": titles.get(k, ""), "pct": round(v * 100 / c) if c else 0} for k, (v, c) in by_part.items()]
+    text = "%d 件活做完 %d 件" % (n, done) + ("，%d 件在做" % working if working else "") if n else "还没有派活"
+    return {"pct": pct, "done": done, "all": n, "working": working, "by_agent": segs, "by_part": parts, "text": text}
+
+
+def fill_demo_progress(conn, result):
+    """给示例模式的快照（/api/v2/snapshot）和旧看板状态（/api/state）里每个对话补 progress（已有就不动）。"""
+    try:
+        if not isinstance(result, dict):
+            return result
+        conv = result.get("conversation")
+        if isinstance(conv, dict) and "tasks" in result and "people" in result:
+            if conv.get("id") and "progress" not in conv:
+                conv["progress"] = demo_progress(result)
+        elif isinstance(result.get("workspaces"), list):
+            for ws in result["workspaces"]:
+                for c in (ws or {}).get("conversations") or []:
+                    if isinstance(c, dict) and c.get("id") and "progress" not in c:
+                        c["progress"] = demo_progress(core_snapshot.build(conn, conv=c["id"]))
+    except Exception:  # noqa: BLE001 - 演示用的补充，出错就不补，不影响原来的数据
+        LOG.debug("示例进度没补上", exc_info=True)
+    return result
 
 
 class _DemoSession:
@@ -132,7 +190,7 @@ class DemoLedger:
     # ---- 其他线程来读：把函数交给专属线程执行 ----
     def run(self, fn, timeout=20.0):
         if threading.current_thread() is self._thread:
-            return fn(self._conn)
+            return fill_demo_progress(self._conn, fn(self._conn))
         if self._thread is None or not self._thread.is_alive():
             raise RuntimeError("示例账本没在运行")
         fut = Future()
@@ -211,7 +269,7 @@ class DemoLedger:
         if fut.cancelled():
             return
         try:
-            fut.set_result(fn(self._conn))
+            fut.set_result(fill_demo_progress(self._conn, fn(self._conn)))
         except BaseException as exc:  # noqa: BLE001 - 异常要原样交还给等结果的线程
             fut.set_exception(exc)
 

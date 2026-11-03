@@ -8,6 +8,7 @@ import { escapeHtml, formatTime } from './utils.js';
 import { partChipHtml, checkChipHtml, itemStateHtml, whoText, itemTip, avatarHtml, wireAvatars, deptTagHtml } from './plan-model.js';
 import { openDetail, refreshDetail } from './plan-detail.js';
 import { OPEN_ICON } from './task-canvas.js';
+import { miniBarHtml } from './progress-bar.js';
 
 // 和上次一样就不动（展开着的折叠块、滚动位置都不被打断）
 function setHtml(el, html) {
@@ -102,12 +103,12 @@ function groupHtml(p, model) {
         </button>
         <div class="pl-head-meta">
           <span class="pm-st t-${escapeHtml(p.tone === 'ready' ? 'wait' : p.tone)}">${escapeHtml(p.word)}</span>
-          <span class="pl-count">做完 ${p.done}/${p.all} 件</span>
+          <span class="pl-count">做完 ${p.done}/${p.all} 件</span>${miniBarHtml(p.pct)}
           ${checkChipHtml(p.check)}
           <button type="button" class="pl-info" data-plan-part-detail="${escapeHtml(p.id)}" title="看这个中任务的说明、监工怎么验收、先后">详情</button>
         </div>
         ${after.length ? `<div class="pl-after">接在 ${after.map(a => partChipHtml(a, { title: false })).join('')} 后面</div>` : ''}
-        <div class="pl-bar" aria-hidden="true"><i style="width:${pct}%"></i></div>
+        ${p.pct == null ? `<div class="pl-bar" aria-hidden="true"><i style="width:${pct}%"></i></div>` : ''}
       </div>
       ${body || '<div class="pl-none">还没有派小任务</div>'}
     </section>`;

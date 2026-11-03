@@ -78,12 +78,18 @@ PERMS['decision.delegated'] = ('user', 'lead')
 # 1.32：员工自主计划（task.planned，by 为 station，也可以 employee）
 PERMS['task.planned'] = ('station', 'employee')
 
+# 负责人中途交接（conversation.lead_changed，by 为 lead）
+PERMS['conversation.lead_changed'] = ('lead',)
+
+# 员工干到一半直接派活（tk_9ed5b54f / arch-v11 §5）：工位替员工写 task.added
+PERMS['task.added'] = PERMS['task.added'] + ('station',)
+
 _COLS = 'seq,ts,v,type,ws,conv,subject,by,data'
 
 
 def _role(by):
+    if by == 'station' or by.startswith('station:'): return 'station'
     if by.startswith('lead:'): return 'lead'
-    if by.startswith('station:'): return 'station'
     if by.startswith('employee:'): return 'employee'
     return by
 
@@ -95,13 +101,18 @@ def _permission(event, state):
         if role not in ('lead','office','rules','station'): raise PermissionError(f'没有权限写入事件：{typ}')
     elif role not in allowed: raise PermissionError(f'没有权限写入事件：{typ}')
     if role=='lead' and conv and by not in ('lead', f'lead:{conv}'): raise PermissionError('负责人只能写当前对话')
+    if typ == 'task.added' and role == 'station':
+        if not (d.get('by_task') and d.get('by_em')):
+            raise PermissionError('工位只能替员工派活（必须包含 by_task 与 by_em）')
     if role in ('station','employee'):
-        em=by.split(':',1)[1]
+        em = by.split(':', 1)[1] if ':' in by else (d.get('by_em') or d.get('em'))
         owner_ok=False
         if sub==em: owner_ok=True
         if d.get('em')==em: owner_ok=True
         if sub in state.get('tasks',{}) and state['tasks'][sub].get('owner')==em: owner_ok=True
         if typ == 'check.result' and sub in state.get('tasks', {}) and state['tasks'][sub].get('owner') != em:
+            owner_ok = True
+        if typ == 'task.added' and role == 'station' and d.get('by_task') and d.get('by_em') and (not em or d.get('by_em') == em):
             owner_ok = True
         if typ in ('letter.sent','proposal.made') and d.get('from')==em: owner_ok=True
         if typ in ('employee.session','employee.online','employee.offline','station.heartbeat','context.updated','context.compacted','context.compact_requested','recall.checked','notes.updated'): owner_ok=(sub==em)
@@ -137,6 +148,11 @@ def _permission(event, state):
         dec = state.get('decisions', {}).get(sub)
         if not (dec.get('opened_by') == 'rules' or (dec.get('kind') == 'conflict' and d.get('option') == 'merge') or dec.get('delegated') == 'rules'):
             raise PermissionError('规则监工只能关掉自己打开的需要你，或者把合并冲突自动再合并一次')
+    if typ == 'conversation.lead_changed':
+        if not d.get('to'):
+            raise ValueError('新负责人不能为空')
+        if sub and sub not in state.get('convs', {}):
+            raise ValueError('对话不存在')
 
 
 # ---------------------------------------------------------------- 进程内现状缓存

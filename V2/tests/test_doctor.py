@@ -172,6 +172,41 @@ class TestDoctor(unittest.TestCase):
         self.assertIn("[✗] 数据目录", output)
         self.assertIn("无写权限", output)
 
+    def test_doctor_generic_agents_check(self):
+        with patch("xay.office.daemon.running_info") as mock_keeper, \
+             patch("xay.office.paths.v2_home") as mock_home, \
+             patch("socket.create_connection") as mock_connect, \
+             patch("socket.socket") as mock_socket_cls, \
+             patch("shutil.which") as mock_which, \
+             patch("xay.providers.agent_kinds") as mock_kinds, \
+             patch("xay.providers.get") as mock_get:
+            mock_home.return_value = self.tmp_home
+            mock_keeper.return_value = None
+            mock_connect.side_effect = OSError("Connection refused")
+            mock_socket_cls.return_value.__enter__.return_value = MagicMock()
+            mock_kinds.return_value = ("codex", "dsh", "agy", "opencode", "mybot")
+
+            fake_opencode = MagicMock(binary="opencode", available=True)
+            fake_mybot = MagicMock(binary="mybot-cli", available=True)
+            mock_get.side_effect = lambda k: fake_opencode if k == "opencode" else fake_mybot
+
+            # git 存在，opencode 存在，mybot-cli 不存在
+            def fake_which(cmd):
+                if cmd in ("git", "opencode"):
+                    return f"/usr/local/bin/{cmd}"
+                return None
+            mock_which.side_effect = fake_which
+
+            stdout_buf = io.StringIO()
+            with patch("sys.stdout", stdout_buf):
+                code = _doctor([])
+
+            output = stdout_buf.getvalue()
+            self.assertEqual(code, 0)
+            self.assertIn("[✓] opencode：已安装（/usr/local/bin/opencode）", output)
+            self.assertIn("[-] mybot：没装：这家 AI 的活派不出去，装好后再来", output)
+            self.assertIn("体检通过", output)
+
     def test_cli_dispatch_doctor(self):
         with patch("xay.cli._doctor") as mock_doc:
             mock_doc.return_value = 0

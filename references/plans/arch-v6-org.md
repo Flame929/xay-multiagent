@@ -73,8 +73,14 @@
 
 - **账号清单**：读用户的 Antigravity Tools（`~/.antigravity_tools/accounts.json` 与 `accounts/<id>.json`），只取名字、优先级（`priority`，数字小的先用）、停用/封禁标记和额度字段，**不读登录信息**。只算 Gemini 那组额度。
 - **每个账号的额度**：取两者中较新的——xay 自己在该账号当前时用 `agy -p "/usage"` 查到的读数（记在 `quota-live.json` 的 `agy_accounts`），或 Tools 的记录（Tools 只在它开着时刷新，可能很旧）。记录之后已过重置时间的窗口按满额算。剩余 < 20% 算偏紧，≤ 0 算用完。
-- **怎么切**：只调用用户自己的 `antigravity-tools switch <邮箱> --target agy`（只切 agy 命令行，不动桌面 App 的账号），切完核对 `current_agy_account_id` 已变。邮箱只在调用时用，不输出。切换记进 `~/.xay/agy-switch.log`；之后 agy 的旧读数作废、重新查询，切换前旧账号的"用完"报错不再算到新账号头上。
-- **挑哪个**：可用（不是停用/封禁）且剩余 ≥ 20% 的账号里，按优先级从小到大，同优先级挑剩得多的。
+- **怎么切（2026-11-02 改）**：xay 自己写 agy 的登录（`V2/xay/agy_login.py`），Antigravity Tools 命令行只兜底。
+  - 实测 agy 1.4.12 先认 macOS 钥匙串里 服务名 `gemini`、账户名 `antigravity` 那一项（go-keyring 格式），钥匙串没有这一项才看 `~/.gemini/antigravity-cli/antigravity-oauth-token`。换号 = 把目标号的登录**先删后加**写进这一项（原地更新 `-U` 实测会把它写坏，agy 直接变成没登录），再写文件；写完读回来核对，写坏了就放回原来那份。
+  - 各号的登录来自 xay 自己的存档 `~/.xay/v2/agy-logins/`（每次换号前把当前那份存下，600 权限）和 Tools 的账号文件。登录只由程序读写，AI 不看、不输出。
+  - **谁是当前号以钥匙串里那份登录为准**。2026-10-31 实测：Tools 记着 账号 A，钥匙串里却是桌面 App 登录的 账号 B，agy 实际一直在用 账号 B；V2 按 Tools 的记录记读数，把 账号 B 一个号的额度依次记到了五个号头上，又不停地"换号"。桌面 App 的登录存在它自己的数据文件里（`~/Library/Application Support/Antigravity/User/globalStorage/state.vscdb` 的 `antigravityUnifiedStateSync.oauthToken`），和 agy 的钥匙串**各存各的**，所以两边可以同时登录、也可以登不同的号（用户允许）。把 agy 拉回 账号 B 的最可能是换号前就开着的 agy 进程：它一直用开工时的号，续期时把那个号写回钥匙串。
+  - 因此：①每次派活前核对一次（`ensure_desired`）：钥匙串不是 xay 定好的号就重新写回来、提示并记日志（`~/.xay/v2/logs/agy-switch.log`）；如果是用户自己在 Antigravity Tools 里换的（Tools 的记录也变了），就照用户的来。②每个 agy 进程记下自己是用哪个号开起来的，登录变了就在下一件活前重启（同一个对话号），旧进程不会再接着用旧号、也不会把旧号写回去。
+  - 切换记日志；之后 agy 的旧读数作废、重新查询，切换前旧账号的"用完"报错不再算到新账号头上。
+- **挑哪个**：可用（不是停用/封禁）且剩余 ≥ 20% 的账号里，按优先级从小到大，同优先级挑剩得多的；都不够 20% 才挑偏紧的。优先级每次现读 Tools 的账号文件，用户在 Tools 里改了马上生效。
+- **按优先级换回（V2，2026-11-02）**：当前号够用、但有优先级更靠前且剩余 ≥ 20% 的号时，开工前也换过去，让排在前面的号先用。
 - **自动**：`xay-run agy` 派活前，若当前账号用完，或偏紧且此刻没有 agy 在跑，就自动换到挑出来的账号，提示写进 start.json 的 `quota_warning`（`XAY_AGY_AUTO_SWITCH=0` 可关）。正在跑的 agy 任务不受影响（只是偏紧时不换）。
 - **负责人手动**：`xay agy-accounts [--json]` 看清单，`xay agy-switch [序号|名字|auto]` 随时切。执行者不能切（属于负责人命令）。
 - **看板**：agy 卡片显示当前账号名、"N 个账号 · M 个充足"、当前号不够时"可换 X"；悬停列出全部账号。
@@ -172,4 +178,4 @@ xay supervise [--dept X] [--once]
 - 明暗两色、宽屏与 390px 手机宽都要可用。
 
 ## 5. 不变的约束
-执行者不 git commit / push、不读或输出密钥；agy 只用 gemini-3.8-*；dsh 只用 deepseek-v4.1-flash；xay 自己不做设备指纹伪装、token 提取（agy 多账号切换经用户的 Antigravity Tools，§1.5）。
+执行者不 git commit / push、不读或输出密钥；agy 只用 gemini-3.8-*；dsh 只用 deepseek-v4.1-flash；xay 自己不做设备指纹伪装、不切 cookie；agy 多账号切换由程序写 agy 的登录（§1.5），AI 不看不输出登录信息。

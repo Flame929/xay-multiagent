@@ -1,4 +1,6 @@
-# xay V2 协议（负责人定稿 · 版本 1.36）
+# xay V2 协议（负责人定稿 · 版本 1.37）
+
+> 1.37（2026-11-03，第十一版：补上同类项目的长处 + 总进度条，设计见 `references/plans/arch-v11-router-parity.md`，细则见本文末尾「附：1.37 细则」）：① 快照根对象和 `/api/state` 每个对话新增 `progress {pct, done, all, working, by_agent:[{agent,label,pct}], by_part:[{id,title,pct}], text}`（各 AI 份额按累计取整相减，加起来等于 pct）。② 管家自动挑 AI 种类：ready、没 owner、没 agent 的活按"同组用过的 → 有空人的（dsh→agy→codex，只读不选 codex）→ 能招新人的 → 排队最短的"挑，额度用完 / 被停 / 没装 / 没配登录的种类排除。③ 负责人：`wait --timeout` 上限 3600；新命令 `notify --hook`、`hook install|uninstall|status`（只改当前项目 `.claude/settings.local.json`）、`handoff [--conv] [--to]`、`up`；`brief` 第一行带"总进度 x%"；新事件 `conversation.lead_changed {from,to}`（by=lead，改对话 lead_kind）。④ 通用命令行员工：`$XAY2_HOME/agents.json` + 预设 claude（只预留：独立配置目录、只认本机 `ANTHROPIC_API_KEY`，没配不派活）/ opencode / devin / zcode（只预留）；AI 种类一律取 `providers.agent_kinds()`，`providers.is_available()` 为假的不派活。⑤ 执行者新命令 `plan add`（写发件箱 `{type:"task"}`，工位校验：同一中任务、每件最多派 3 件、只一层、要改文件须写不重叠的 writes，合格后工位写 `task.added{by_task, by_em}`、不加依赖；`task.added` 权限加 station 仅限此情况）和 `board`（工位每轮写 `XAY2_BOARD_FILE` = `board.md`，≤40 行，标出"你在做的是这件"）。
 
 > 1.36（2026-11-02，命令行看板多员工共用直播连接）：`GET /api/v2/live` 新增参数 `ems=员工1,员工2,…`（与 `em` 互斥，逗号分隔，去重，最多 64 个，格式不对或空报 422），一条 SSE 连接同时推送多名员工的实时直播。支持断点续传格式 `ems=em_a@段.行,em_b`（最新一段等于该段号则只发编号大于行号的；最新一段大于该段号则按 tail 补发新一段最近几行；没带按 tail 补发）。多员工模式下每帧 `event: live`，`data` 新增字段 `em`，不发 SSE 的 `id` 行，忽略 `Last-Event-ID` 与 `since` 参数；`plain=1` 时每人独立叙述器；`demo=1` 时只发心跳。
 
@@ -451,3 +453,364 @@ CREATE TABLE meta (k TEXT PRIMARY KEY, v TEXT);   -- schema_version=1 等
 ## 10. 验收用样本（`V2/fixtures/golden/`）
 
 每个样本两份文件：`NN-<名字>.events.jsonl`（`by/type/subject/data/ts`，seq 由测试按行号分配）和 `NN-<名字>.expect.json`（`[{"path":"people.em_a.state","equals":"working"}, …]`，path 指快照里的位置，列表用下标）。测试：临时目录建账本 → 逐行 append（某行带 `$error` 期望时，断言这一行抛出该错误、不写入，然后**继续**下一行）→ 生成快照（`now` 取最后一行的 ts）→ 检查每条 expect（path 指向的键不存在时取值为 `null`）；再 `rebuild` 一次结果完全一样。必须覆盖：计划加/改/删与版本历史、申请通过与拒绝、员工发号不复用、证据表每一行、需要你的打开与解决、记忆更新与压缩、离线、信件送达与答复、越权写入被拒、dedup 幂等、未知事件类型被跳过。
+
+## 附：1.37 细则（由各任务的改动说明合并）
+
+### 协议变更：全链路支持通用员工与可用性检查
+
+> 日期：2026-11-03  
+> 任务：所有地方都认新接入的 AI（tk_fbe24a68）  
+> 依据：`references/plans/arch-v11-router-parity.md` §4、§1
+
+#### 1. 变更背景
+此前在命令行参数校验、管家自动排活、规则监工和旧看板适配中，AI 种类硬编码为 `codex`、`dsh`、`agy`。为了支持通过 `agents.json` 声明的任意通用命令行员工，必须将所有写死的三种 AI 统一替换为 `providers.agent_kinds()` 动态集合，并在挑种类、选人招人和命令行报错时严格核验 `providers.is_available(agent)`。
+
+#### 2. 变更内容
+
+### 命令行（`cli.py`）
+- `AGENTS` 统一替换为 `providers.agent_kinds()`。
+- `xay2 hire` 与 `xay2 plan add` 的报错提示动态列出当前系统中实际支持的 AI 种类（例如 `codex / dsh / agy / claude / opencode ...`）。
+- 增加了针对通用员工可用性（`is_available`）的拦截：当负责人尝试给未配置 API 登录的通用员工（如 Claude）派活时，直接报大白话错误：`Claude 员工还没配置 API 登录，先在本机配好再派`。
+
+### 管家调度（`scheduler.py`）
+- `AGENTS` 与任务所属 AI 校验改用 `providers.agent_kinds()`。
+- `pick_agent_kind`（自动挑 AI）：
+  - 默认校验 `providers.is_available(agent)`，过滤掉未配置登录或命令行未安装的种类（如未配登录的 Claude 绝不自动挑选）；
+  - `candidates_ordered` 排序规则更新：`PREFER_ORDER`（dsh → agy → codex）中的种类优先，不在 `PREFER_ORDER` 中的新种类排在最后；
+- 选人、招人及队列推送前校验：若该种类 `is_available` 为 False，则不分配或不招人。
+
+### 规则监工（`rules.py`）
+- 审查任务指定 AI（`reviewer`）与额度巡检中的硬编码三类 AI 替换为 `providers.agent_kinds()`。
+- `update_caps` 巡检额度时，将 `not providers.is_available(agent)` 的种类直接记入 `lines_out`，视为不可用。
+
+### 看板聚合（`oldboard.py`）
+- `KNOWN_AGENTS` 替换为 `providers.agent_kinds()`，看板对话统计能正确聚合并展示新通用员工。
+
+### 协议变更：没写用哪种 AI 的活由管家自动挑人
+
+> 日期：2026-11-03  
+> 任务：没写用哪种 AI 的活由管家自动挑人（tk_9494e782）  
+> 依据：`references/plans/arch-v11-router-parity.md` §1
+
+#### 1. 变更背景与规则
+
+### 现状
+在此之前，`ready` 的活若既没指定负责人（`--to`），也没指定用哪种 AI（`--agent`，默认 `auto` 等同于未指定），会一直留在 `ready` 状态等待负责人手动分配。
+
+### 变更后
+对于 `ready`、未分配负责人且未指定 AI 种类的活，管家每拍先按四条优先级规则自动挑选一种 AI，再走现有的选人三步规则进行派工或招人。
+
+#### 四条挑选规则（满足第一条即生效）：
+1. **同组经验优先**：同一个中任务（part）里别的活（不算撤回的）用过的 AI，用得最多的那一种。
+2. **空闲员工优先**：有空着且未被排除的员工的 AI 种类；多种都有空闲员工时，按 `dsh → agy → codex` 顺序优先选择成本更低、额度更充裕的 AI。若任务为只读（`readonly`），不选择 codex。
+3. **招新名额优先**：还有空名额（能招新人）的 AI 种类，同样按 `dsh → agy → codex` 顺序。若任务为只读，不选择 codex。
+4. **最短排队优先**：都已满员时，选择排队任务数最少的那种 AI。
+
+#### 排除条件：
+- 额度线路全用完
+- 今天被叫停或调用次数用尽
+- 命令行未安装（提供者表里不可用）
+
+#### 分配理由大白话：
+挑出后写入 `task.assigned` 的 `reason` 字段，以大白话说明，例如：
+`"没指定用哪种 AI，交给空着的 Gemini 2"`
+`"没指定用哪种 AI，Gemini 员工都在忙，招了 Gemini 2 来做"`
+
+### 协议变更：员工能看到整块任务板
+
+> 日期：2026-11-03  
+> 任务：员工能看到整块任务板（编号 tk_c3da8d1e）  
+> 依据：`references/plans/arch-v11-router-parity.md` §6
+
+#### 1. 变更背景
+此前仅负责人能通过 `xay2 plan show` 查看完整的对话计划树。员工在自己的工作区和沙盒里干活时，只能看到单张任务卡，无法了解全局上下文、同伴进展与前后依赖。
+为了让员工在协作和拆活时知晓整体进度与团队分工，按照设计文档第 6 节要求，工位在每轮开工时将本对话的计划树生成并写入员工输出目录的 `board.md` 文件（并通过环境变量 `XAY2_BOARD_FILE` 传递给执行者进程），同时支持执行者直接运行 `xay2 board` 打印任务板。
+
+#### 2. 变更内容
+
+### 环境变量与文件输出（`station.py`）
+- 环境变量新增：`XAY2_BOARD_FILE`，指向员工桌子输出目录下的 `board.md`（与 `XAY2_TASK_FILE` 存放在同一目录 `.xay/out/`）。
+- 工位在每轮开工时（`_turn` 方法中）：
+  - 调用 `_write_board_file(tk, conv)` 自动刷新并写出当前对话的计划树至 `board.md`；
+  - 任务板严格限制行数 ≤ 40 行；
+  - 精确标出当前员工正在执行的任务，行末附注 `（你在做的是这件）`。
+
+### 命令行（`cli.py`）
+- 命令行参数解析器新增子命令 `board`。
+- 执行者模式（`XAY_ROLE=executor`）：
+  - 执行者放行 `xay2 board` 命令；
+  - 运行时直接读取环境变量 `XAY2_BOARD_FILE`（不存在时 fallback 至输出目录 `board.md`）并打印任务板内容；
+  - 执行者运行 `xay2 board` 无需依赖 `XAY2_TASK`（随时可查看）。
+- 负责人模式：
+  - `COMMANDS` 字典注册 `board` 命令映射至计划树查看。
+- 新增 `render_board(state, conv, current_task=None, max_lines=40)` 函数，供工位与命令行渲染带当前任务标注的任务板。
+
+### 员工手册（`V2/docs/员工手册.md`）
+- 在员工手册第一节加入与他人配合的指引：
+  - 要和别人配合先 `xay2 board` 看板；
+  - 自己做不完的独立部分可以 `xay2 plan add` 派给别人（一句话讲清限制规则：只能派进自己所属中任务，改文件必须指定不重叠的 writes，最多派 3 件且不能二次派活）。
+
+### 协议变更：员工干到一半直接派活给别人
+
+> 日期：2026-11-03  
+> 任务：员工干到一半能直接派活给别人（tk_9ed5b54f）  
+> 依据：`references/plans/arch-v11-router-parity.md` §5
+
+#### 1. 变更背景
+此前仅负责人能添加任务进计划树（通过 `xay2 plan add`），执行者仅能在自己桌子里汇报进度、提出申请或提交汇报。
+为了让员工在干活途中能快速把分支工作拆派给其他 AI 配合（例如 Codex 把格式审查或辅助分析直接派给 Gemini），根据设计文档第 5 节，放开执行者通过发件箱提交新子任务，经工位严格校验限制后，自动转换排入计划树。
+
+#### 2. 变更内容
+
+### 命令行（`cli.py`）
+- 执行者环境（`XAY_ROLE=executor`）放行 `xay2 plan add` 命令。
+- 执行者调用 `xay2 plan add` 时不直接碰账本，而是把任务参数写入发件箱（`outbox.jsonl`），格式为：
+  `{"v": 1, "task": "<当前任务编号>", "type": "task", "data": {"title": "...", "writes": [...], "mode": "write"|"readonly", ...}}`。
+- 负责人等待信号（`_wakes`）更新：将员工派活事件（带 `by_task` 或 `by_em` 的 `task.added`）作为要紧事唤醒负责人 `wait` / `notify`。
+- `wait` 提示文案（`_wait_line`）适配：输出 `Codex 1 派了「X」给 Gemini（理由）` 大白话。
+
+### 权限与校验（`events.py`）
+- `PERMS['task.added']` 追加 `station` 角色。
+- 增加约束拦截：`station` 角色仅限替员工派活时写入 `task.added`（数据对象必须包含 `by_task` 与 `by_em`，且员工身份需对应），非法的普通写入仍严格拒绝。
+
+### 账本投影与计划历史（`reducers.py`、`humanize.py`）
+- `reducers.py`：
+  - 处理 `task.added` 时，若带 `by_task` 和 `by_em`，保留在任务属性中；
+  - 触发计划版本 +1（`plan_version += 1`）；
+  - `_add_change` 记录 `by_em`、`by_task` 与 `agent`。
+- `humanize.py`：
+  - `plan_change_text` / `plan_summary` 识别员工派活并生成历史文案：形如 `Codex 1 派了「X」给 Gemini`（附理由）。
+  - `_text`（近期事件流）输出大白话格式：`Codex 1 派了「X」给 Gemini`。
+
+### 工位检查与调度转化（`station.py`）
+- 轮询发件箱时识别 `type: 'task'` 条目，并由工位按文档严格检查限制：
+  1. **只一层**：员工派出来的活不能再派活给别人（`cur_task.get("by_task")` 存在时拒绝）；
+  2. **最多 3 件**：同一件活最多派 3 件子任务（已派出的未撤回活达到 3 件时拒绝）；
+  3. **改动文件不重叠**：要改文件的任务必须填写改动文件范围（`--writes`），且不能和当前活的 `writes` 重叠；
+  4. **只读活不限**：只读任务（`--readonly`）不限 `writes`；
+  5. **小任务与依赖**：自动派进自己这件活所属的小任务（`part`），不加任何依赖（`deps = []`，派出去的是能同时做的独立部分；负责人验收时改定）。
+- 校验合格：工位以 `by="station"` 写入 `task.added`，自动带上 `by_task` 和 `by_em`。
+- 校验不合格：记一条 `outbox_rejected` 信号（`signal.raised`），并在下一轮开工输入（`_turn_input`）开头提醒员工被拒绝原因。
+
+### 协议变更：通用命令行员工接入（2026-11-03，tk_765277e1）
+
+设计依据：`references/plans/arch-v11-router-parity.md` 第 4 节。
+
+#### 1. 新增功能概括
+允许通过声明文件接入任何具备非交互模式的命令行 AI（如 OpenCode、Devin、ZCode 等），无需编写适配代码。
+
+#### 2. 声明文件与预设
+- 声明文件位置：`$XAY2_HOME/agents.json`。
+- 内置预设：
+  1. `claude`（2026-11-03 批准新增预设，编号 tk_30dbd3a0）：
+     - 命令：`claude -p {prompt} --output-format stream-json --verbose --permission-mode bypassPermissions`（有 {model} 时加 `--model {model}`）
+     - 续接：`claude -p {prompt} --output-format stream-json --verbose --permission-mode bypassPermissions --resume {session}`
+     - 输出：`jsonl`，从 `session_id` 提取会话，最终文字取 `result`，用量取 `usage`
+     - 只读参数：`--permission-mode plan`
+     - 独立配置目录与权限隔离：固定设置 `CLAUDE_CONFIG_DIR=$XAY2_HOME/claude-employee`，严格禁止与负责人共用已登录的订阅，不碰 `~/.claude`；只认本机配置的 `ANTHROPIC_API_KEY`（只写变量名），未配置时算"未登录"，提供者行标不可用（`available=False`），管家不派活，doctor 提示"Claude 员工：预留，未配置 API 登录"。
+  2. `opencode`：
+     - 命令：`opencode run --format json {prompt}`
+     - 续接：`opencode run --format json --session {session} {prompt}`
+     - 输出：`jsonl`，从 `session_id`、`text`、`usage.total_tokens` 解析事件
+     - 只读参数：`--read-only`
+  3. `devin`：
+     - 命令：`devin run --non-interactive {prompt}`
+     - 续接：`devin run --non-interactive --session {session} {prompt}`（待实测）
+     - 输出：`text`
+     - 只读参数：`--readonly`（待实测）
+  4. `zcode`：
+     - 命令：`zcode run --batch {prompt}`（待实测）
+     - 续接：`zcode run --batch --session {session} {prompt}`（待实测）
+     - 输出：`jsonl`（`session_id`、`content`、`tokens`）
+     - 只读参数：`--dry-run`（待实测）
+- 权限与密钥安全约束：声明中的 `env` 字段只允许写环境变量名映射或安全目录路径（如 `$XAY2_HOME/...`），严禁直接写入明文密钥（例如 `sk-...` 等），违者在加载或验证时直接拒绝。Claude 员工只认本机环境配置的 API Key 变量名，严禁任何形式的订阅混用。
+
+#### 3. 提供者与适配器行为
+- `providers.agent_kinds()`：返回原有 `codex`、`dsh`、`agy` 以及所有已声明的通用员工。
+- `providers.get()`：通用员工默认 `max_concurrent` 为 2，不查额度（`daily_call_cap` 为 None），`steer` 为 `none`（不支持中途插话），`interrupt` 为 `kill`。
+- `adapters.make_adapter()`：自动识别通用员工并构造 `GenericAdapter` 实例。
+- 错误归类：通用命令行非零退出时，结合标准输出与标准错误自动归类为 `quota` / `rate_limit` / `auth` / `network` / `other`。
+
+### 协议变更：负责人中途交接与总进度展示
+
+> 日期：2026-11-03  
+> 任务：负责人可以换人，中途交接不丢东西（tk_cc313d54）  
+> 依据：`references/plans/arch-v11-router-parity.md` §3
+
+#### 1. 变更背景
+主负责人可以中途交接更换，方便在不同模型（如 Claude、Codex、DeepSeek、Gemini）间流转。交接过程中必须生成一份纯大白话的交接单（控制在 60 行以内），保留任务状态、未决事项、最近动态和接手命令，并在更换时记下审计事件。同时在 `xay2 brief` 第一行末尾直观展示总进度。
+
+#### 2. 新增命令
+
+### `xay2 handoff`
+- 用法：`xay2 handoff [--conv <对话编号>] [--to codex|dsh|agy|claude]`
+- 功能：
+  - 输出一份 ≤60 行纯文本大白话交接单，要素包括：
+    1. 大任务标题与总进度（如 `总进度：63%（9 件活做完 5 件，2 件在做）`）
+    2. 当前负责人或已移交的负责人
+    3. 未处理事项：未决的“需要你”（decisions）、待批申请（proposals）、未回复信件（letters）
+    4. 任务与分工：小任务及其下属任务的执行状态与指派员工
+    5. 最近动向：最近 10 条事件的大白话动态
+    6. 当前账本游标与新负责人接手命令（`xay2 wait --conv <编号> --since <游标>`）
+  - 若指定了 `--to` 参数，则以 `by=lead` 身份记录一条 `conversation.lead_changed` 事件。
+
+#### 3. 新增事件
+
+### `conversation.lead_changed`
+- **写入权限**：`lead`（必须指定对话）
+- **subject**：对话编号（`conv`）
+- **数据结构**：
+  ```json
+  {
+    "from": "claude",
+    "to": "codex"
+  }
+  ```
+- **校验规则**：`to` 字段不能为空且必须为字符串；对话必须存在。
+- **账本汇总（Reducer）**：将该对话的 `lead_kind` 更新为 `to` 对应的负责人标识。
+- **大白话文案（Humanize）**：
+  `"负责人从 <原负责人名称> 换成了 <新负责人名称>"`，例如 `"负责人从 Claude 换成了 Codex"`。
+
+#### 4. 命令改进
+
+### `xay2 brief`
+- 第一行增加总进度展示，格式为：
+  `对话：<标题>（<对话编号>，计划第 <版本> 版） 总进度 <百分比>%`
+  其中百分比直接取快照顶层 `progress.pct`。
+
+### 协议变更：做完的结果自动送到负责人手上
+
+> 日期：2026-11-03  
+> 任务：做完的结果自动送到负责人手上（tk_73c2c4c8）  
+> 依据：`references/plans/arch-v11-router-parity.md` §2
+
+#### 1. 变更背景与目标
+
+负责人在 Claude 桌面版等环境中工作，外部程序无法直接向其对话注入内容。为了让子任务完成、报错或需要决策时能第一时间主动触达负责人，提供两条路径：
+1. **后台等待**：`xay2 wait --timeout` 上限放宽到 3600 秒（1小时），方便负责人把等待放入后台运行，有要紧事时醒来。
+2. **钩子插话**：新增 `xay2 notify --hook`，以 Claude Code 规范的 JSON 输出要紧事，并提供 `xay2 hook install|uninstall|status` 方便在项目里安装和管理 `PostToolUse` 钩子。
+
+#### 2. 新增命令与参数变化
+
+### 2.1 `xay2 wait`
+- `--timeout`：上限放宽至 3600 秒（默认 240 秒）。超过 3600 秒时给出大白话错误提示并以退出码 2 退出。
+
+### 2.2 `xay2 notify --hook`
+- 读取当前工作目录对应、最近一个未结束的对话。
+- 游标保存在 `$XAY2_HOME/notify/<对话编号>`，与 `wait` 游标相互独立。
+- 筛选要紧事（完全复用 `wait` 现有筛选：需要你、申请改计划、来信、任务合并、改动保留、任务失败、警告等）。
+- 若有要紧事：输出合法 JSON：
+  ```json
+  {
+    "hookSpecificOutput": {
+      "hookEventName": "PostToolUse",
+      "additionalContext": "一行大白话要紧事\n第二行大白话要紧事"
+    }
+  }
+  ```
+  同时推进游标，退出码 0。
+- 若无要紧事：不输出任何内容，退出码 0。
+
+### 2.3 `xay2 hook install|uninstall|status`
+- 只修改当前 git 项目根目录的 `.claude/settings.local.json`，不碰任何其它配置。
+- `install`：在 `hooks.PostToolUse` 中添加 `xay2 notify --hook` 钩子，重复执行幂等且不重复添加。
+- `uninstall`：从 `hooks.PostToolUse` 中移除 `xay2 notify --hook`，其它钩子和配置原样保留，多次执行幂等。
+- `status`：输出大白话检查状态（已安装/未安装）。
+
+### 协议变更：快照与对话列表新增总进度和各 AI 份额字段（progress）
+
+> 日期：2026-11-03  
+> 任务：快照里算好总进度和每种 AI 的份额（tk_8c7633a2）  
+> 依据：`references/plans/arch-v11-router-parity.md` §8
+
+#### 1. 变更背景
+
+多 AI 协作时，页面需要一条直观展示项目整体进度的总进度条，且能拆分呈现每种 AI 贡献了多少份额。
+为避免各前端重复计算产生口径分歧，在服务端快照及旧看板状态中统一计算好并提供 `progress` 字段。
+
+#### 2. 字段定义
+
+在快照接口（`/api/v2/snapshot`）根对象及旧看板接口（`GET /api/state`）中 `workspaces[].conversations[]` 的每个对话对象中新增 `progress` 字段：
+
+```json
+"progress": {
+  "pct": 63,
+  "done": 5,
+  "all": 9,
+  "working": 2,
+  "by_agent": [
+    {"agent": "codex", "label": "Codex", "pct": 30},
+    {"agent": "agy", "label": "Gemini", "pct": 22}
+  ],
+  "by_part": [
+    {"id": "pt_1", "title": "小任务一", "pct": 80}
+  ],
+  "text": "9 件活做完 5 件，2 件在做"
+}
+```
+
+### 字段说明
+- `pct`（int）：0~100 整数，代表总进度百分比。没有活时为 0。
+- `done`（int）：已做完的活数量（状态为 done、reported、landed、accepted）。
+- `all`（int）：有效活总数（撤回 canceled 的活不计入）。没有活时为 0。
+- `working`（int）：正在做的活数量（状态为 working）。
+- `by_agent`（list）：各 AI 贡献的份额拆分列表：
+  - `agent`：AI 种类标识（如 `codex`、`dsh`、`agy`）。
+  - `label`：页面展示名称（`codex`→`Codex`、`dsh`→`DeepSeek`、`agy`→`Gemini`，其余种类首字母大写）。
+  - `pct`：该 AI 贡献的百分比（占全部任务），各段 `pct` 相加严格等于总 `pct`（四舍五入后由最后一段补差）。未贡献份额的 AI 不入列。
+- `by_part`（list）：按小任务（part）划分的各阶段进度百分比，复用快照已有的 parts。
+- `text`（string）：大白话文字描述，格式为：`"X 件活做完 Y 件，Z 件在做"`。
+
+#### 3. 计算口径与规则
+
+1. **份额折算**：
+   - 每件未撤回的活权重为 1 份。
+   - 做完（done / reported / landed / accepted）：1.0 份。
+   - 正在做（working）：`min(0.9, step / of)`；若无步数信息则计 0.1 份。
+   - 改动保留（kept，即状态为 kept 或 needs_you 且带有 kept_reason）：0.9 份。
+   - 排队、未开始、未做成（queued / planned / ready / failed 等）：0.0 份。
+   - 撤回的活（status 为 canceled）：彻底排除，不计入件数与份额。
+2. **总百分比**：
+   - `pct = round(100 * 合计份额 / 有效件数)`。没有有效活时 `pct = 0`。
+3. **补差规则**：
+   - 每种 AI 的份额单独按总件数计算百分比并四舍五入；列表最后一种 AI 的百分比通过 `总 pct - 前面各段之和` 补齐，确保多段百分比之和严格等于总 `pct`。
+
+### 协议变更：一条命令开工与通用员工环境体检
+
+> 日期：2026-11-03  
+> 任务：一条命令就能开工（tk_2f7da3e8）  
+> 依据：`references/plans/arch-v11-router-parity.md` §7
+
+#### 1. 变更背景
+为了降低项目上手门槛，实现“一条命令就能开工”的用户体验，新增 `xay2 up` 命令。命令自动跑完环境体检，若体检未通过仅输出失败项并提示修复，若体检通过则列出当前环境中能用的 AI 种类，自动启动管家后台守护进程（若未开），并输出看板、公司页地址以及下一步开工命令。同时，扩展 `xay2 doctor` 支持检查 `providers.agent_kinds()` 里的通用员工命令行工具是否已安装。
+
+#### 2. 新增命令
+
+### `xay2 up`
+- 用法：`xay2 up`
+- 权限：负责人 / 用户（执行者角色 `XAY_ROLE=executor` 运行将被拒绝并退出，退出码 2）。
+- 执行流程：
+  1. **环境体检**：检查 Python 3.11+、SQLite3、git、端口 7878/7879 占用情况、数据目录读写权限等必需项。
+     - 若有未满足项：**仅打印未通过的项**（`[✗] ...`），并输出 `体检未通过：存在未满足的必需项，请先修复后再试。`，退出码 1；
+     - 若全部满足：不打印通过的 `[✓]` 项，保持输出干净清爽。
+  2. **可用 AI 展示**：输出一行大白话：
+     `能用的 AI：codex、dsh、agy、...`（或 `能用的 AI：无`）。
+     - 判定标准：基础 AI 及声明在 `providers.agent_kinds()` 中的通用员工，其对应的可执行文件已在 PATH 中安装，且 `available` 为 True（已配置必需的环境变量）。
+  3. **管家进程自启**：
+     - 若管家后台守护进程未在运行，则自动调用启动逻辑拉起管家服务（默认端口 7879，看板端口 7878）；
+     - 若管家已在运行，则复用现有进程，不重复启动。
+  4. **地址与下一步引导**：
+     输出看板与公司页访问地址，以及开工建议命令：
+     ```text
+     看板：http://127.0.0.1:7878/
+     公司页：http://127.0.0.1:7879/org
+     下一步命令：xay2 begin --title "你的大任务标题"
+     ```
+
+#### 3. 命令扩展
+
+### `xay2 doctor`
+- 在原本检查 Python、SQLite3、git、端口、数据目录和基础 AI（codex、dsh、agy、antigravity-tools）的基础上，自动遍历 `providers.agent_kinds()` 中的通用员工（如 claude, opencode, devin, zcode 等）。
+- 检查每个通用员工的可执行命令是否安装：
+  - 已安装：打印 `[✓] <kind>：已安装（<路径>）`；
+  - 未安装：打印 `[-] <kind>：没装：这家 AI 的活派不出去，装好后再来`（属于提示项，不影响整体体检通过状态，不导致退出码为 1）。

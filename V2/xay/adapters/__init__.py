@@ -20,21 +20,25 @@ from .codex import CodexAdapter
 from .dsh import DshAdapter
 from .agy import AgyAdapter
 from .fake import FakeAdapter
+from .generic import GenericAdapter
+from .. import providers
 
 ADAPTERS = {"codex": CodexAdapter, "dsh": DshAdapter, "agy": AgyAdapter}
 
 
 def make_adapter(agent: str, **kwargs) -> Adapter:
     """按 AI 名字造一个适配器（还没 open）。"""
-    try:
-        cls = ADAPTERS[agent]
-    except KeyError:
-        raise ValueError("不认识的 AI：%r（只有 %s）" % (agent, ", ".join(ADAPTERS)))
-    return cls(**kwargs)
+    if agent in ADAPTERS:
+        return ADAPTERS[agent](**kwargs)
+    spec = providers.get_agent_spec(agent)
+    if spec:
+        return GenericAdapter(agent=agent, **kwargs)
+    valid_names = providers.agent_kinds()
+    raise ValueError("不认识的 AI：%r（只有 %s）" % (agent, ", ".join(valid_names)))
 
 
 __all__ = [
     "Adapter", "AdapterBusy", "AdapterConfigError", "AdapterError", "AdapterEvent", "Capabilities", "EVENT_KINDS", "ERROR_KINDS",
-    "classify_error", "redact", "redact_data", "CodexAdapter", "DshAdapter", "AgyAdapter", "FakeAdapter",
+    "classify_error", "redact", "redact_data", "CodexAdapter", "DshAdapter", "AgyAdapter", "FakeAdapter", "GenericAdapter",
     "ADAPTERS", "make_adapter",
 ]

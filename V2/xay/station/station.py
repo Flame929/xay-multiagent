@@ -61,7 +61,7 @@ import threading
 import time
 from pathlib import Path
 
-from .. import providers, quota, quota_live
+from .. import agy_login, providers, quota, quota_live
 from ..adapters import make_adapter
 from ..adapters.base import QUOTA_LIKE, AdapterBusy, AdapterConfigError, AdapterError, redact
 from ..core import append, load_state, max_seq, open_db
@@ -327,6 +327,7 @@ class Station:
         self._lock_fh = None
         self.rejected_writes = []   # 账本没收下的写入（调试 / 测试看）
         self._task_turn_counts = collections.defaultdict(int)
+        self._pending_outbox_rejects = []
 
     # ------------------------------------------------------------ 账本
 
@@ -945,11 +946,44 @@ class Station:
         if self.adapter.set_allow_commands(self._agy_allow(t), mode=mode):
             self.live.add("status", "这件活的验收命令不一样，重启 Gemini 进程（还是同一个对话）")
 
+    def _real_agy(self):
+        """真的 agy 进程（不是测试里的假适配器）才去看 agy 的登录。"""
+        return self.factory is None and not fakes.enabled()
+
+    def _note_agy_login(self):
+        """记下这个 agy 进程是用哪个号的登录开起来的。换号后，还开着的旧进程续期时会把旧号写回钥匙串，
+        所以登录变了就要在下一件活前重启它（_agy_precheck）。"""
+        if self.agent != "agy" or not self._real_agy():
+            return
+        try:
+            self._agy_login = agy_login.current_account_id()
+        except Exception:  # noqa: BLE001
+            self._agy_login = None
+
     def _agy_precheck(self, tk, conv):
         """开工前事前预检：当前账号额度已用完（或偏紧且有更充裕的高优先级账号）时，自动提前切号。
         避免发给 agy 报错 429 后再慢吞吞事后重试。"""
         if os.environ.get("XAY_AGY_AUTO_SWITCH") == "0":
             return
+        try:
+            fixed = quota.ensure_agy_login(home=self.home)   # 定好的号被桌面 App / 别的 agy 改回去了：先写回来
+        except Exception:  # noqa: BLE001
+            fixed = None
+        if fixed:
+            self._signal("quota", fixed, conv=conv)
+            self.live.add("status", fixed)
+            if self.adapter is not None:
+                self._close_adapter()
+        started = getattr(self, "_agy_login", None) if self._real_agy() else None
+        if self.adapter is not None and started:
+            try:
+                now_login = agy_login.current_account_id()
+            except Exception:  # noqa: BLE001
+                now_login = None
+            if now_login and now_login != started:
+                # 这个进程还是用旧号开的：重启（同一个对话号），否则它会接着用旧号、续期时还会把旧号写回去
+                self.live.add("status", "Gemini 换过账号了，重启进程用新账号（还是同一个对话）")
+                self._close_adapter()
         try:
             q = quota_live.entry(quota_live.lines_now(self.conn), "agy")
             fresh = (q or {}).get("accounts") or []
@@ -964,10 +998,23 @@ class Station:
         is_exhausted = cur_status == "exhausted" or (cur_left is not None and float(cur_left) <= 0)
         is_tight = cur_status == "tight" or (cur_left is not None and float(cur_left) < 20)
 
+        skip = quota_live.used_up_accounts(q)
         if not is_exhausted and not is_tight:
+            # 当前号够用：按 Antigravity Tools 里的优先级，有更靠前（数字更小）而且额度充足的号就换回去
+            better = quota.choose_agy_account(accounts, skip=skip)
+            better_left = better.get("left") if better else None
+            if better and better.get("status") == "ok" and (better_left is None or float(better_left) >= 20) \
+                    and int(better.get("priority") or 999) < int(cur.get("priority") or 999):
+                reason = "优先级更靠前的「%s」额度充足（当前「%s」排在后面）" % (better.get("name"), cur.get("name"))
+                res = quota.switch_agy_account(reason, home=self.home, skip=skip, accounts=accounts, target=better.get("index"))
+                if res.get("switched"):
+                    msg = "Gemini 开工前按优先级换号：%s" % res.get("text")
+                    self._signal("quota", msg, conv=conv)
+                    self.live.add("status", msg)
+                    if self.adapter is not None:
+                        self._close_adapter()
             return
 
-        skip = quota_live.used_up_accounts(q)
         if cur.get("name") and cur["name"] not in skip and is_exhausted:
             skip.append(cur["name"])
 
@@ -1025,6 +1072,7 @@ class Station:
             self._open_error = str(exc)
             return None
         self.adapter = a
+        self._note_agy_login()
         if self.cli_version:
             a.capabilities.cli_version = self.cli_version
         self._session_pending = ("resume", None)
@@ -1052,6 +1100,7 @@ class Station:
         out = self._desk_path() / ".xay" / "out"
         env = {"XAY_ROLE": "executor", "XAY2_EM": self.em, "XAY2_TASK": tk or "",
                "XAY2_OUTBOX": str(out / "outbox.jsonl"), "XAY2_TASK_FILE": str(out / "task"),
+               "XAY2_BOARD_FILE": str(out / "board.md"),
                "PATH": str(v2_root() / "bin") + os.pathsep + os.environ.get("PATH", "")}
         if conv:
             env["XAY2_CONV"] = conv
@@ -1069,6 +1118,8 @@ class Station:
                     card[key] = str(tcard[key])
             if card.get("model"):
                 providers.validate_model(self.agent, card["model"])   # 硬性约束：不合规的模型在起进程之前就拒绝
+            if t.get("mode") == "readonly":
+                card["readonly"] = True
             if self.agent == "agy":
                 card["allow_commands"] = self._agy_allow(t)
                 card["mode"] = "readonly" if t.get("mode") == "readonly" else "write"
@@ -1221,6 +1272,7 @@ class Station:
                 return False
             reason, segment = "resume_failed", seg + 1
         self.adapter = a
+        self._note_agy_login()
         if self.cli_version:
             a.capabilities.cli_version = self.cli_version
         self._session_pending = (reason, segment)
@@ -1291,6 +1343,10 @@ class Station:
 
     def _turn_input(self, t, tk, kind, rework, origin):
         parts = []
+        if getattr(self, "_pending_outbox_rejects", None):
+            for r in self._pending_outbox_rejects:
+                parts.append("【上一轮发件箱未记上】%s" % r)
+            self._pending_outbox_rejects = []
         letters = self._mail(start=tk)          # M4：还没送到的信放在这一轮输入的最开头
         if letters:
             parts.append(letters)
@@ -1364,6 +1420,24 @@ class Station:
         except OSError:
             pass
 
+    def _write_board_file(self, tk, conv):
+        path = self._desk_path() / ".xay" / "out" / "board.md"
+        try:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            conv_id = conv or self._conv()
+            content = self._render_board(tk, conv_id)
+            path.write_text(content, encoding="utf-8")
+        except Exception:  # noqa: BLE001
+            pass
+
+    def _render_board(self, tk, conv):
+        try:
+            from ..cli import render_board
+            self._refresh()
+            return render_board(self.state or {}, conv, current_task=tk, max_lines=40)
+        except Exception:  # noqa: BLE001
+            return "任务板暂时无法生成"
+
     def _turn(self, tk, conv, kind, text, extra, title=""):
         tn = new_id("tn_")
         memory = kind in MEMORY_TURNS
@@ -1372,6 +1446,7 @@ class Station:
                      "claim": None, "progress": None, "outbox_n": 0, "rejects": 0, "interrupting": False,
                      "title": title, "error": None, "resume_failed": False, "error_loop": False}
         self._write_task_file("" if (memory or not tk) else tk)
+        self._write_board_file(tk, conv)
         self._w("turn.started", {"task": tk, "em": self.em, "kind": kind}, subject=tn, conv=conv)
         self.live.add("status", "整理记忆：写交接摘要" if memory else ("聊天" if kind == "chat" else "开始做「%s」" % title))
         self._think_buf, self._thought_pending = "", ""
@@ -1554,6 +1629,11 @@ class Station:
         data = {"line": d.get("line") or self._current_line(), "windows": windows}
         if d.get("reached"):
             data["reached"] = str(d["reached"])[:60]
+        if data["line"] == "codex-relay":
+            # Codex 报的 5 小时 / 本周百分比永远是 ChatGPT Plus 账号的；走中转站时不能记成中转站的额度
+            # （中转站的真实额度只看它自己的 /usage：今天还能用多少钱）
+            windows = data["windows"] = []
+            data.pop("reached", None)
         last, last_ts = getattr(self, "_quota_last", (None, 0.0))
         now = time.time()
         if last is not None and now - last_ts < QUOTA_EVERY_S and last["line"] == data["line"] \
@@ -1734,6 +1814,9 @@ class Station:
             return
         if t is not None:
             t["rejects"] += 1
+        if not hasattr(self, "_pending_outbox_rejects"):
+            self._pending_outbox_rejects = []
+        self._pending_outbox_rejects.append(text)
         self._signal("outbox_rejected", "%s 的一条回报没记上：%s" % (self._label(), text))
 
     def _outbox_init(self, desk):
@@ -1846,6 +1929,14 @@ class Station:
                     subject=review_of, conv=conv, dedup="outbox:%s:%d" % (self.em, lineno))
             return
 
+        is_task = isinstance(row, dict) and (row.get("type") == "task" or (isinstance(row.get("data"), dict) and row["data"].get("kind") == "task"))
+        if is_task:
+            if not t:
+                self._reject("没有在干活，这次派活没记上")
+                return
+            self._handle_outbox_task(lineno, row)
+            return
+
         if not t:
             self._reject("没有在干活，这次回报没记上")
             return
@@ -1855,6 +1946,98 @@ class Station:
             self._reject(str(exc))
             return
         self._report(typ, data, dedup="outbox:%s:%d" % (self.em, lineno))
+
+    def _handle_outbox_task(self, lineno, row):
+        t = self.turn
+        self._refresh()
+        tasks = self.state.get("tasks") or {}
+        cur_task = tasks.get(t["task"]) or {}
+
+        # 1. 员工派出来的活里不能再派（只一层）
+        if cur_task.get("by_task"):
+            self._reject("派出来的活不能再给别人派活（只允许派一层）")
+            return
+
+        # 2. 一件活最多派 3 件
+        existing = [
+            tk_id for tk_id, tk_info in tasks.items()
+            if tk_info.get("by_task") == t["task"] and tk_info.get("status") != "canceled"
+        ]
+        if len(existing) >= 3:
+            self._reject("一件活最多只能派 3 件")
+            return
+
+        d = row.get("data") or {}
+        title = (d.get("title") or "").strip()
+        if not title:
+            self._reject("任务标题不能为空")
+            return
+
+        # 3. 只能派进自己这件活所属的小任务
+        part = cur_task.get("part")
+
+        # 4. 要改文件的必须写 --writes，而且不能和自己这件活的 writes 重叠（避免两人改同一批文件）；只读活不限
+        is_readonly = (d.get("mode") == "readonly" or bool(d.get("readonly")))
+        writes = d.get("writes") or []
+        if isinstance(writes, str):
+            writes = [w.strip() for w in writes.split(",") if w.strip()]
+        writes = list(writes)
+
+        if not is_readonly:
+            if not writes:
+                self._reject("要改文件的任务必须填写改动文件范围（--writes）")
+                return
+            cur_writes = set(cur_task.get("writes") or [])
+            overlap = cur_writes.intersection(set(writes))
+            if overlap:
+                self._reject("改动文件范围不能和自己这件活重叠：%s" % "、".join(sorted(overlap)))
+                return
+
+        # 5. agent / to 校验
+        agent = d.get("agent")
+        if agent and agent != "auto":
+            valid_kinds = providers.agent_kinds()
+            if agent not in valid_kinds:
+                self._reject("指定的 AI 类型不可用：%s" % agent)
+                return
+        else:
+            agent = None
+
+        to = d.get("to")
+        owner = None
+        if to:
+            for em_id, em_info in (self.state.get("employees") or {}).items():
+                if em_id == to or em_info.get("label") == to:
+                    owner = em_id
+                    break
+            if not owner and to.startswith("em_"):
+                owner = to
+
+        new_tk = new_id("tk_")
+        task_data = {
+            "title": title,
+            "part": part,
+            "deps": [],   # 派出去的是能同时做的独立部分，不等派活的人做完（arch-v11 §5）
+            "writes": writes,
+            "mode": "readonly" if is_readonly else "write",
+            "by_task": t["task"],
+            "by_em": self.em,
+        }
+        if owner:
+            task_data["owner"] = owner
+        elif agent:
+            task_data["agent"] = agent
+        if d.get("card"):
+            task_data["card"] = d["card"]
+        if d.get("reason"):
+            task_data["reason"] = d["reason"]
+        if d.get("steps"):
+            task_data["steps"] = d["steps"]
+
+        conv = t.get("conv") or self._conv()
+        self._w("task.added", task_data, subject=new_tk, conv=conv, by="station",
+                dedup="outbox:%s:%d" % (self.em, lineno))
+        self._refresh(force=True)
 
     # ---- 收工：证据 → 结论
 
@@ -2301,6 +2484,7 @@ class Station:
         try:
             a.open(str(cwd), native_id=None, card=self._card(cwd, tk, conv))
             self.adapter = a
+            self._note_agy_login()
             if self.cli_version:
                 a.capabilities.cli_version = self.cli_version
             self._drain()

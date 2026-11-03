@@ -7,6 +7,7 @@
 // 中任务里不再分部门（部门就是中任务本身）。
 // 同一个中任务在四处的编号、名字、颜色、状态图标、验收说法一模一样；同一件小任务在四处的名字、状态词、谁做也一模一样。
 // 纯函数（不碰页面、不发请求），node 里能直接测。输入：快照（必有）+ 任务树（有就用：/api/v2/plan 或员工详情的 tree，补步骤明细和依赖）。
+import { progressOf, partPct, miniBarHtml } from './progress-bar.js';
 import { escapeHtml, shortTitle, progressLine, checkWord, partStatus, getAgentType, formatDateTime, spanText, isTechy } from './utils.js';
 
 // 中任务的颜色：按画布 / 房间里的先后（第 1 步、第 2 步的 A、B…）轮着取；零散的活是灰的
@@ -348,6 +349,7 @@ export function buildPlan(snap, tree, opts = {}) {
         started: Number(det.started) || 0, ended: Number(det.ended) || 0 },
       after: (p.after || []).map(String), depts, deptIds, looseItems, items: ordered,
       all: ordered.length, done: ordered.filter(it => isDone(it.status)).length, mine: ordered.some(it => it.mine),
+      pct: partPct(progressOf(s), p.id),       // 快照 progress.by_part 里同 id 的百分比（没有就是 null，不显示小进度条）
       stepWord: p.id === 'all' ? '还没拆中任务：这次的小任务都在这一个里' : loose ? '零散的小任务（不排先后）' : letter ? `第 ${n} 步的 ${letter} 线（和 ${sibs.filter(x => x !== p).map(x => `${n}-${LETTERS[sibs.indexOf(x) % 26]}`).join('、')} 同时做）` : `第 ${n} 步`
     };
   });
@@ -615,7 +617,7 @@ export function partDetailHtml(p, model) {
     <header class="pd-head" style="--pc:${p.color}">
       <div class="pd-kicker">${partChipHtml(p, { title: false })}<span>${escapeHtml(p.loose ? '零散的小任务' : '中任务')}</span></div>
       <h3>${escapeHtml(p.title)}</h3>
-      <div class="pd-sub"><span class="pm-st t-${escapeHtml(p.tone === 'ready' ? 'wait' : p.tone)}">${escapeHtml(p.word)}</span><span class="pd-count">做完 ${p.done}/${p.all} 件</span>${checkChipHtml(p.check)}</div>
+      <div class="pd-sub"><span class="pm-st t-${escapeHtml(p.tone === 'ready' ? 'wait' : p.tone)}">${escapeHtml(p.word)}</span><span class="pd-count">做完 ${p.done}/${p.all} 件</span>${miniBarHtml(p.pct)}${checkChipHtml(p.check)}</div>
     </header>
     <dl class="pd-facts">
       ${fact('排在第几', p.stepWord)}${fact('验收方式', p.check.tip)}

@@ -16,7 +16,7 @@
   --brand: #0F1115; --brand-text: #FFFFFF; --accent: #4176E6;
   --ok: #22C55E; --ok-bg: #E6FAED; --err: #EC1313; --err-bg: #FEE2E2;
   --warn: #F59E0B; --warn-label: #DD8629; --warn-bg: #FEF5E7; --idle: #CFD3D6; --unsafe: #DD8629;
-  --ai-codex: #10A37F; --ai-dsh: #4D6BFE; --ai-agy: #9B72CB; --ai-other: #81858C;
+  --ai-codex: #10A37F; --ai-dsh: #4D6BFE; --ai-agy: #9B72CB; --ai-claude: #D97757; --ai-other: #81858C;
   --lead-bubble: #F1F3F6;
   --hair: 0.5px;
   --sans: -apple-system, "PingFang SC", system-ui, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Roboto, sans-serif;
@@ -31,7 +31,7 @@
     --border-1: rgba(255,255,255,.06); --border-2: rgba(255,255,255,.12); --border-3: rgba(255,255,255,.16); --border-4: rgba(255,255,255,.20);
     --brand: #F9FAFB; --brand-text: #0F1115;
     --ok-bg: #233C2C; --err-bg: #570C0C; --warn-bg: #27241F; --idle: #81858C;
-    --ai-codex: #1CB891; --ai-dsh: #627EFE; --ai-agy: #AB86D8;
+    --ai-codex: #1CB891; --ai-dsh: #627EFE; --ai-agy: #AB86D8; --ai-claude: #E58A6C;
     --lead-bubble: #2A2B2E;
     --shadow: 0 1px 2px rgba(0,0,0,.3), 0 4px 16px rgba(0,0,0,.4);
   }
@@ -43,7 +43,7 @@
   --border-1: rgba(255,255,255,.06); --border-2: rgba(255,255,255,.12); --border-3: rgba(255,255,255,.16); --border-4: rgba(255,255,255,.20);
   --brand: #F9FAFB; --brand-text: #0F1115;
   --ok-bg: #233C2C; --err-bg: #570C0C; --warn-bg: #27241F; --idle: #81858C;
-  --ai-codex: #1CB891; --ai-dsh: #627EFE; --ai-agy: #AB86D8;
+  --ai-codex: #1CB891; --ai-dsh: #627EFE; --ai-agy: #AB86D8; --ai-claude: #E58A6C;
   --lead-bubble: #2A2B2E;
   --shadow: 0 1px 2px rgba(0,0,0,.3), 0 4px 16px rgba(0,0,0,.4);
 }
@@ -300,6 +300,21 @@ details.more .acts { margin-top: 6px; }
 .conv-head .line .ws { flex: 0 1 auto; color: var(--label-4); white-space: nowrap; max-width: 40%; overflow: hidden; text-overflow: ellipsis; }
 .conv-head .line .rest::before, .conv-head .line .ws::before { content: '·'; margin-right: 6px; color: var(--label-4); }
 .conv-head.loading h1 { color: var(--label-2); }
+/* 总进度条（arch-v11 §8）：对话标题下方一条细的，按 AI 种类分颜色段；数字由 /api/state 里对话的 progress 给，没有就不显示 */
+/* 不占高度（零高的一层，里面绝对定位到状态那一行的右侧），下面工具按钮的位置和 /board 保持一致 */
+.conv-progress { position: relative; height: 0; flex: none; min-width: 0; }
+.conv-progress[hidden] { display: none; }
+.conv-progress .cp-in { position: absolute; right: 24px; bottom: 0; height: 20px; width: min(440px, 44%); display: flex; align-items: center; gap: 8px; }
+.conv.has-progress .conv-head .line { padding-right: calc(min(440px, 44%) + 16px); }
+.conv-progress .cp-track { flex: 1 1 120px; min-width: 120px; display: flex; height: 6px; border-radius: 3px; overflow: hidden; background: var(--bg-module); }
+.conv-progress .cp-seg { display: block; height: 100%; flex: none; width: 0; transition: width .7s cubic-bezier(.22,.61,.36,1); }
+.conv-progress .cp-seg + .cp-seg { box-shadow: inset 1px 0 0 var(--bg-base); }
+.conv-progress .cp-num { flex: none; font-size: 13px; font-weight: 700; color: var(--label-1); font-variant-numeric: tabular-nums; min-width: 3.2ch; text-align: right; }
+.conv-progress .cp-text { flex: 0 1 auto; font-size: 12px; color: var(--label-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.conv-progress.full .cp-num { color: var(--ok); }
+.conv-progress.flash .cp-track { animation: cpFlash 1.3s ease-out; }
+@keyframes cpFlash { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--ok) 55%, transparent); filter: brightness(1.25); } 100% { box-shadow: 0 0 0 7px color-mix(in srgb, var(--ok) 0%, transparent); filter: brightness(1); } }
+@media (prefers-reduced-motion: reduce) { .conv-progress .cp-seg { transition: none; } .conv-progress.flash .cp-track { animation: none; } }
 
 /* AI 切换条：默认一次只看一个 AI；宽屏可切到并排 */
 .conv-bar { display: flex; align-items: flex-end; gap: 8px; padding: 10px 24px 0; border-bottom: var(--hair) solid var(--border-2); flex: none; min-width: 0; }
@@ -646,6 +661,7 @@ body.dock-open .conv.files-on .fview { padding-right: min(560px, 92vw); }
   .topbar { display: flex; }
   .page-inner { padding: 20px 16px 48px; }
   .conv-head { padding: 10px 16px 0; }
+  .conv-progress .cp-in { right: 16px; }
   .conv-head h1 { display: none; }
   .conv-head .line { margin-top: 0; }
   .conv-bar { padding: 6px 12px 0; }
@@ -1575,6 +1591,7 @@ function renderConversation() {
   App.els.threads.clear(); App.els.msgs.clear(); App.els.cols.clear();
   const root = h('div', { class: 'conv' + (App.showFiles ? ' files-on' : ''), id: 'conv-root' });
   root.append(h('div', { class: 'conv-head', id: 'conv-head' }));
+  root.append(h('div', { class: 'conv-progress', id: 'conv-progress', role: 'progressbar', 'aria-valuemin': '0', 'aria-valuemax': '100', hidden: '' }));
   root.append(h('div', { class: 'conv-bar', id: 'conv-bar' }, h('div', { class: 'tabs', id: 'conv-tabs' }), h('div', { class: 'filters', id: 'conv-filters' }), h('div', { class: 'tools', id: 'conv-tools' })));
   root.append(h('div', { class: 'phases', id: 'conv-phases' }));
   const cols = h('div', { class: 'cols ' + layoutMode(), id: 'conv-cols' });
@@ -1751,6 +1768,46 @@ function renderConvHead() {
       line.rest ? h('span', { class: 'rest', text: line.rest }) : null,
       line.lead ? h('span', { class: 'lead', text: line.lead, title: '冲突未合并、终失败、失联这类事归负责人 AI 处理，不需要你出手' }) : null,
       wsText ? h('span', { class: 'ws', text: wsText, title: ws.path || '' }) : null));
+  renderConvProgress();
+}
+/* 总进度条：数字全由 /api/state 里这个对话的 progress 给（页面不自己算）；同一个元素就地更新，宽度和数字平滑变化，到 100% 轻轻闪一下 */
+const CP_COLOR = { codex: 'var(--ai-codex)', dsh: 'var(--ai-dsh)', agy: 'var(--ai-agy)', claude: 'var(--ai-claude)' };
+function renderConvProgress() {
+  const box = $('#conv-progress'); if (!box || !App.conv) return;
+  const c = findConv(App.convId) || App.conv.conversation || {};
+  const p = c.progress;
+  const root = $('#conv-root');
+  if (!p || typeof p !== 'object' || !isFinite(Number(p.pct))) { box.hidden = true; if (root) root.classList.remove('has-progress'); return; }
+  box.hidden = false; if (root) root.classList.add('has-progress');
+  const clamp = n => Math.max(0, Math.min(100, Math.round(Number(n) || 0)));
+  const pct = clamp(p.pct);
+  let st = box._cp;
+  if (!st) {
+    st = box._cp = { track: h('div', { class: 'cp-track' }), num: h('b', { class: 'cp-num num' }), text: h('span', { class: 'cp-text' }), segs: new Map(), shown: null, last: null, raf: 0 };
+    box.replaceChildren(h('div', { class: 'cp-in' }, st.track, st.num, st.text));
+  }
+  const seen = new Set();
+  (Array.isArray(p.by_agent) ? p.by_agent : []).filter(x => x && Number(x.pct) > 0).forEach(x => {
+    const key = String(x.agent || 'other'); seen.add(key);
+    let seg = st.segs.get(key);
+    if (!seg) { seg = h('i', { class: 'cp-seg' }); st.segs.set(key, seg); }
+    st.track.append(seg);
+    seg.style.background = CP_COLOR[x.agent] || 'var(--ai-other)';
+    seg.title = (x.label || x.agent || '其他') + ' 攒了 ' + clamp(x.pct) + '%';
+    const w = clamp(x.pct) + '%';
+    requestAnimationFrame(() => { seg.style.width = w; });
+  });
+  st.segs.forEach((seg, key) => { if (!seen.has(key)) { seg.remove(); st.segs.delete(key); } });
+  cancelAnimationFrame(st.raf);
+  const from = st.shown == null ? pct : st.shown, t0 = performance.now();
+  const tick = now => { const k = Math.min(1, (now - t0) / 700); st.shown = Math.round(from + (pct - from) * (1 - Math.pow(1 - k, 3))); st.num.textContent = st.shown + '%'; if (k < 1) st.raf = requestAnimationFrame(tick); };
+  if (from === pct) { st.shown = pct; st.num.textContent = pct + '%'; } else st.raf = requestAnimationFrame(tick);
+  st.text.textContent = p.text || '';
+  box.title = '总进度 ' + pct + '%' + (p.text ? ' · ' + p.text : '');
+  box.setAttribute('aria-valuenow', String(pct));
+  box.classList.toggle('full', pct >= 100);
+  if (pct >= 100 && st.last != null && st.last < 100) { box.classList.remove('flash'); void box.offsetWidth; box.classList.add('flash'); setTimeout(() => box.classList.remove('flash'), 1400); }
+  st.last = pct;
 }
 function renderPhases() {
   const box = $('#conv-phases'); if (!box || !App.conv) return;
@@ -2520,10 +2577,13 @@ const Demo = (function () {
 
   const convs = {};
   // counts.lead_todo = 有待负责人处理事项（冲突未合并等）的线程数；status 只在有 for_user 决定时才是 needs_you
-  convs[C1] = { id: C1, title: '看板第五版：按对话展示每个 AI 的工作', lead_kind: 'claude', workspace: { path: WS1, name: 'xay-v4' }, status: 'running', updated: NOW - 20, counts: { running: 6, done: 2, failed: 0, lead_todo: 0 }, agents: ['codex', 'dsh', 'agy'] };
-  convs[C2] = { id: C2, title: '结账页改版：按钮文案与流程', lead_kind: 'claude', workspace: { path: WS2, name: 'demo-shop' }, status: 'needs_you', updated: NOW - 360, counts: { running: 0, done: 1, failed: 0, lead_todo: 1 }, agents: ['dsh'] };
+  convs[C1] = { id: C1, title: '看板第五版：按对话展示每个 AI 的工作', lead_kind: 'claude', workspace: { path: WS1, name: 'xay-v4' }, status: 'running', updated: NOW - 20, counts: { running: 6, done: 2, failed: 0, lead_todo: 0 }, agents: ['codex', 'dsh', 'agy'],
+    progress: { pct: 52, done: 2, all: 8, working: 6, by_agent: [{ agent: 'codex', label: 'Codex', pct: 21 }, { agent: 'dsh', label: 'DeepSeek', pct: 23 }, { agent: 'agy', label: 'Gemini', pct: 8 }], by_part: [], text: '8 件活做完 2 件，6 件在做' } };
+  convs[C2] = { id: C2, title: '结账页改版：按钮文案与流程', lead_kind: 'claude', workspace: { path: WS2, name: 'demo-shop' }, status: 'needs_you', updated: NOW - 360, counts: { running: 0, done: 1, failed: 0, lead_todo: 1 }, agents: ['dsh'],
+    progress: { pct: 50, done: 1, all: 2, working: 0, by_agent: [{ agent: 'dsh', label: 'DeepSeek', pct: 50 }], by_part: [], text: '2 件活做完 1 件' } };
   // 没选文件夹的对话归到「这台电脑」；没有负责人记录的旧运行归到 legacy:true 的「临时文件夹」
-  convs[C3] = { id: C3, title: '修复登录后跳回首页的 bug', lead_kind: 'codex', workspace: { path: WS0, name: '这台电脑' }, status: 'done', updated: NOW - 3600 * 20, counts: { running: 0, done: 1, failed: 0, lead_todo: 0 }, agents: ['codex'] };
+  convs[C3] = { id: C3, title: '修复登录后跳回首页的 bug', lead_kind: 'codex', workspace: { path: WS0, name: '这台电脑' }, status: 'done', updated: NOW - 3600 * 20, counts: { running: 0, done: 1, failed: 0, lead_todo: 0 }, agents: ['codex'],
+    progress: { pct: 100, done: 1, all: 1, working: 0, by_agent: [{ agent: 'codex', label: 'Codex', pct: 100 }], by_part: [], text: '1 件活做完 1 件' } };
   convs[CL] = { id: CL, title: '以前的任务', legacy: true, lead_kind: 'unknown', workspace: { path: WSL, name: '临时文件夹', legacy: true }, status: 'done', updated: NOW - 86400 * 2, counts: { running: 0, done: 2, failed: 1, lead_todo: 0 }, agents: ['codex', 'dsh'] };
 
   const threads = {};

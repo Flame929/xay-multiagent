@@ -72,9 +72,10 @@ def empty_state():
 def _cp(v):
     return copy.deepcopy(v) if isinstance(v, (dict, list)) else v
 
-def _by_name(by):
+def _by_name(by, d=None):
     if by.startswith('lead:'): return 'gm'
     if by.startswith('employee:') or by.startswith('station:'): return by.split(':',1)[1]
+    if by == 'station' and d and d.get('by_em'): return d['by_em']
     if by in ('office','rules','user'): return 'office' if by in ('office','rules') else by
     return by
 
@@ -107,7 +108,16 @@ def _close_batch(state, conv):
 def _add_change(t):
     after={k:_cp(t.get(k)) for k in ('title','owner','dept','deps')}
     if t.get('part'): after['part']=t['part']          # 1.23 小任务：写了才记
-    return {'op':'add','task':t['id'],'title':t.get('title'),'after':after}
+    if t.get('by_em'):
+        after['by_em']=t['by_em']
+        if t.get('by_task'): after['by_task']=t['by_task']
+        if t.get('agent'): after['agent']=t['agent']
+    ch = {'op':'add','task':t['id'],'title':t.get('title'),'after':after}
+    if t.get('by_em'):
+        ch['by_em']=t['by_em']
+        if t.get('by_task'): ch['by_task']=t['by_task']
+        if t.get('reason'): ch['reason']=t['reason']
+    return ch
 
 def _change_fields(t, fields):
     before = {}; after = {}
@@ -169,6 +179,12 @@ def apply(s, event):
         if d.get('alias') not in s['aliases']: s['aliases'][d['alias']]=conv
     elif typ == 'conv.titled': _conv(s,conv)['title']=d.get('title','')
     elif typ == 'conv.ended': _conv(s,conv)['ended']=True
+    elif typ == 'conversation.lead_changed':
+        target_conv = conv or sub
+        if target_conv:
+            c = _conv(s, target_conv)
+            if d.get('to'):
+                c['lead_kind'] = d.get('to')
     elif typ == 'dept.opened':
         s['depts'][dept_key(conv,sub)]={'id':sub,'conv':conv,'ws':ws,'name':d.get('name',sub),'mission':d.get('mission',''),'owns':_cp(d.get('owns',[])),'head':d.get('head','rules'),'closed':False,'members':[],'part':d.get('part')}
     elif typ == 'dept.closed':
@@ -229,7 +245,9 @@ def apply(s, event):
         if d.get('agent'): t['agent']=d['agent']
         if d.get('review_of'): t['review_of']=d['review_of']
         if d.get('check'): t['task_check']=_cp(d['check'])
-        _history(s,conv,_by_name(by),ts,d.get('reason',''),_add_change(t),batch)
+        if d.get('by_task'): t['by_task']=d['by_task']
+        if d.get('by_em'): t['by_em']=d['by_em']
+        _history(s,conv,_by_name(by, d),ts,d.get('reason',''),_add_change(t),batch)
     elif typ == 'task.changed':
         t=_task(s,sub); ch=_change_fields(t, d.get('fields',{}) or {})
         _history(s,conv,_by_name(by),ts,d.get('reason',''),ch,batch)

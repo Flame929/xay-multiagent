@@ -11,7 +11,8 @@
     "id": "cv_20261030-160000_a1b2",
     "title": "开发商城商品详情页与运费计算",
     "lead_kind": "claude",
-    "plan_version": 3
+    "plan_version": 3,
+    "progress": {"pct": 34, "done": 1, "all": 8, "working": 3, "by_agent": [{"agent": "codex", "label": "Codex", "pct": 6}, {"agent": "dsh", "label": "DeepSeek", "pct": 15}, {"agent": "agy", "label": "Gemini", "pct": 13}], "by_part": [{"id": "all", "title": "", "pct": 34}], "text": "8 件活做完 1 件，3 件在做"}
   },
   "gm": {
     "agent": "claude",

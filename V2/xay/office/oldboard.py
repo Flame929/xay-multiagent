@@ -23,13 +23,15 @@ import time
 from typing import Any
 
 from xay.core import events as core_events
+from xay.core import snapshot as core_snapshot
 from xay.core.reducers import legacy_status
 from xay import quota_live
+from xay import providers
 
 
 TEMP_PREFIXES = ("/tmp", "/private/tmp", "/var/folders", "/private/var/folders")
 ORDER = {"needs_you": 0, "running": 1, "idle": 2, "done": 3}
-KNOWN_AGENTS = ("codex", "dsh", "agy")
+KNOWN_AGENTS = providers.agent_kinds()
 
 
 # 工作区归类和旧看板（scripts/xay_watch.py 的 _workspace_for）一致：Claude 桌面版的对话按它打开的文件夹分组；
@@ -264,7 +266,7 @@ def state(conn, now: float | None = None) -> dict[str, Any]:
             if owner:
                 emp = employees_raw.get(owner) or {}
                 agent = emp.get("agent")
-                if agent in KNOWN_AGENTS:
+                if agent in providers.agent_kinds():
                     st["agents"].add(agent)
 
         for run in legacy_runs_raw.values():
@@ -286,7 +288,7 @@ def state(conn, now: float | None = None) -> dict[str, Any]:
             if not agent and run.get("em"):
                 emp = employees_raw.get(run["em"]) or {}
                 agent = emp.get("agent")
-            if agent in KNOWN_AGENTS:
+            if agent in providers.agent_kinds():
                 st["agents"].add(agent)
 
         # 构建工作区和对话分组
@@ -319,7 +321,7 @@ def state(conn, now: float | None = None) -> dict[str, Any]:
             conv_legacy = is_temp
 
             c_status = _conv_status(st["needs_you"], st["running"], st["done"], st["tasks_count"], bool(c.get("ended")))
-            sorted_agents = [a for a in KNOWN_AGENTS if a in st["agents"]]
+            sorted_agents = [a for a in providers.agent_kinds() if a in st["agents"]]
 
             conv_item = {
                 "id": cid,
@@ -338,6 +340,7 @@ def state(conn, now: float | None = None) -> dict[str, Any]:
                 "lead_host": c.get("lead_host") or "",
                 "archived": bool(c.get("archived") or sess.get("archived")),
                 "legacy": conv_legacy,
+                "progress": core_snapshot.calc_progress(s, cid),
             }
 
             if is_temp:

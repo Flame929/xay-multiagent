@@ -8,7 +8,7 @@
   --brand: #0F1115; --brand-text: #FFFFFF; --accent: #4176E6;
   --ok: #22C55E; --ok-bg: #E6FAED; --err: #EC1313; --err-bg: #FEE2E2;
   --warn: #F59E0B; --warn-label: #DD8629; --warn-bg: #FEF5E7; --idle: #CFD3D6;
-  --ai-codex: #10A37F; --ai-dsh: #4D6BFE; --ai-agy: #9B72CB; --ai-gm: #E07A5F; --ai-other: #81858C;
+  --ai-codex: #10A37F; --ai-dsh: #4D6BFE; --ai-agy: #9B72CB; --ai-gm: #E07A5F; --ai-claude: #D97757; --ai-other: #81858C;
   --line: #CDD4DD; --shadow-sm: 0 1px 3px rgba(0,0,0,.05); --shadow-md: 0 4px 14px rgba(0,0,0,.08);
   --sans: -apple-system, "PingFang SC", system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
@@ -21,7 +21,7 @@
     --label-1: #F1F3F5; --label-2: #ADB2B8; --label-3: #979DA6; --label-4: #61666B;
     --border-1: rgba(255,255,255,.07); --border-2: rgba(255,255,255,.12); --border-3: rgba(255,255,255,.18); --border-4: rgba(255,255,255,.24);
     --brand: #F9FAFB; --brand-text: #0F1115; --ok-bg: #1B3524; --err-bg: #4A1212; --warn-bg: #3B2A14; --idle: #5A5E66;
-    --ai-codex: #1CB891; --ai-dsh: #627EFE; --ai-agy: #AB86D8; --ai-gm: #F28C6E;
+    --ai-codex: #1CB891; --ai-dsh: #627EFE; --ai-agy: #AB86D8; --ai-gm: #F28C6E; --ai-claude: #E58A6C;
     --line: #3B414B; --shadow-sm: 0 1px 3px rgba(0,0,0,.3); --shadow-md: 0 4px 14px rgba(0,0,0,.45);
   }
 }
@@ -32,7 +32,7 @@
   --label-1: #F1F3F5; --label-2: #ADB2B8; --label-3: #979DA6; --label-4: #61666B;
   --border-1: rgba(255,255,255,.07); --border-2: rgba(255,255,255,.12); --border-3: rgba(255,255,255,.18); --border-4: rgba(255,255,255,.24);
   --brand: #F9FAFB; --brand-text: #0F1115; --ok-bg: #1B3524; --err-bg: #4A1212; --warn-bg: #3B2A14; --idle: #5A5E66;
-  --ai-codex: #1CB891; --ai-dsh: #627EFE; --ai-agy: #AB86D8; --ai-gm: #F28C6E;
+  --ai-codex: #1CB891; --ai-dsh: #627EFE; --ai-agy: #AB86D8; --ai-gm: #F28C6E; --ai-claude: #E58A6C;
   --line: #3B414B; --shadow-sm: 0 1px 3px rgba(0,0,0,.3); --shadow-md: 0 4px 14px rgba(0,0,0,.45);
 }
 :root[data-theme="light"] {
@@ -42,7 +42,7 @@
   --label-1: #0F1115; --label-2: #61666B; --label-3: #81858C; --label-4: #ADB2B8;
   --border-1: rgba(0,0,0,.05); --border-2: rgba(0,0,0,.09); --border-3: rgba(0,0,0,.14); --border-4: rgba(0,0,0,.20);
   --brand: #0F1115; --brand-text: #FFFFFF; --ok-bg: #E6FAED; --err-bg: #FEE2E2; --warn-bg: #FEF5E7; --idle: #CFD3D6;
-  --ai-codex: #10A37F; --ai-dsh: #4D6BFE; --ai-agy: #9B72CB; --ai-gm: #E07A5F;
+  --ai-codex: #10A37F; --ai-dsh: #4D6BFE; --ai-agy: #9B72CB; --ai-gm: #E07A5F; --ai-claude: #D97757;
   --line: #CDD4DD; --shadow-sm: 0 1px 3px rgba(0,0,0,.05); --shadow-md: 0 4px 12px rgba(0,0,0,.08);
 }
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1169,3 +1169,46 @@ button.step-line:focus-visible { outline: 2px solid var(--accent); outline-offse
 /* 从上往下排时的连线：负责人到时间线、时间线到每一行房间的细线是中性色，落到房间那一截是房间的颜色 */
 .org-branch.org-trunk { opacity: .9; stroke-width: 1.5; }
 #dept-grid.by-steps .step-main { gap: 22px; }
+
+/* ===== 总进度条（arch-v11 §8）：顶栏下面一条；按 AI 种类分颜色段，右边大字百分比 + 一句话 ===== */
+#progress-strip {
+  display: flex; align-items: center; gap: 14px; padding: 8px 16px; min-height: 44px;
+  background: var(--bg-layer-1); border-bottom: 1px solid var(--border-2); z-index: 36; border-radius: 0;
+}
+#progress-strip[hidden] { display: none; }
+.pg-label { flex: none; font-size: 12px; font-weight: 600; color: var(--label-3); }
+.pg-track-wrap { position: relative; flex: 1 1 auto; min-width: 120px; }
+.pg-track {
+  display: flex; height: 10px; border-radius: 5px; overflow: hidden; background: var(--bg-module);
+  box-shadow: inset 0 0 0 1px var(--border-1);
+}
+.pg-seg { display: block; height: 100%; flex: none; transition: width .7s cubic-bezier(.22,.61,.36,1), filter .15s; cursor: default; }
+.pg-seg + .pg-seg { box-shadow: inset 1.5px 0 0 var(--bg-layer-1); }
+.pg-seg:hover { filter: brightness(1.12) saturate(1.1); }
+.pg-tip {
+  position: absolute; top: calc(100% + 7px); transform: translateX(-50%); padding: 3px 8px; border-radius: 6px; white-space: nowrap;
+  font-size: 12px; font-weight: 600; color: var(--brand-text); background: var(--brand); box-shadow: var(--shadow-md); pointer-events: none; z-index: 5;
+}
+.pg-tip[hidden] { display: none; }
+.pg-right { flex: none; display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+.pg-num { font-size: 20px; line-height: 1; font-weight: 700; color: var(--label-1); font-variant-numeric: tabular-nums; letter-spacing: -.02em; min-width: 3.2ch; text-align: right; }
+.pg-text { font-size: 12.5px; color: var(--label-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 32vw; }
+#progress-strip.pg-full .pg-num { color: var(--ok); }
+#progress-strip.pg-flash .pg-track { animation: pgFlash 1.3s ease-out; }
+#progress-strip.pg-flash .pg-num { animation: pgPop 1.3s ease-out; }
+@keyframes pgFlash {
+  0% { box-shadow: inset 0 0 0 1px var(--border-1), 0 0 0 0 color-mix(in srgb, var(--ok) 55%, transparent); filter: brightness(1); }
+  25% { filter: brightness(1.25); }
+  100% { box-shadow: inset 0 0 0 1px var(--border-1), 0 0 0 9px color-mix(in srgb, var(--ok) 0%, transparent); filter: brightness(1); }
+}
+@keyframes pgPop { 0% { transform: scale(1); } 20% { transform: scale(1.12); } 100% { transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) {
+  .pg-seg { transition: none; }
+  #progress-strip.pg-flash .pg-track, #progress-strip.pg-flash .pg-num { animation: none; }
+}
+
+/* 中任务卡片"做完 x/y 件"旁边的小进度条（用 progress.by_part） */
+.pg-mini { display: inline-block; width: 44px; height: 5px; border-radius: 3px; overflow: hidden; vertical-align: middle;
+  background: color-mix(in srgb, var(--pc, var(--accent)) 16%, transparent); }
+.pg-mini > i { display: block; height: 100%; border-radius: 3px; background: var(--pc, var(--accent)); transition: width .6s ease; }
+.pg-mini-n { font-size: 11px; font-weight: 600; color: var(--label-3); font-variant-numeric: tabular-nums; margin-left: -2px; }

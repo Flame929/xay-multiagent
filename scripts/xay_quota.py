@@ -639,7 +639,24 @@ def _agy_tools_bin():
     return None
 
 
+def _agy_login():
+    """V2 的 agy 换号模块（V2/xay/agy_login.py）：看 agy 实际登录的是谁、把目标号的登录写进 agy 认的钥匙串。"""
+    v2 = str(Path(__file__).resolve().parent.parent / "V2")
+    if v2 not in sys.path:
+        sys.path.append(v2)
+    try:
+        from xay import agy_login
+        return agy_login
+    except ImportError:
+        return None
+
+
 def _agy_current_id():
+    # 以 agy 实际的登录为准；Tools 自己记的当前号会和真实情况对不上（2026-10-31 实测），读不到登录才用它
+    login = _agy_login()
+    real = login.current_account_id() if login else None
+    if real:
+        return real
     index = _read_json(_agy_tools_home() / "accounts.json", {}) or {}
     return index.get("current_agy_account_id") if isinstance(index, dict) else None
 
@@ -752,18 +769,25 @@ def switch_agy_account(target=None, home=None, reason="手动", accounts=None):
     # 用户自己的 Antigravity Tools 负责切换；按邮箱指定（邮箱只在这里用，不输出）
     detail = _read_json(_agy_tools_home() / "accounts" / f"{chosen['id']}.json", {}) or {}
     email = detail.get("email") or next((x.get("email") for x in (_read_json(_agy_tools_home() / "accounts.json", {}) or {}).get("accounts", []) if x.get("id") == chosen["id"]), None)
-    binary = _agy_tools_bin()
-    if not binary:
-        return False, "找不到 antigravity-tools 命令"
-    try:
-        proc = subprocess.run([binary, "switch", email or str(chosen["index"]), "--target", "agy"],
-                              stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=90)
-    except subprocess.TimeoutExpired:
-        return False, "Antigravity Tools 切换超时"
-    except OSError:
-        return False, "找不到 antigravity-tools 命令"
-    if proc.returncode != 0 or _agy_current_id() != chosen["id"]:
-        return False, "Antigravity Tools 没能切过去（可以打开它看看）"
+    login = _agy_login()
+    if login and not os.environ.get("XAY_AGY_TOOLS_BIN"):
+        # 默认用 xay 自己的换号（V2/xay/agy_login.py）；显式指定了 XAY_AGY_TOOLS_BIN 才走 Antigravity Tools 命令行
+        ok, why = login.switch_to(chosen["id"])
+        if not ok:
+            return False, f"没能切过去：{why}"
+    else:
+        binary = _agy_tools_bin()
+        if not binary:
+            return False, "找不到 antigravity-tools 命令"
+        try:
+            proc = subprocess.run([binary, "switch", email or str(chosen["index"]), "--target", "agy"],
+                                  stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=90)
+        except subprocess.TimeoutExpired:
+            return False, "Antigravity Tools 切换超时"
+        except OSError:
+            return False, "找不到 antigravity-tools 命令"
+        if proc.returncode != 0 or _agy_current_id() != chosen["id"]:
+            return False, "Antigravity Tools 没能切过去（可以打开它看看）"
     # 换了账号，agy 的旧读数作废
     with _LIVE_LOCK:
         path = xay_home(home) / LIVE_FILE

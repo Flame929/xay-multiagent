@@ -26,7 +26,7 @@ description: 多 AI 协作工作流：由当前 AI 担任负责人，先拆解�
 | 代码审查 | 和作者**不同厂商**的 AI |
 | 读大量代码再决定 | 先派 dsh / agy 只读侦察，出 ≤20 行摘要 |
 
-负责人不是 Claude 时，Claude 不能被派活（本机没有命令行），适合它的部分负责人自己做。
+Claude Code 员工（`--agent claude`）目前只预留，用户在本机配好 API 登录后才能派，适合它的部分负责人自己做。
 
 ## 2. 先梳理全部任务（大白话），再开工
 
@@ -41,7 +41,7 @@ description: 多 AI 协作工作流：由当前 AI 担任负责人，先拆解�
 ### 3.1 开对话、写整份计划
 
 ```bash
-xay2 office status || xay2 office start            # 看板 http://127.0.0.1:7878/ ，公司页 http://127.0.0.1:7879/org
+xay2 up                                            # 体检 + 开管家；看板 http://127.0.0.1:7878/ ，公司页 http://127.0.0.1:7879/org
 xay2 begin --title "大任务（大白话）"                 # 其他负责人之后每条命令加 --conv cv_…
 xay2 plan template --title "大任务" > plan.json      # 带中文填写说明的模板
 # 照说明填好：每个中任务写 why（做完用户得到什么）；标题全用大白话，技术细节写进 card
@@ -58,12 +58,12 @@ xay2 plan part "新的中任务" --why "做完得到什么" --after <中任务> 
 ```
 
 - **任务卡要短**：背景一两句、做什么、能改哪些文件、验收命令、要回答什么。员工手册和执行准则由工位自动附上；项目背景写进 `<项目>/.xay/context.md`。
-- 返工 → `--to` 原来那个人；要并行 → `--agent` 让管家挑；只读加 `--readonly`。
+- 返工 → `--to` 原来那个人；要并行 → `--agent` 让管家挑（不写 `--agent` 管家连种类一起挑）；只读加 `--readonly`。员工也能把独立部分派给别人（同一中任务、最多 3 件）。
 - 改计划：`plan move` / `plan drop` / `plan edit [--part]`；中任务 `plan part-edit` / `plan part-drop`。别往已经做完的中任务里加活（会卡住后面的步骤，工具会拦）。
 
 ### 3.3 等：只处理要紧的事
 
-`xay2 wait --since <游标> --timeout 540`（第一次不写 `--since`）。只在需要你（`dc_`）、改计划申请（`pp_`）、写给你的信（`lt_`）、做完 / 没做成 / 改动先保留、警告时返回；最后一行是**游标**，下次 `--since` 它；退出码 3 = 没事，接着等。Claude 订阅版主对话用 540 秒（Bash 的 timeout 设 600000），子代理或 API 用 240 秒。要看全貌用 `xay2 brief`（≤25 行）。结果以 wait / brief 和验收为准，不读日志、不看页面。
+`xay2 wait --since <游标> --timeout 540`（第一次不写 `--since`）。只在需要你（`dc_`）、改计划申请（`pp_`）、写给你的信（`lt_`）、做完 / 没做成 / 改动先保留、警告时返回；最后一行是**游标**，下次 `--since` 它；退出码 3 = 没事，接着等。**Claude 桌面版 / Claude Code 负责人**：派完活把 `xay2 wait --since <游标> --timeout 3000` 放后台跑（Bash `run_in_background`），接着干别的，有事它退出、结果自动送回；不能后台跑就 540 秒前台等（Bash timeout 600000），子代理或 API 用 240 秒。用户同意后可 `xay2 hook install` 自动插话。要看全貌用 `xay2 brief`（≤25 行，第一行带总进度）；换负责人或上下文快满时 `xay2 handoff [--to codex]` 打交接单给接手的人。结果以 wait / brief 和验收为准，不读日志、不看页面。
 
 ### 3.4 处理
 
@@ -104,7 +104,7 @@ xay2 steer Codex1 "纠偏"    xay2 interrupt Codex1    xay2 stop <人|任务|--a
 
 ## 合规提醒
 
-Codex（ChatGPT 订阅或中转站）、dsh（OpenCode Go）都是在本机以用户本人身份运行官方命令行。Google FAQ 写明个人套餐下由第三方 AI 调用 `agy` 不受支持、可能封号；用户已知悉并接受。不做绕过检测的事（改设备指纹、提取 token、切 cookie）。agy 多账号只通过用户自己的 Antigravity Tools 切换（`xay agy-switch`），这是用户明确的决定、自担风险，不要删掉这部分功能。
+Codex（ChatGPT 订阅或中转站）、dsh（OpenCode Go）都是在本机以用户本人身份运行官方命令行。Google FAQ 写明个人套餐下由第三方 AI 调用 `agy` 不受支持、可能封号；用户已知悉并接受。不做绕过检测的事（改设备指纹、提取 token、切 cookie）。agy 多账号用 `xay agy-switch` 切换（xay 自己把目标号的登录写进 agy，Antigravity Tools 兜底），这是用户明确的决定、自担风险，不要删掉这部分功能。
 
 ## 附：退回旧版
 

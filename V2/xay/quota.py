@@ -4,10 +4,11 @@
    V2 自己记一本小账 ``$XAY2_HOME/quota/agy-calls.jsonl``（一行一次，加锁追加）。当天用了多少 = V2 记的
    + 旧系统 ``$XAY_HOME/registry.jsonl`` 里当天的 ``agy_call`` 行（只读；新旧系统用的是同一批账号）。
    一次调用 = 往 agy 里发一轮（干活、复述、写交接摘要、/compact 都算）。
-2. agy 换号：**允许且支持自动切换 agy CLI 账号**（统一通过用户自己的 Antigravity Tools 命令行；xay 自己不读取、不提取 token / cookie——
-   ``antigravity-tools list`` 看有哪些账号、``antigravity-tools switch <序号> --target agy`` 切换）。
-   这是用户 2026-10-30 明确同意的功能（"我自己承担风险，可以切换 agy 多账号"），全力保障 agy 额度连续可用。
-   命令输出里的邮箱一律丢掉，只留序号、别名、状态。几个 agy 员工同时撞上额度时只换一次（加锁 + 2 分钟冷却）。
+2. agy 换号：**允许且支持自动切换 agy CLI 账号**（用户 2026-10-30 明确同意，"我自己承担风险"）。
+   2026-11-02 起用 xay 自己的一套（``xay/agy_login.py``：直接把目标账号的登录写进 agy 认的钥匙串那一项，写完读回来核对），
+   不再非得经过 Antigravity Tools 命令行；它只在自己那套换不了时兜底。账号清单直接读 Tools 的账号文件，
+   **谁是当前号以 agy 实际的登录为准**（Tools 自己记的当前号会和真实情况对不上，见 agy_login.py 开头）。
+   邮箱、登录信息只在 agy_login.py 里由程序使用，对外只留序号、别名、状态。几个 agy 员工同时撞上额度时只换一次（加锁 + 2 分钟冷却）。
 3. 四条线路的真实上限与剩余（含各 Gemini 账号还剩多少）在 ``xay/quota_live.py``（2026-10-31，管家定时查、写账本）；
    优先按 Antigravity Tools 的优先级（数字小的先用）挑额度充足（≥20%）的账号；换号时跳过 skip（已经用完的账号名）。
 """
@@ -156,6 +157,16 @@ def parse_accounts(text: str) -> List[Dict[str, object]]:
 
 
 def agy_accounts(timeout: float = TOOLS_TIMEOUT_S) -> List[Dict[str, object]]:
+    """换号用的账号清单 [{index, id, name, current, status, ok}]：读 Tools 的账号文件，当前号以 agy 实际的登录为准；
+    没有账号文件才退回 ``antigravity-tools list``（它说的当前号可能不准）。"""
+    try:
+        from . import quota_live
+        rich = quota_live.agy_accounts()
+    except Exception:  # noqa: BLE001
+        rich = []
+    if rich:
+        return [{"index": a["index"], "id": a["id"], "name": a["name"], "current": a["current"],
+                 "status": "停用" if a["status"] == "blocked" else "正常", "ok": a["status"] != "blocked"} for a in rich]
     code, text = _run_tools(["list"], timeout)
     if code != 0:
         raise RuntimeError("antigravity-tools list 退出码 %s" % code)
@@ -358,6 +369,15 @@ def _pick_next(accounts: List[Dict[str, object]], skip=()) -> Optional[Dict[str,
     return next((a for a in ordered if a.get("ok") and not a.get("current") and a.get("name") not in skip_set), None)
 
 
+def ensure_agy_login(home=None) -> Optional[str]:
+    """派活前核对 agy 的登录还是不是 xay 定好的号；被桌面 App / 还开着的 agy 改回去了就写回来。返回要提示的话。"""
+    from . import agy_login
+    msg = agy_login.ensure_desired(home)
+    if msg:
+        _log(home, msg)                         # 记下每次被改回去的情况，看看到底是谁在改
+    return msg
+
+
 def _log(home, text: str) -> None:
     try:
         logs = (Path(home) if home else xay2_home()) / "logs"
@@ -418,20 +438,26 @@ def switch_agy_account(reason: str, home=None, cooldown_s: float = SWITCH_COOLDO
                 return {"ok": True, "switched": False, "to": chosen.get("name"),
                         "text": "Gemini 已经是「%s」" % chosen.get("name")}
 
-            try:
-                code, _text = _run_tools(["switch", str(chosen["index"]), "--target", "agy"])
-            except subprocess.TimeoutExpired:
-                return {"ok": False, "switched": False, "text": "Antigravity Tools 切换超时"}
-            except (OSError, subprocess.SubprocessError) as exc:
-                return {"ok": False, "switched": False, "text": "Antigravity Tools 切换失败：%s" % exc}
-
-            try:
-                now = next((a for a in agy_accounts() if a.get("current")), None)   # 切完用命令行核对
-            except (OSError, RuntimeError, subprocess.SubprocessError):
-                now = None
-
-            if code != 0 or not now or now["index"] != chosen["index"]:
-                return {"ok": False, "switched": False, "text": "Antigravity Tools 没能切过去（可以打开它看看）"}
+            from . import agy_login
+            own_why = None
+            if chosen.get("id"):
+                # 先用 xay 自己的一套：把这个号的登录写进 agy 认的钥匙串，写完读回来核对
+                ok_own, own_why = agy_login.switch_to(str(chosen["id"]), home)
+            if not chosen.get("id") or not ok_own:
+                try:                                                                 # 兜底：Antigravity Tools 命令行
+                    code, _text = _run_tools(["switch", str(chosen["index"]), "--target", "agy"])
+                except subprocess.TimeoutExpired:
+                    return {"ok": False, "switched": False, "text": "Antigravity Tools 切换超时" + ("（自己换也没成：%s）" % own_why if own_why else "")}
+                except (OSError, subprocess.SubprocessError) as exc:
+                    return {"ok": False, "switched": False, "text": "Antigravity Tools 切换失败：%s" % exc}
+                try:
+                    now = next((a for a in agy_accounts() if a.get("current")), None)   # 切完按 agy 实际的登录核对
+                except (OSError, RuntimeError, subprocess.SubprocessError):
+                    now = None
+                if code != 0 or not now or now["index"] != chosen["index"]:
+                    return {"ok": False, "switched": False, "text": "没能切过去" + ("：%s" % own_why if own_why else "（Antigravity Tools 也没切成）")}
+                if chosen.get("id"):
+                    agy_login.set_desired(str(chosen["id"]), home)
 
             text = "Gemini 已从「%s」换到「%s」" % (cur["name"] if cur else "未知", chosen["name"])
             try:

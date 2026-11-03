@@ -13,6 +13,7 @@ import { renderDecisionsBar } from './decisions.js';
 import { syncChars } from './station.js';
 import { initEmployeePanel, onSnapshot as employeeOnSnapshot, onLedgerItem as employeeOnLedger, currentTree } from './employee-panel.js';
 import { renderQuotaStrip } from './quota-view.js';
+import { renderProgress, progressOf } from './progress-bar.js';
 
 let currentSnapshot = null;
 let disconnectStream = null;
@@ -152,6 +153,8 @@ function updateTopBar(data, pm = null) {
 
   // 额度条：四条线路的真实剩余（管家定时查；用完的标红，鼠标停留看重置时间）
   renderQuotaStrip(document.getElementById('quota-strip'), data.quota, data.now);
+  // 总进度条：数字全由快照算好；没有 progress 字段时整条不显示
+  renderProgress(document.getElementById('progress-strip'), progressOf(data));
   setBoardLink(conv.id);
 }
 

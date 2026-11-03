@@ -1,7 +1,7 @@
 from .events import _reading
 from .reducers import CHANGEABLE, dept_key, legacy_status, _legacy_from
 
-AI_NAMES = {'codex': 'Codex', 'dsh': 'DeepSeek', 'agy': 'Gemini'}
+AI_NAMES = {'codex': 'Codex', 'dsh': 'DeepSeek', 'agy': 'Gemini', 'claude': 'Claude'}
 VERDICT_TEXT = {'accept': '同意', 'modify': '按修改办', 'reject': '不同意'}
 PLAN_SUMMARY_MAX = 3      # 一版计划的一句话总结里最多列几处改动
 
@@ -57,6 +57,23 @@ def plan_change_text(s, conv, ch):
     op=ch.get('op'); before=ch.get('before') or {}; after=ch.get('after') or {}
     name=_short(before.get('title') or ch.get('title') or _task_title(s,conv,ch.get('task')))
     if op=='add':
+        by_em = after.get('by_em') or ch.get('by_em')
+        if by_em:
+            sender = _label(s, by_em) or by_em
+            target = ''
+            if after.get('owner'):
+                target = _who(s, conv, after['owner'])
+            elif after.get('agent'):
+                target = AI_NAMES.get(after['agent'], after['agent'].capitalize())
+            elif after.get('dept'):
+                target = _who(s, conv, after['dept'])
+            title_str = _short(after.get('title')) if after.get('title') else name
+            to_str = f"给 {target}" if target else ""
+            res = f"{sender} 派了「{title_str}」{to_str}".strip()
+            reason = ch.get('reason') or after.get('reason')
+            if reason:
+                res += f"（{reason}）"
+            return res
         extra=[]
         if after.get('owner'): extra.append('交给 '+_who(s,conv,after['owner']))
         elif after.get('dept'): extra.append('归'+_who(s,conv,after['dept']))
@@ -119,6 +136,10 @@ def _text(event, s):
     if typ=='conv.begun': return f"开启新对话：{d.get('title','')}"
     if typ=='conv.titled': return f"对话标题改为：{d.get('title','')}"
     if typ=='conv.ended': return '本次对话已圆满结束'
+    if typ=='conversation.lead_changed':
+        frm = AI_NAMES.get(d.get('from'), (d.get('from') or '').capitalize())
+        to = AI_NAMES.get(d.get('to'), (d.get('to') or '').capitalize())
+        return f"负责人从 {frm} 换成了 {to}"
     if typ=='dept.opened': return f"成立了{d.get('name',event.get('subject',''))}"
     if typ=='dept.closed': return f"关闭了{d.get('name',event.get('subject',''))}"
     if typ=='employee.hired': return f"新员工 {_label(s,event.get('subject'))} 加入团队"
@@ -128,7 +149,17 @@ def _text(event, s):
     if typ=='employee.online': return f"{label} 上线了"
     if typ=='employee.offline': return f"{label} 离线了"
     if typ=='employee.fired': return f"{label} 已离职"
-    if typ=='task.added': return f"负责人把「{d.get('title','')}」排进计划"
+    if typ=='task.added':
+        if d.get('by_em'):
+            who = _label(s, d.get('by_em'))
+            target = _label(s, d.get('owner')) if d.get('owner') else AI_NAMES.get(d.get('agent'), (d.get('agent') or '').capitalize())
+            to_str = f"给 {target}" if target else ""
+            reason_str = f"（{d.get('reason')}）" if d.get('reason') else ""
+            title_str = d.get('title', '')
+            if to_str:
+                return f"{who} 派了「{title_str}」{to_str}{reason_str}"
+            return f"{who} 把「{title_str}」派进计划{reason_str}"
+        return f"负责人把「{d.get('title','')}」排进计划"
     if typ=='task.changed': return f"「{title}」的计划已调整"
     if typ=='task.removed': return f"「{title}」已从计划中取消：{d.get('reason','')}"
     if typ=='task.assigned': return f"「{title}」交给 {_label(s,d.get('owner'))}：{d.get('reason','')}"

@@ -67,7 +67,7 @@ class DemoLedgerTests(unittest.TestCase):
         p = self.tmp / "e.jsonl"
         p.write_text('\n{"type":"a","by":"x","data":{}}\n坏行\n{"type":1}\n[1]\n{"type":"b","by":"y"}\n', encoding="utf-8")
         self.assertEqual([e["type"] for e in load_events(p)], ["a", "b"])
-        self.assertEqual(len(load_events(FIXTURE)), 82)
+        self.assertEqual(len(load_events(FIXTURE)), 98)
 
     def test_replay_fills_the_snapshot_with_people_and_stays_in_memory(self):
         ledger = self.started()
@@ -76,9 +76,12 @@ class DemoLedgerTests(unittest.TestCase):
         self.assertEqual(snap["conversation"]["title"], DEMO_TITLE)
         self.assertGreaterEqual(len(snap["people"]), 5)
         self.assertEqual(len(snap["depts"]), 3)
-        self.assertEqual(len(snap["tasks"]), 6)
+        self.assertEqual(len(snap["tasks"]), 7)                              # 6 件负责人排的 + 1 件 Codex 1 派给别人的
         self.assertTrue(snap["recent"])
-        self.assertEqual(len(snap["decisions"]), 1)
+        self.assertEqual(snap["decisions"], [])                              # 放到最后你已经选了"让他接着改"
+        self.assertEqual(snap["conversation"]["progress"]["pct"], 100)      # 总进度条最后涨满
+        sent = next(t for t in snap["tasks"] if t["id"] == "tk_a1000007")   # 员工派的活由管家自动挑人
+        self.assertEqual(sent["assigned_reason"], "没指定用哪种 AI，交给空着的 Gemini 2")
         # 全程只在内存里：磁盘上没有任何账本文件
         self.assertFalse((self.tmp / "v2" / "xay.db").exists())
 
@@ -97,12 +100,12 @@ class DemoLedgerTests(unittest.TestCase):
         ledger = self.started(min_gap=0.03, max_gap=0.03)
         self.assertLessEqual(ledger.run(core_events.max_seq), 3)          # 刚起来只放了开头几条
         self.assertTrue(ledger.wait_loops(1, 20))
-        self.assertEqual(ledger.run(core_events.max_seq), 82 - len(ledger.rejected))
+        self.assertEqual(ledger.run(core_events.max_seq), 98 - len(ledger.rejected))
         rows = ledger.run(lambda conn: core_events.since(conn, 0))
         self.assertGreaterEqual(rows[0]["ts"], before - 1)                  # 不是示例文件里的 1793300000
         self.assertLessEqual(rows[-1]["ts"], time.time())
         self.assertEqual([r["ts"] for r in rows], sorted(r["ts"] for r in rows))
-        self.assertGreater(rows[-1]["ts"] - rows[0]["ts"], 1.5)             # 82 条 × 0.03 秒
+        self.assertGreater(rows[-1]["ts"] - rows[0]["ts"], 1.5)             # 98 条 × 0.03 秒
 
     def test_loops_forever_with_a_fresh_ledger_each_round(self):
         ledger = self.started(loop_pause=0.05)
@@ -111,7 +114,7 @@ class DemoLedgerTests(unittest.TestCase):
         deadline = time.time() + 5
         while time.time() < deadline and ledger.run(core_events.max_seq) > 40:
             time.sleep(0.005)
-        self.assertLess(ledger.run(core_events.max_seq), 82 * 2)           # 是新账本重新数，不是接着往后加
+        self.assertLess(ledger.run(core_events.max_seq), 98 * 2)           # 是新账本重新数，不是接着往后加
 
     def test_run_passes_exceptions_back_and_fails_cleanly_after_stop(self):
         ledger = self.started()
@@ -186,6 +189,11 @@ class DemoThroughServerTests(W.OfficeCase):
         self.assertTrue(any(b < a for a, b in zip(ids, ids[1:])), "新一轮开始后事件流应当从新账本的开头继续")
 
     def test_demo_decisions_go_to_the_demo_ledger_not_the_real_one(self):
+        # 完整示例最后会由"你"把这件事处理掉；这里只放到它还开着的那一条为止
+        cut = self.tmp / "demo-until-decision.jsonl"
+        lines = FIXTURE.read_text(encoding="utf-8").splitlines()
+        cut.write_text("\n".join(l for l in lines if '"decision.resolved"' not in l) + "\n", encoding="utf-8")
+        self.start_server(demo_factory=lambda: make_ledger(fixture=cut))
         self.get_json("/api/v2/snapshot?demo=1")
         self.assertTrue(self.srv._demo.wait_loops(1, 20))
         _, fake = self.get_json("/api/v2/snapshot?demo=1")

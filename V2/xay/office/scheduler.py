@@ -1,9 +1,10 @@
-"""管家的排程（arch-v10 §2、§3.1 ③、§3.5；protocol §4.3）。
+"""管家的排程（arch-v10 §2、§3.1 ③、§3.5；protocol §4.3；arch-v11 §1）。
 
 每秒看一眼账本：
 1. `planned` 的任务，前置都 `done` → `task.ready`。
-2. `ready` 的任务：有负责人（`--to`）→ 直接 `task.queued`；没负责人但写了用哪种 AI（task.agent，或 card 是对象时的
-   card.agent）→ **选人三步规则**（§3.1 ③，不靠打分，`_pick`）：
+2. `ready` 的任务：有负责人（`--to`）→ 直接 `task.queued`；
+   没负责人但写了用哪种 AI（task.agent，或 card 是对象时的 card.agent）→ **选人三步规则**（§3.1 ③，不靠打分，`_pick`）；
+   没负责人也没写用哪种 AI 的任务由管家自动挑选 AI（同 part 其他活多用的 > 有空人的 dsh/agy/codex > 有名额的 > 排队最短的；只读不选 codex；额度用完/今天停了/命令行未装的排除），再走选人三步。都不满足或全排除的留给负责人分配。
    ① 排除：只看同一种 AI；最近连续失败 2 次的不选；记忆条 >80% 而且压缩也压不下来的不选；今天预算用完 / 被叫停的不选。
    ② 优先老员工（满足任一条就交给他，他正忙就排进他的队列）：这件活依赖的前一件是他做的；要改的文件和他最近 3 件活
       有重叠；他是同一个部门的。几个人都满足时，依次比：哪条更强（依赖 > 文件 > 部门）、谁等得少。
@@ -11,8 +12,9 @@
    ③ 招新人：没人满足第 2 步也没人空着；或者那个老员工正忙、预计要等 10 分钟以上（按他最近几件活的时长估）、
       而且还有空名额（提供者表 max_concurrent、XAY2_MAX_STATIONS）——这时有空着的同种员工先给空着的，没有才招。
       名额满了就排进等得最少的那个人的队列。
-   每次分配都写大白话理由（task.assigned.reason，页面会显示），比如"交给 Codex 1：他最近做的「X」改过同一批文件"。
-   都没写的留给负责人分配。agy 今天的调用次数用完了 → Gemini 的活先不排（留在 ready），第二天再排。
+   每次分配都写大白话理由（task.assigned.reason，页面会显示），比如"交给 Codex 1：他最近做的「X」改过同一批文件"；
+   自动挑人的写成"没指定用哪种 AI，交给空着的 Gemini 2"等大白话。
+   agy 今天的调用次数用完了 → Gemini 的活先不排（留在 ready），第二天再排。
    某种 AI 的额度线路全用完了（管家查到的真数，xay/quota_live.py：Codex 两条线路、DeepSeek、Gemini 所有账号）
    → 它的活同样先不排、不起工位，规则监工写一条提醒；额度恢复了自动接着派。
 3. 有活（排队中的任务，或人决定了要合并 / 丢掉改动）的员工，确保有一个工位进程在跑：没有就脱离父进程起
@@ -34,6 +36,7 @@ import json
 import logging
 import math
 import os
+import shutil
 import signal
 import subprocess
 import sys
@@ -61,7 +64,7 @@ SPAWN_GRACE = 15.0           # 没拿到进程句柄时：起了工位以后这�
 CRASH_WINDOW = 300.0
 CRASH_MAX = 3
 REUSE_BELOW_PCT = 80.0
-AGENTS = ("codex", "dsh", "agy")
+AGENTS = providers.agent_kinds()
 AI_NAMES = {"codex": "Codex", "dsh": "DeepSeek", "agy": "Gemini"}
 PLAN_BY_LEAD = ("task.added", "task.assigned", "task.changed")
 PROJECT_DEPT = "proj"         # 管家替没分部门的员工开的"项目组"（每个对话一个，编号只在对话内唯一）
@@ -160,7 +163,164 @@ def _task_agent(t):
     card = t.get("card")
     if not agent and isinstance(card, dict):
         agent = card.get("agent")
-    return agent if agent in AGENTS else None
+    return agent if agent in providers.agent_kinds() else None
+
+
+PREFER_ORDER = ("dsh", "agy", "codex")
+
+
+def _is_task_readonly(t):
+    if not t:
+        return False
+    card = t.get("card")
+    card_ro = bool(card.get("readonly")) if isinstance(card, dict) else False
+    return bool(t.get("readonly") or card_ro or t.get("mode") == "readonly")
+
+
+def pick_agent_kind(state, task, scheduler=None, *, lines_out=None, agy_capped=None, stopped=None, is_available=None, now=None):
+    """自动挑一种 AI（arch-v11 §1）：
+    规则（取第一条成立的）：
+    1. 同一个小任务（part）里别的活用过的 AI（不算撤回的），用得最多的那种。
+    2. 有空着的员工（idle，没被排除）的 AI 种类；多种都有空人时按 dsh → agy → codex 顺序。只读活（readonly）不选 codex。
+    3. 还有空名额（能招新人）的种类，同样按上面的顺序。
+    4. 都满了：排队最短的那种。
+
+    被排除的种类：额度线路全用完、今天被停、提供者表里不可用（命令行没装）。
+    """
+    now = time.time() if now is None else now
+    is_ro = _is_task_readonly(task)
+
+    # 1. 过滤未被排除的候选种类
+    candidates = []
+    for agent in providers.agent_kinds():
+        if is_ro and agent == "codex":
+            continue
+
+        # 没配登录（如 Claude 员工没配 API）：不管命令行装没装，一律不挑
+        if not providers.is_available(agent):
+            continue
+        # 命令行没装（提供者表里不可用）
+        if is_available is not None:
+            if not is_available(agent):
+                continue
+        else:
+            try:
+                cmd = providers.resolve_command(agent)
+                exe = cmd[0] if cmd else None
+                if not exe or not shutil.which(exe):
+                    continue
+            except Exception:
+                continue
+
+        # 额度线路全用完
+        if lines_out is not None:
+            if agent in lines_out or lines_out.get(agent):
+                continue
+        elif scheduler is not None and scheduler.line_out(agent):
+            continue
+
+        # agy 今天的调用次数用完
+        if agent == "agy":
+            is_cap = agy_capped if agy_capped is not None else (scheduler.agy_capped if scheduler else False)
+            if is_cap:
+                continue
+
+        # 今天被停
+        if stopped is not None and agent in stopped:
+            continue
+
+        candidates.append(agent)
+
+    if not candidates:
+        return None
+
+    # PREFER_ORDER 里没有的新种类排在最后
+    candidates_ordered = [a for a in PREFER_ORDER if a in candidates] + [a for a in candidates if a not in PREFER_ORDER]
+    conv = task.get("conv")
+    ws = task.get("ws")
+    part_ref = task.get("part")
+
+    # 规则 1：同一个小任务（part）里别的活用过的 AI（不算撤回的），用得最多的那种
+    if part_ref and conv:
+        peers = [t for t in state.get("tasks", {}).values()
+                 if t.get("conv") == conv and t.get("id") != task.get("id")
+                 and not t.get("legacy") and t.get("status") != "canceled"]
+        parts = state.get("parts", {})
+        part_obj = next((p for p in parts.values() if p.get("conv") == conv and (p.get("id") == part_ref or p.get("key") == part_ref)), None)
+        target_part_ids = {part_ref}
+        if part_obj:
+            if part_obj.get("id"): target_part_ids.add(part_obj["id"])
+            if part_obj.get("key"): target_part_ids.add(part_obj["key"])
+
+        part_peers = [t for t in peers if t.get("part") in target_part_ids]
+        counts = {a: 0 for a in candidates}
+        for pt in part_peers:
+            used_agent = None
+            owner = pt.get("owner")
+            if owner and owner in state.get("employees", {}):
+                used_agent = state["employees"][owner].get("agent")
+            if not used_agent:
+                used_agent = _task_agent(pt)
+            if used_agent in counts:
+                counts[used_agent] += 1
+
+        if any(cnt > 0 for cnt in counts.values()):
+            best = max(candidates_ordered, key=lambda a: counts.get(a, 0))
+            if counts.get(best, 0) > 0:
+                return best
+
+    # 规则 2：有空着的员工（idle，没被排除）的 AI 种类，按 dsh -> agy -> codex
+    def is_idle_employee(e):
+        if e.get("ws") != ws or e.get("former") or legacy_employee(e) or (e.get("label") or "").endswith("临时工"):
+            return False
+        em_key = e.get("key") or e.get("id")
+        if scheduler is not None:
+            if scheduler._excluded(state, e, scheduler.cfg(), now) is not None:
+                return False
+            if scheduler._busy(state, em_key):
+                return False
+        else:
+            if int(e.get("fail_streak") or 0) >= 2 or e.get("stopped"):
+                return False
+            if e.get("turn") or e.get("state") in ("working", "compacting"):
+                return False
+            if any(t.get("owner") == em_key and t.get("status") in ("ready", "queued", "working") and not t.get("legacy")
+                   for t in state.get("tasks", {}).values()):
+                return False
+        return True
+
+    for a in candidates_ordered:
+        for e in state.get("employees", {}).values():
+            if e.get("agent") == a and is_idle_employee(e):
+                return a
+
+    # 规则 3：还有空名额（能招新人）的种类，按 dsh -> agy -> codex
+    def has_free_slots(agent):
+        if scheduler is not None:
+            return scheduler._slots_free(state, agent)
+        emps = state.get("employees", {})
+        busy = [em for em, e in emps.items() if not e.get("former") and not legacy_employee(e) and (e.get("turn") or e.get("state") in ("working", "compacting"))]
+        cap = providers.get(agent).max_concurrent if agent in providers.agent_kinds() else None
+        same = sum(1 for em in busy if emps[em].get("agent") == agent)
+        return len(busy) < 8 and (cap is None or same < cap)
+
+    for a in candidates_ordered:
+        if has_free_slots(a):
+            return a
+
+    # 规则 4：都满了：排队最短的那种
+    def agent_queue_len(agent):
+        tasks = state.get("tasks", {})
+        emps = [e for e in state.get("employees", {}).values()
+                if e.get("ws") == ws and e.get("agent") == agent and not e.get("former") and not legacy_employee(e)]
+        if not emps:
+            return 0
+        total_q = 0
+        for e in emps:
+            total_q += len([tk for tk in e.get("queue", []) if tasks.get(tk, {}).get("status") == "queued"])
+        return total_q
+
+    return min(candidates_ordered, key=lambda a: (agent_queue_len(a), candidates_ordered.index(a)))
 
 
 class Scheduler:
@@ -182,6 +342,9 @@ class Scheduler:
 
     def cfg(self):
         return reactions.load(self.home)
+
+    def pick_agent_kind(self, s, t, now=None):
+        return pick_agent_kind(s, t, scheduler=self, now=now)
 
     @property
     def agy_capped(self):
@@ -369,6 +532,8 @@ class Scheduler:
             return "今天的预算用完了"
         if e["key"] in self._stopped:
             return "被叫停了"
+        if not providers.is_available(e.get("agent")):
+            return "还没配置 API 登录"
         return None
 
     def _recent_tasks(self, s, em, n, exclude):
@@ -415,7 +580,7 @@ class Scheduler:
         """③ 还有没有空名额：正在忙的员工数没到 XAY2_MAX_STATIONS，同种 AI 没到提供者表的 max_concurrent。"""
         emps = s.get("employees", {})
         busy = [em for em, e in emps.items() if not e.get("former") and not legacy_employee(e) and self._busy(s, em)]
-        cap = providers.get(agent).max_concurrent if agent in AGENTS else None
+        cap = providers.get(agent).max_concurrent if agent in providers.agent_kinds() else None
         same = sum(1 for em in busy if emps[em].get("agent") == agent)
         return len(busy) < self.max_stations and (cap is None or same < cap)
 
@@ -490,6 +655,8 @@ class Scheduler:
     def pick_other(self, s, t, agent, exclude=()):
         """在"需要你"里选了"换个人做"：按三步规则另找一个（必要时招新人）。→ (em, 理由) | None"""
         agent = agent or _task_agent(t) or "codex"
+        if not providers.is_available(agent):
+            return None
         how, em, why = self._pick(s, t, agent, exclude=set(exclude or ()))
         if how == "assign":
             return em, why
@@ -538,8 +705,14 @@ class Scheduler:
             ws, conv, owner = t.get("ws"), t.get("conv"), t.get("owner")
             if not owner:
                 agent = _task_agent(t)
+                auto_picked = False
                 if not agent:
-                    continue        # 没说交给谁、也没说用哪种 AI：等负责人分配
+                    agent = self.pick_agent_kind(s, t, now)
+                    if not agent:
+                        continue        # 没说交给谁、挑不出合适的 AI：等负责人分配
+                    auto_picked = True
+                if not providers.is_available(agent):
+                    continue        # 该 AI 不可用（如未配登录）：先排着，配好后再派
                 if agent == "agy" and self.agy_capped:
                     continue        # Gemini 今天的调用次数用完了：明天再排
                 if self.line_out(agent):
@@ -552,15 +725,21 @@ class Scheduler:
                     s = core_events.load_state(self.conn)
                     tasks = s.get("tasks", {})
                     reason = "%s，招了 %s 来做" % (reason, s["employees"][owner].get("label"))
+                if auto_picked:
+                    clean_reason = reason.replace("交给空闲的", "交给空着的")
+                    reason = "没指定用哪种 AI，" + clean_reason
                 if not self._w("task.assigned", {"owner": owner, "reason": reason}, ws=ws, conv=conv, subject=tk):
                     continue
                 s = core_events.load_state(self.conn)
                 tasks = s.get("tasks", {})
             if owner not in s.get("employees", {}) or s["employees"][owner].get("former"):
                 continue
-            if s["employees"][owner].get("agent") == "agy" and self.agy_capped:
+            owner_agent = s["employees"][owner].get("agent")
+            if not providers.is_available(owner_agent):
                 continue
-            if self.line_out(s["employees"][owner].get("agent")):
+            if owner_agent == "agy" and self.agy_capped:
+                continue
+            if self.line_out(owner_agent):
                 continue
             lengths[owner] = lengths.get(owner, 0) + 1
             if self._w("task.queued", {"owner": owner, "position": lengths[owner]}, ws=ws, conv=conv, subject=tk):
@@ -698,7 +877,7 @@ class Scheduler:
                             ws=e.get("ws"), subject=em)
                 continue
             agent = e.get("agent")
-            cap = providers.get(agent).max_concurrent if agent in AGENTS else None
+            cap = providers.get(agent).max_concurrent if agent in providers.agent_kinds() else None
             same = sum(1 for x in running if (s["employees"].get(x) or {}).get("agent") == agent)
             if (cap is not None and same >= cap) or len(running) >= self.max_stations:
                 continue

@@ -14,9 +14,18 @@
 
 ## 先看一眼
 
-![xay 演示预览（14 秒）：员工开工、互相写信](docs/media/demo-preview.gif)
+![xay 演示预览（15 秒）：员工互相派活、写信，总进度条一点点涨满](docs/media/demo-preview.gif)
 
-上面是 14 秒预览。完整视频约 2 分钟（mp4，3.8MB）：[**下载 demo.mp4**](https://github.com/Flame929/xay-multiagent/raw/main/docs/media/demo.mp4)。内容是：总经理开部门、招员工、拆任务，员工开工、互相写信、做完被验收，遇到拿不准的事停下来问你。这是示例模式的回放，不是真实任务。
+上面是 15 秒预览。完整视频约 2 分钟（mp4，5.9MB）：[**下载 demo.mp4**](https://github.com/Flame929/xay-multiagent/raw/main/docs/media/demo.mp4)。内容是：总经理开部门、招员工、拆任务，员工开工、互相写信、干到一半把一部分活派给别人，没指定用哪种 AI 的活由管家交给空着的人，做完被验收，遇到拿不准的事停下来问你；顶上的总进度条按每种 AI 分颜色一起涨满。这是示例模式的回放，不是真实任务。
+
+**几个亮点**
+
+- **总进度条**：几个 AI 一起攒一条进度条，每种 AI 一种颜色，越满说明离干完越近。
+- **自动领活**：活没写交给谁、也没写用哪种 AI，管家会挑空着的人接手；员工做完一件，同组的下一件接着交给他。
+- **员工之间直接配合**：员工能看到整块任务板，干到一半能把独立的一部分直接派给别人（同一组、最多 3 件）。
+- **结果主动送回**：谁做完了、谁卡住了，自动送到负责人手上，负责人派完活不用干等；要换负责人时一条命令打出交接单。
+- **能接更多 AI**：除了 Codex、DeepSeek、Gemini，写一份声明就能接入其他命令行 AI（已预留 OpenCode、ZCode、Devin、Claude Code）。
+- **额度不断档**：Codex 两条线路互相切、Gemini 多账号自动换号，额度用完先停派、恢复了接着派。
 
 想看看一份计划长什么样、自己试一试？见 [`docs/examples/`](docs/examples/README.md)：三份现成的示例计划。
 
@@ -47,23 +56,17 @@ cd xay-multiagent
 export PATH="$(pwd)/V2/bin:$PATH"
 ```
 
-### 2. 检查运行环境
-
-运行内置的体检命令，自动检测系统 Python 版本与各家 AI 命令行工具的安装状态：
+### 2. 一条命令开工
 
 ```bash
-xay2 doctor
+xay2 up
 ```
 
-### 3. 启动办公后台与看板
+它会先体检（只列出没通过的项）、告诉你能用哪些 AI，管家没开就顺手开好，最后打印两个页面的地址和下一步命令。想看完整体检用 `xay2 doctor`。
 
-执行以下命令启动 xay 后台服务：
+### 3. 打开页面
 
-```bash
-xay2 office start
-```
-
-启动成功后，在浏览器中打开以下两个页面：
+在浏览器中打开以下两个页面：
 - **公司页**：[http://127.0.0.1:7879/org](http://127.0.0.1:7879/org)
 - **任务实时看板**：[http://127.0.0.1:7878/](http://127.0.0.1:7878/)
 
@@ -90,7 +93,9 @@ xay2 office start
 
 ## 页面上能看到什么？
 
-- **公司页（http://127.0.0.1:7879/org）**：每个中任务一个房间、能看到谁在做什么、谁做完在休息；员工之间写的信在右边。
+- **公司页（http://127.0.0.1:7879/org）**：每个中任务一个房间、能看到谁在做什么、谁做完在休息；员工之间写的信在右边。顶上是总进度条，每种 AI 一种颜色：
+
+  ![总进度条：Codex、DeepSeek、Gemini 各攒一段，加起来 57%](docs/media/progress.webp)
 
   ![公司页：员工在各自的工位上干活，右边是员工之间的信件](docs/media/org-letters.webp)
 
@@ -131,6 +136,20 @@ xay2 office start
 rm -rf ~/.xay/v2
 ```
 > **注意**：这样会删掉所有历史记录和员工的工作笔记。重新启动 `xay2 office start` 会自动初始化干净的全新环境，不会影响当前代码仓库。
+
+---
+
+## 致谢
+
+xay 从一个"让手边几个 AI 像公司一样协作"的想法起步，一路迭代到现在。开源社区里也有不少朋友在探索同一件事，交流中给了我很多启发，在这里一并感谢：
+
+- [agent-router](https://github.com/dazhi666666/agent-router) / [agent-router-mcp](https://github.com/dazhi666666/agent-router-mcp)（dazhi666666）：同样在做多 AI 协作调度，思路很有意思。xay 第十一版的几处迭代受到它的启发：结果主动送回、负责人交接、员工互相派活、共享任务板，以及总进度条的视觉灵感。
+- [AgentRouter](https://github.com/Jinlong75/AgentRouter)（Jinlong75）：它的通用适配器让 xay 接入新 AI 的方式更灵活。
+- [Magpie](https://github.com/yetone/magpie)（yetone）：让我们想到以后可以把 Agent App 里的额度也用起来，已经列进 xay 的规划。
+
+推荐对多 AI 协作感兴趣的朋友也去看看这些项目。
+
+**画面素材**：AI 角色头像来自 [lmy414/ai-chan-sheets](https://github.com/lmy414/ai-chan-sheets)（原始形象 ZipZipPipe 胖次狐，CC BY-NC-SA 4.0，详见 [`V2/web/chars/img/LICENSE.md`](V2/web/chars/img/LICENSE.md)）；监工头像和工位小物件由本项目用 AI 生成；屏幕小动画用 Google Flow 生成。
 
 ---
 

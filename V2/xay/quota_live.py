@@ -356,6 +356,12 @@ def _tools_home() -> Path:
 
 
 def agy_current_id():
+    """agy 现在实际用的是哪个号：看 agy 的登录（钥匙串）是谁（xay/agy_login.py）。
+    读不到 agy 的登录才退回 Tools 自己记的当前号——2026-10-31 实测它会和真实情况对不上（Tools 说 账号 A，agy 实际在用 账号 B）。"""
+    from . import agy_login
+    real = agy_login.current_account_id()
+    if real:
+        return real
     index = _read_json(_tools_home() / "accounts.json", {}) or {}
     return index.get("current_agy_account_id") if isinstance(index, dict) else None
 
@@ -397,7 +403,7 @@ def agy_accounts(now=None, seen=None):
     index = _read_json(tools / "accounts.json", {}) or {}
     if not isinstance(index, dict) or not isinstance(index.get("accounts"), list):
         return []
-    current = index.get("current_agy_account_id")
+    current = agy_current_id()
     seen = seen or {}
     out = []
     for number, summary in enumerate(index["accounts"], 1):
